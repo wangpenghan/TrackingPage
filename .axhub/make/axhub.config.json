@@ -1,0 +1,22 @@
+{
+  "projectInfo": {
+    "name": "盯控页面",
+    "description": null
+  },
+  "server": {
+    "host": "localhost",
+    "allowLAN": false,
+    "enableCommandAPI": false
+  },
+  "projectDefaults": {
+    "defaultTheme": null
+  },
+  "automation": {
+    "defaultPromptClient": null,
+    "defaultIDE": "trae_cn"
+  },
+  "assistant": {
+    "webBaseUrl": null,
+    "apiBaseUrl": null
+  }
+}

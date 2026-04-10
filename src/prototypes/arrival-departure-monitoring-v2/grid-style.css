@@ -1,0 +1,1545 @@
+/* grid-style.css */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=Oswald:wght@400;500;700&display=swap');
+
+/* Main Container */
+.train-grid-container {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #f5f5f7 0%, #f0f0f2 100%);
+  padding: 0 16px 16px 16px;
+  gap: 5px;
+  min-width: 1400px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  position: relative;
+}
+
+.train-grid-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.train-grid-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 4px;
+}
+
+.train-grid-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+
+.train-grid-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* Base Grid Definition */
+/* 
+  Columns:
+  1. 车次 (Train No)
+  2. 到点 (Arrival)
+  3. 发点 (Departure)
+  4. 开停检时间 (Check Time)
+  5. 股道/站台 (Track/Platform)
+  6. 检票口/站台 (Gates)
+  7. 旅服作业 (Devices)
+  8. 客流信息 (Passenger)
+  9. 检票作业 (Check-in)
+  10. 站台作业 (Platform)
+  11. 出站作业 (Exit)
+  12. 结合部作业 (Joint)
+  13. 计划状态 (Status)
+  14. 日志 (Log)
+*/
+.train-grid-layout {
+  display: grid;
+  grid-template-columns: 
+    minmax(100px, 1fr)   /* 车次 */
+    minmax(90px, 1fr)    /* 到点 */
+    minmax(90px, 1fr)    /* 发点 */
+    minmax(100px, 1fr)   /* 开停检时间 */
+    minmax(90px, 1fr)    /* 股道/站台 */
+    minmax(100px, 1fr)   /* 检票口/出站口 */
+    minmax(100px, 1fr)   /* 旅服作业 */
+    minmax(100px, 1fr)   /* 客流信息 */
+    minmax(100px, 1fr)   /* 检票作业 */
+    minmax(100px, 1fr)   /* 站台作业 */
+    minmax(100px, 1fr)   /* 出站作业 */
+    minmax(150px, 1.2fr) /* 结合部作业 - 增加宽度 */
+    minmax(55px, 0.5fr)  /* 状态 - 压缩宽度 */
+    minmax(60px, 0.8fr); /* 日志 */
+  gap: 16px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 1400px;
+}
+
+/* For Intervention Mode */
+.train-grid-container.collapsed .train-grid-layout {
+  grid-template-columns: 140px 120px 120px 140px; /* Only show first 4 columns */
+  width: auto;
+}
+.train-grid-container.collapsed .hide-on-collapse {
+  display: none !important;
+}
+
+/* Header - macOS Style */
+.train-grid-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(246, 246, 246, 0.92) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
+  border-radius: 10px;
+  padding: 14px 12px;
+  box-shadow: 
+    0 0.5px 2px rgba(0, 0, 0, 0.03),
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+  z-index: 100;
+  margin: 5px 16px 5px 16px;
+  width: calc(100% - 32px);
+}
+
+.card-content {
+  padding: 12px;
+  min-height: 100px;
+  flex: 1;
+  width: 100%;
+}
+
+.grid-header-cell {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", 'Oswald', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  color: #1d1d1f;
+  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: fit-content;
+  height: 100%;
+  letter-spacing: -0.01em;
+}
+
+.grid-header-cell:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 15%;
+  height: 70%;
+  width: 0.5px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.08) 20%, rgba(0, 0, 0, 0.08) 80%, transparent 100%);
+}
+
+/* Train Card */
+.train-card {
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e4e4e7;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  overflow: visible;
+  position: relative;
+  z-index: 2;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+  min-height: 130px;
+  cursor: pointer;
+}
+
+.train-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  transform: translateY(-1px);
+  z-index: 3;
+}
+
+.train-card.selected-card {
+  border-color: #f59e0b;
+  border-width: 1px;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25), 0 2px 8px rgba(245, 158, 11, 0.15);
+  background-color: #fffbeb;
+  z-index: 10;
+  transform: scale(1.005);
+  transition: all 0.2s ease;
+}
+
+.train-card.selected-card .card-topbar {
+  background: linear-gradient(90deg, #fef3c7 0%, #fde68a 100%);
+  border-bottom: 1px solid #f59e0b;
+}
+
+/* 选中行内的标签样式调整 */
+.train-card.selected-card .service-tag {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.train-card.selected-card .service-tag.red-outline {
+  background: rgba(254, 242, 242, 0.9);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.train-card.selected-card .service-tag.yellow-outline {
+  background: rgba(254, 252, 232, 0.9);
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+/* 选中行内的灰色标签样式调整 */
+.train-card.selected-card .badge-gray {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #78350f;
+}
+
+/* 选中行内默认内容块的玻璃质感效果 */
+.train-card.selected-card .info-stack,
+.train-card.selected-card .box-cell {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 2px 4px rgba(245, 158, 11, 0.1);
+  backdrop-filter: blur(4px);
+}
+
+/* 选中行内的图标背景 */
+.train-card.selected-card .bg-gray {
+  background: rgba(255, 255, 255, 0.7);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #92400e;
+}
+
+/* 选中行内的时间/信息块 */
+.train-card.selected-card .connection-time {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  color: #78350f;
+}
+
+/* 选中行内地标标签样式 - 与车型标签一致 */
+.train-card.selected-card .badge-landmark {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  color: #78350f !important;
+}
+
+.train-card.suspended-train {
+  background-color: #8c8c8c !important;
+  border: 2px solid #595959 !important;
+}
+
+.train-card.suspended-train .card-topbar {
+  background-color: #595959 !important;
+  border-bottom-color: #434343 !important;
+}
+
+.train-card.suspended-train .info-stack,
+.train-card.suspended-train .box-cell {
+  background-color: #737373 !important;
+  border-color: #595959 !important;
+}
+
+.train-card.suspended-train .badge-gray,
+.train-card.suspended-train .badge-index,
+.train-card.suspended-train .formation-info-group,
+.train-card.suspended-train .badge-station,
+.train-card.suspended-train .badge-landmark,
+.train-card.suspended-train .service-tag {
+  background-color: #595959 !important;
+  border-color: #434343 !important;
+  color: #ffffff !important;
+}
+
+.train-card.suspended-train .train-main-pill,
+.train-card.suspended-train .train-sub-pill {
+  background-color: transparent !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+}
+
+/* 停运列车选中时的样式 */
+.train-card.suspended-train.selected-card .badge-gray {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.25) 0%, rgba(29, 78, 95, 0.2) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.4) !important;
+  color: #5DA3B3 !important;
+}
+
+.train-card.suspended-train.selected-card .badge-landmark {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.35) !important;
+  color: #5DA3B3 !important;
+}
+
+.train-card.suspended-train.selected-card .info-stack,
+.train-card.suspended-train.selected-card .box-cell {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.35) !important;
+}
+
+/* 停运列车选中时的编组信息组样式 */
+.train-card.suspended-train.selected-card .formation-info-group {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.35) !important;
+}
+
+/* 停运列车日志按钮容器样式 - 透明 */
+.train-card.suspended-train .hide-on-collapse {
+  background-color: transparent !important;
+}
+
+.train-card.suspended-train.selected-card .hide-on-collapse {
+  background-color: transparent !important;
+}
+
+/* 更精确的选择器 - 确保覆盖所有标签 */
+.train-card.suspended-train div[class*="badge"],
+.train-card.suspended-train span[class*="badge"],
+.train-card.suspended-train div[class*="service"],
+.train-card.suspended-train span[class*="service"] {
+  background-color: #595959 !important;
+  border-color: #434343 !important;
+  color: #ffffff !important;
+}
+
+/* 强制覆盖所有行内样式 - 最高优先级 */
+.train-card.suspended-train *[style] {
+  background-color: #595959 !important;
+  border-color: #434343 !important;
+  color: #ffffff !important;
+}
+
+.train-card.suspended-train span,
+.train-card.suspended-train div {
+  color: #ffffff !important;
+}
+
+.train-card.suspended-train .icon-circle,
+.train-card.suspended-train .icon-square {
+  background-color: #8c8c8c !important;
+  border-color: #595959 !important;
+  color: #ffffff !important;
+}
+
+/* 停运列车日志按钮样式 - 最高优先级 */
+.train-card.suspended-train .log-button,
+.train-card.suspended-train *[style].log-button {
+  background-color: transparent !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+.train-card.suspended-train .log-button svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+/* 停运列车车次单元格样式 - 透明 */
+.train-card.suspended-train .cell-train-no {
+  background-color: transparent !important;
+}
+
+.train-card.suspended-train .icon-circle.bg-gray,
+.train-card.suspended-train .icon-square.bg-gray {
+  color: #d9d9d9 !important;
+}
+
+.train-card.suspended-train .text-blue {
+  color: #91d5ff !important;
+}
+
+.train-card.suspended-train .text-red {
+  color: #ffa39e !important;
+}
+
+.train-card.suspended-train .text-yellow {
+  color: #ffe58f !important;
+}
+
+.train-card.suspended-train .text-green {
+  color: #b7eb8f !important;
+}
+
+.train-card.suspended-train .tag-blue-bg {
+  background-color: rgba(145, 213, 255, 0.2) !important;
+  color: #91d5ff !important;
+}
+
+.train-card.suspended-train .tag-red-bg {
+  background-color: rgba(255, 163, 158, 0.2) !important;
+  color: #ffa39e !important;
+}
+
+/* 异常指示灯闪烁动画 */
+@keyframes indicator-blink {
+  0%, 100% { 
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% { 
+    opacity: 0.3;
+    box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+  }
+}
+
+.indicator-abnormal {
+  animation: indicator-blink 0.8s ease-in-out infinite;
+}
+
+/* 异常指示灯样式 */
+.abnormal-indicator {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #EF4444;
+  z-index: 10;
+}
+
+/* Card Top Bar */
+.card-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px;
+  border-bottom: 1px solid #f4f4f5;
+  background: #fafafa;
+  border-radius: 12px 12px 0 0;
+}
+
+.topbar-left, .topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Topbar Badges */
+.badge-index {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 24px;
+  border: 1px solid #d4d4d8;
+  border-radius: 12px;
+  font-family: 'Oswald', sans-serif;
+  font-weight: 500;
+  color: #52525b;
+  background: #ffffff;
+}
+
+/* 站名标签 - 与 badge-gray 保持一致 */
+.badge-station {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid #d4d4d8;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3f3f46;
+  background: #e4e4e7;
+}
+
+/* 选中行内的站名标签样式 */
+.train-card.selected-card .badge-station {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+  color: #92400e;
+}
+
+/* 停运列车选中时的站名标签样式 */
+.train-card.suspended-train.selected-card .badge-station {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+
+.badge-status {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-status.bg-yellow {
+  background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+  border: 1px solid #fde047;
+  color: #b45309;
+}
+
+.badge-status.bg-green {
+  background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);
+  border: 1px solid #6ee7b7;
+  color: #047857;
+}
+
+.badge-status.bg-purple {
+  background: linear-gradient(135deg, #f5f3ff 0%, #e9d5ff 100%);
+  border: 1px solid #d8b4fe;
+  color: #6b21a8;
+}
+
+.badge-gray {
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #e4e4e7;
+  color: #3f3f46;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-yellow {
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #fef08a;
+  color: #854d0e;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-green {
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #dcfce7;
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.badge-blue {
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #dbeafe;
+  color: #2563eb;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Tags on the right */
+.service-tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+.service-tag.blue { color: #0ea5e9; }
+.service-tag.orange { color: #f97316; }
+.service-tag.cyan { color: #14b8a6; }
+.service-tag.purple { color: #a855f7; }
+.service-tag.indigo { color: #6366f1; }
+.service-tag.teal { color: #14b8a6; }
+.service-tag.gold { color: #f59e0b; }
+.service-tag.red-outline { 
+  color: #ef4444; 
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+}
+.service-tag.yellow-outline { 
+  color: #eab308; 
+  border: 1px solid #fde047;
+  background: #fefce8;
+}
+
+/* 客运记录标签 - 浅色模式 */
+.service-tag.passenger-record-tag {
+  color: #eab308;
+  border: 1px solid #fde047;
+  background: #fefce8;
+}
+
+/* Card Content Data */
+.card-content {
+  padding: 4px 10px;
+  min-height: 80px;
+  flex: 1;
+}
+
+/* Specific Cell Styles */
+.cell-train-no {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  position: relative;
+  height: 100%;
+  min-height: 60px;
+  padding: 5px 0;
+  width: 100%;
+}
+
+.cell-train-no .train-sub-pill.source {
+  width: auto !important;
+  min-width: 70px !important;
+  max-width: none !important;
+}
+
+.train-main-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #d9d9d9;
+  color: #333;
+  padding: 5px 16px;
+  border-radius: 8px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 10;
+  min-width: 110px;
+  text-align: center;
+  margin: 3px 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.train-main-pill.origin {
+  background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+  border-color: #fde047;
+  color: #b45309;
+}
+
+.train-main-pill.pass {
+  background: linear-gradient(135deg, #f5f3ff 0%, #e9d5ff 100%);
+  border-color: #d8b4fe;
+  color: #6b21a8;
+}
+
+.train-main-pill.end {
+  background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);
+  border-color: #6ee7b7;
+  color: #047857;
+}
+
+.train-sub-pill {
+  background: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+  border: 1px solid #fde047;
+  color: #1e3a8a;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 5;
+  cursor: pointer;
+  min-width: 70px;
+  text-align: center;
+  transition: all 0.2s ease;
+  margin: 2px 0;
+  position: relative;
+  transform: none;
+  box-sizing: border-box;
+}
+
+.train-sub-pill.source {
+  min-width: 220px !important;
+  width: 100%;
+}
+
+.train-sub-pill:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.train-sub-pill.source {
+  order: -1;
+}
+
+.train-sub-pill.target {
+  order: 1;
+}
+
+.connection-time {
+  order: 2;
+  font-family: 'Oswald', sans-serif;
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+  margin-top: 3px;
+  padding: 2px 6px;
+  background: #f4f4f5;
+  border-radius: 4px;
+  text-align: center;
+  min-width: 50px;
+  box-sizing: border-box;
+}
+
+.train-sub-pill.origin {
+  background: linear-gradient(135deg, #fefce8 0%, #fef08a 100%);
+  border-color: #fde047;
+  color: #b45309;
+}
+
+.train-sub-pill.end {
+  background: linear-gradient(135deg, #ecfdf5 0%, #a7f3d0 100%);
+  border-color: #6ee7b7;
+  color: #047857;
+}
+
+.train-sub-pill.pass {
+  background: linear-gradient(135deg, #f5f3ff 0%, #e9d5ff 100%);
+  border-color: #d8b4fe;
+  color: #6b21a8;
+}
+
+/* Landmark Badge */
+.landmark-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.landmark-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* Time & Info Stacks */
+.info-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: center;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 4px 6px;
+  background: #fafafa;
+}
+
+.info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  color: #3f3f46;
+}
+
+.icon-square, .icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.icon-circle {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Oswald, sans-serif;
+  border-radius: 50%;
+}
+
+.icon-square {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Oswald, sans-serif;
+  border-radius: 4px;
+}
+
+/* Icon Variants */
+.bg-gray { background: #f4f4f5; border: 1px solid #d4d4d8; color: #71717a; }
+.bg-cyan { background: #e0f2fe; border: 1px solid #7dd3fc; color: #0284c7; }
+.bg-yellow { background: #fefce8; border: 1px solid #fde047; color: #ca8a04; }
+.bg-green { background: #dcfce7; border: 1px solid #86efac; color: #16a34a; }
+.bg-red { background: #fee2e2; border: 1px solid #fca5a5; color: #dc2626; }
+.bg-blue { background: #dbeafe; border: 1px solid #93c5fd; color: #2563eb; }
+
+.text-red { color: #ef4444; font-weight: 700; }
+.text-green { color: #10b981; font-weight: 700; }
+.text-blue { color: #1890ff; font-weight: 700; }
+.text-yellow { color: #f59e0b; font-weight: 700; }
+
+.tag-red-bg {
+  background: #ef4444;
+  color: white;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+.tag-blue-bg {
+  background: #1890ff;
+  color: white;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+}
+
+/* Box Cells (旅服, 客流) */
+.box-cell {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 4px 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background: #fafafa;
+  justify-content: center;
+}
+
+.box-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #52525b;
+}
+
+.box-row-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+
+.box-row-left svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.box-row-left .dot {
+  flex-shrink: 0;
+  margin-left: 0;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.green { background: #10b981; }
+.dot.red { background: #ef4444; }
+.dot.white { background: #ffffff; border: 1px solid #d4d4d8; }
+.dot.yellow { background: #f59e0b; }
+
+/* 小圆圈黄色闪烁动画 - 出务预告 */
+@keyframes dot-blink-yellow {
+  0%, 100% { 
+    background: #fbbf24;
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  50% { 
+    background: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+  }
+}
+
+.dot.yellow-blink {
+  background: #f59e0b;
+  animation: dot-blink-yellow 1.5s infinite ease-in-out;
+}
+
+/* Operation Info Container */
+.ops-container {
+  display: flex;
+  gap: 8px;
+  height: 100%;
+}
+
+.op-block {
+  flex: 0 0 auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  min-width: 100px;
+  width: auto;
+  max-width: none;
+}
+
+.op-header {
+  background: #f4f4f5;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #3f3f46;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.op-body {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  font-size: 12px;
+  color: #52525b;
+  overflow: visible;
+  align-items: center;
+  min-height: 36px;
+}
+
+.op-body .op-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  background: #fafafa;
+  padding: 6px 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: visible;
+  flex: 0 0 auto;
+  width: auto;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  color: #3f3f46;
+  font-weight: 500;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.op-missing {
+  background: #fef2f2;
+  color: #ef4444;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Job Person Card */
+.job-person-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f5f5f7;
+  border: 1px solid #e4e4e7;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: #3f3f46;
+  font-weight: 500;
+}
+
+/* Joint Task Card */
+.joint-task-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  padding: 6px 10px;
+  border-radius: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  color: #3f3f46;
+  font-weight: 500;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.joint-task-card:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transform: translateY(-1px);
+}
+
+/* Right stacked tasks */
+.ops-stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  justify-content: space-between;
+}
+
+.stacked-task {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 2px 6px;
+  border: 1px solid #e4e4e7;
+  border-radius: 4px;
+  background: #fafafa;
+}
+
+.task-person {
+  background: #e4e4e7;
+  padding: 0 4px;
+  border-radius: 4px;
+}
+.task-person.error {
+  background: #fef2f2;
+  color: #ef4444;
+  border: 1px solid #fca5a5;
+}
+
+/* Status Block */
+.status-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+}
+
+.status-square {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Oswald, sans-serif;
+  color: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  text-align: center;
+  padding: 0 4px;
+}
+
+.status-square.green {
+  background: #10b981;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Oswald, sans-serif;
+}
+.status-square.red { background: #ef4444; }
+.status-square.gray { background: #a1a1aa; }
+.status-square.blue { background: #0ea5e9; }
+.status-square.normal { background: #64748b; }
+
+/* Dark Mode Status Squares */
+.dark .status-square.green { background: #10b981; }
+.dark .status-square.red { background: #ef4444; }
+.dark .status-square.gray { background: #64748b; }
+.dark .status-square.blue { background: #0ea5e9; }
+.dark .status-square.normal { background: #475569; }
+
+/* Simple Mode Styles */
+
+/* 简洁模式下的网格布局 - 与标准模式保持完全一致的列宽 */
+.train-grid-layout.simple-mode {
+  /* 与标准模式相同的14列布局 */
+  grid-template-columns: 
+    minmax(100px, 1fr)   /* 车次 */
+    minmax(90px, 1fr)    /* 到点 */
+    minmax(90px, 1fr)    /* 发点 */
+    minmax(100px, 1fr)   /* 开停检时间 */
+    minmax(90px, 1fr)    /* 股道/站台 */
+    minmax(100px, 1fr)   /* 检票口/出站口 */
+    minmax(100px, 1fr)   /* 旅服作业 */
+    minmax(100px, 1fr)   /* 客流信息 */
+    minmax(100px, 1fr)   /* 检票作业 */
+    minmax(100px, 1fr)   /* 站台作业 */
+    minmax(100px, 1fr)   /* 出站作业 */
+    minmax(150px, 1.2fr) /* 结合部作业 - 增加宽度 */
+    minmax(55px, 0.5fr)  /* 状态 - 压缩宽度 */
+    minmax(60px, 0.8fr); /* 日志 */
+  min-width: 1400px;
+}
+
+/* 简洁模式下的卡片高度调整 */
+.train-card.simple-mode {
+  min-height: 100px;
+}
+
+/* 简洁模式下的状态标记 - 更大更明显 */
+.simple-mode .status-indicator {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* 简洁模式下的检票口 */
+.simple-mode .check-in-gate {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* 简洁模式下的信息行 */
+.simple-mode .info-row {
+  font-size: 18px;
+}
+
+/* 简洁模式深色模式适配 */
+.dark .train-grid-layout.simple-mode {
+  background: linear-gradient(180deg, #0D1B2A 0%, #0A1520 100%);
+}
+
+.dark .simple-mode .box-cell {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%);
+  border-color: rgba(42, 107, 124, 0.35);
+}
+
+/* Dark Mode - Railway Night Theme */
+.dark .train-grid-container {
+  background: linear-gradient(180deg, #0D1B2A 0%, #0A1520 100%);
+}
+
+.dark .train-grid-container::-webkit-scrollbar-track {
+  background: rgba(42, 107, 124, 0.1);
+}
+
+.dark .train-grid-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #2A6B7C 0%, #1D4E5F 100%);
+  border-radius: 4px;
+}
+
+.dark .train-grid-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #3A8B9C 0%, #2A6B7C 100%);
+}
+
+.dark .train-grid-header {
+  background: linear-gradient(180deg, rgba(13, 27, 42, 0.98) 0%, rgba(10, 21, 32, 0.95) 100%);
+  border: 1px solid rgba(42, 107, 124, 0.3);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.4),
+    0 1px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(42, 107, 124, 0.2);
+}
+
+.dark .grid-header-cell {
+  color: #E2E8F0;
+}
+
+.dark .grid-header-cell:not(:last-child)::after {
+  background: linear-gradient(180deg, transparent 0%, rgba(42, 107, 124, 0.4) 20%, rgba(42, 107, 124, 0.4) 80%, transparent 100%);
+}
+
+.dark .train-card {
+  background: linear-gradient(180deg, #0F3A47 0%, #0D1B2A 100%);
+  border-color: rgba(42, 107, 124, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.dark .train-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  border-color: rgba(42, 107, 124, 0.5);
+}
+
+.dark .card-topbar {
+  background: linear-gradient(180deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  border-bottom-color: rgba(42, 107, 124, 0.3);
+}
+
+.dark .badge-index {
+  background: linear-gradient(135deg, #1D4E5F 0%, #0F3A47 100%);
+  border-color: rgba(42, 107, 124, 0.4);
+  color: #5DA3B3;
+}
+
+.dark .info-stack,
+.dark .box-cell {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%);
+  border-color: rgba(42, 107, 124, 0.35);
+}
+
+.dark .info-row,
+.dark .box-row {
+  color: #E2E8F0;
+}
+
+.dark .op-block {
+  background: linear-gradient(180deg, #0F3A47 0%, #0D1B2A 100%);
+  border-color: rgba(42, 107, 124, 0.3);
+}
+
+.dark .op-header {
+  background: linear-gradient(180deg, rgba(42, 107, 124, 0.25) 0%, rgba(29, 78, 95, 0.2) 100%);
+  border-bottom-color: rgba(42, 107, 124, 0.35);
+  color: #E2E8F0;
+}
+
+.dark .op-body {
+  color: #CBD5E1;
+}
+
+.dark .op-body .op-item {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  border-color: rgba(42, 107, 124, 0.3);
+  color: #E2E8F0;
+}
+
+.dark .job-person-card,
+.dark .joint-task-card {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  border-color: rgba(42, 107, 124, 0.35);
+  color: #E2E8F0;
+}
+
+.dark .stacked-task {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%);
+  border-color: rgba(42, 107, 124, 0.3);
+  color: #CBD5E1;
+}
+
+.dark .task-person {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.3) 0%, rgba(29, 78, 95, 0.25) 100%);
+  border-color: rgba(42, 107, 124, 0.4);
+  color: #5DA3B3;
+}
+
+.dark .train-main-pill {
+  background: linear-gradient(135deg, #0F3A47 0%, #1D4E5F 100%);
+  border-color: rgba(42, 107, 124, 0.4);
+  color: #5DA3B3;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .train-sub-pill {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.25) 0%, rgba(29, 78, 95, 0.2) 100%);
+  border-color: rgba(42, 107, 124, 0.4);
+  color: #5DA3B3;
+}
+
+.dark .connection-time {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  color: #94A3B8;
+}
+
+.dark .bg-gray { background: rgba(42, 107, 124, 0.25); border-color: rgba(42, 107, 124, 0.4); color: #94A3B8; }
+.dark .bg-cyan { background: rgba(42, 107, 124, 0.3); border-color: rgba(42, 107, 124, 0.5); color: #5DA3B3; }
+.dark .bg-yellow { background: rgba(217, 119, 6, 0.25); border-color: rgba(245, 158, 11, 0.4); color: #F59E0B; }
+.dark .bg-green { background: rgba(5, 150, 105, 0.25); border-color: rgba(16, 185, 129, 0.4); color: #10B981; }
+.dark .bg-red { background: rgba(185, 28, 28, 0.25); border-color: rgba(239, 68, 68, 0.4); color: #EF4444; }
+.dark .bg-blue { background: rgba(59, 130, 246, 0.25); border-color: rgba(59, 130, 246, 0.4); color: #60A5FA; }
+
+/* Person Label */
+.person-label {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+.person-label.normal {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+.person-label.error {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.dark .person-label.normal {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  color: #94A3B8;
+  border: 1px solid rgba(42, 107, 124, 0.3);
+}
+.dark .person-label.error {
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.2) 0%, rgba(127, 29, 29, 0.15) 100%);
+  color: #FCA5A5;
+  border: 1px solid rgba(185, 28, 28, 0.3);
+}
+
+/* Additional Dark Mode Badge Styles */
+.dark .badge-status.bg-yellow {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #F59E0B;
+}
+
+.dark .badge-status.bg-green {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25) 0%, rgba(4, 120, 87, 0.2) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10B981;
+}
+
+.dark .badge-status.bg-purple {
+  background: linear-gradient(135deg, rgba(91, 33, 182, 0.25) 0%, rgba(76, 29, 149, 0.2) 100%);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #A78BFA;
+}
+
+.dark .badge-gray {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  color: #94A3B8;
+  border-color: rgba(42, 107, 124, 0.3);
+}
+
+.dark .badge-yellow {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%);
+  color: #F59E0B;
+}
+
+.dark .badge-green {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25) 0%, rgba(4, 120, 87, 0.2) 100%);
+  color: #10B981;
+}
+
+.dark .badge-blue {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25) 0%, rgba(29, 78, 216, 0.2) 100%);
+  color: #60A5FA;
+}
+
+/* Service Tags Dark Mode */
+.dark .service-tag.blue { color: #38BDF8; }
+.dark .service-tag.orange { color: #FB923C; }
+.dark .service-tag.cyan { color: #2DD4BF; }
+.dark .service-tag.purple { color: #C084FC; }
+.dark .service-tag.indigo { color: #818CF8; }
+.dark .service-tag.teal { color: #5EEAD4; }
+.dark .service-tag.gold { color: #FCD34D; }
+.dark .service-tag.red-outline { 
+  color: #FCA5A5; 
+  border-color: rgba(248, 113, 113, 0.4);
+  background: linear-gradient(135deg, rgba(185, 28, 28, 0.15) 0%, rgba(127, 29, 29, 0.1) 100%);
+}
+.dark .service-tag.yellow-outline { 
+  color: #FDE047; 
+  border-color: rgba(250, 204, 21, 0.4);
+  background: linear-gradient(135deg, rgba(161, 98, 7, 0.15) 0%, rgba(113, 63, 18, 0.1) 100%);
+}
+
+/* Train Pills Dark Mode - Keep color distinction */
+.dark .train-main-pill.origin {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #F59E0B;
+}
+
+.dark .train-main-pill.pass {
+  background: linear-gradient(135deg, rgba(91, 33, 182, 0.25) 0%, rgba(76, 29, 149, 0.2) 100%);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #A78BFA;
+}
+
+.dark .train-main-pill.end {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25) 0%, rgba(4, 120, 87, 0.2) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10B981;
+}
+
+.dark .train-sub-pill.origin {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #F59E0B;
+}
+
+.dark .train-sub-pill.end {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.25) 0%, rgba(4, 120, 87, 0.2) 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10B981;
+}
+
+.dark .train-sub-pill.pass {
+  background: linear-gradient(135deg, rgba(91, 33, 182, 0.25) 0%, rgba(76, 29, 149, 0.2) 100%);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #A78BFA;
+}
+
+/* Selected Card Dark Mode */
+.dark .train-card.selected-card {
+  background: linear-gradient(180deg, rgba(217, 119, 6, 0.18) 0%, rgba(180, 83, 9, 0.12) 100%) !important;
+  border-color: rgba(245, 158, 11, 0.6) !important;
+  border-width: 1px !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2), 0 2px 8px rgba(245, 158, 11, 0.2) !important;
+  z-index: 10;
+  transform: scale(1.005);
+}
+
+.dark .train-card.selected-card .card-topbar {
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+/* 暗色模式下选中行内的标签样式 */
+.dark .train-card.selected-card .service-tag {
+  background: rgba(30, 30, 30, 0.6);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.dark .train-card.selected-card .service-tag.red-outline {
+  background: rgba(127, 29, 29, 0.3);
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.dark .train-card.selected-card .service-tag.yellow-outline {
+  background: rgba(113, 63, 18, 0.3);
+  border-color: rgba(250, 204, 21, 0.4);
+}
+
+/* 暗色模式下选中行内的灰色标签样式 */
+.dark .train-card.selected-card .badge-gray {
+  background: rgba(30, 30, 30, 0.6);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+/* 暗色模式下选中行内默认内容块的玻璃质感效果 */
+.dark .train-card.selected-card .info-stack,
+.dark .train-card.selected-card .box-cell {
+  background: rgba(30, 30, 30, 0.4);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+}
+
+/* 暗色模式下选中行内的图标背景 */
+.dark .train-card.selected-card .bg-gray {
+  background: rgba(50, 50, 50, 0.5);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #fbbf24;
+}
+
+/* 暗色模式下选中行内的时间/信息块 */
+.dark .train-card.selected-card .connection-time {
+  background: rgba(40, 40, 40, 0.5);
+  border: 1px solid rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+/* 暗色模式下选中行内地标标签样式 - 与车型标签一致 */
+.dark .train-card.selected-card .badge-landmark {
+  background: rgba(30, 30, 30, 0.6) !important;
+  border: 1px solid rgba(245, 158, 11, 0.3) !important;
+  color: #fbbf24 !important;
+}
+
+/* 暗色模式下选中行内的站名标签样式 */
+.dark .train-card.selected-card .badge-station {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.3) 0%, rgba(180, 83, 9, 0.25) 100%);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #fbbf24;
+}
+
+/* 暗色模式下站名标签样式 - 加边框，非白色背景 */
+.dark .badge-station {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
+  border: 1px solid rgba(42, 107, 124, 0.4);
+  color: #5DA3B3;
+}
+
+/* 暗色模式下编组信息组样式 - 加边框，非白色背景 */
+.dark .formation-info-group {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%);
+  border: 1px solid rgba(42, 107, 124, 0.35);
+  border-radius: 4px;
+}
+
+/* 暗色模式下编组信息组内的标签样式 */
+.dark .formation-info-group .badge-gray {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.25) 0%, rgba(29, 78, 95, 0.2) 100%);
+  border-color: rgba(42, 107, 124, 0.4);
+  color: #5DA3B3;
+}
+
+.dark .formation-info-group .badge-landmark {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.35) !important;
+  color: #5DA3B3 !important;
+}
+
+/* 暗色模式下开检就绪标签样式 - 加边框，非白色背景 */
+.dark .service-tag.checkin-ready-tag {
+  color: #86EFAC !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  background: linear-gradient(135deg, rgba(21, 128, 61, 0.15) 0%, rgba(20, 83, 45, 0.1) 100%) !important;
+}
+
+/* 暗色模式下客运记录标签样式 - 加边框，非白色背景 */
+.dark .service-tag.passenger-record-tag {
+  color: #FDE047 !important;
+  border-color: rgba(250, 204, 21, 0.4) !important;
+  background: linear-gradient(135deg, rgba(161, 98, 7, 0.15) 0%, rgba(113, 63, 18, 0.1) 100%) !important;
+}
+
+/* Detail Button Dark Mode */
+.dark .train-card button {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.15) 0%, rgba(29, 78, 95, 0.1) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.35) !important;
+}
+
+.dark .train-card button:hover {
+  background: linear-gradient(135deg, rgba(42, 107, 124, 0.25) 0%, rgba(29, 78, 95, 0.2) 100%) !important;
+  border-color: rgba(42, 107, 124, 0.5) !important;
+}
+
+.dark .train-card button svg {
+  stroke: #60A5FA !important;
+}
+
+/* 作业卡片状态样式 - 颜色规则 */
+
+/* 1. 存在未到岗：参考股道变更颜色，红色背景不闪烁 */
+.box-cell.has-absent {
+  background: rgba(255, 77, 79, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 77, 79, 0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(255, 77, 79, 0.15) !important;
+}
+
+/* 2. 临站已经发车：只有边框橘黄色，背景不动 */
+.box-cell.station-departed {
+  border: 2px solid rgba(249, 115, 22, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.2);
+}
+
+/* 3. 已经出务预告：只有边框青绿色闪烁，背景不动 */
+@keyframes border-blink-teal {
+  0%, 100% { 
+    box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.4);
+  }
+  50% { 
+    box-shadow: inset 0 0 0 2px rgba(20, 184, 166, 0.8);
+  }
+}
+
+.box-cell.work-preview {
+  animation: border-blink-teal 2s infinite ease-in-out;
+  border-color: rgba(20, 184, 166, 0.5);
+}
+
+/* 深色模式适配 */
+.dark .box-cell.has-absent {
+  background: rgba(185, 28, 28, 0.15) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(248, 113, 113, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(185, 28, 28, 0.2) !important;
+}
+
+.dark .box-cell.station-departed {
+  border: 2px solid rgba(249, 115, 22, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(249, 115, 22, 0.2);
+}
+
+.dark .box-cell.work-preview {
+  animation: border-blink-teal-dark 2s infinite ease-in-out;
+}
+
+@keyframes border-blink-teal-dark {
+  0%, 100% { 
+    box-shadow: inset 0 0 0 1px rgba(20, 184, 166, 0.4);
+  }
+  50% { 
+    box-shadow: inset 0 0 0 2px rgba(20, 184, 166, 0.8);
+  }
+}

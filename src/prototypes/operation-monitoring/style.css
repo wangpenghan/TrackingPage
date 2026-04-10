@@ -1,0 +1,220 @@
+.operation-monitoring-page {
+  padding: 16px;
+  background-color: #f0f2f5;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Base Table Header */
+.custom-table .ant-table-thead > tr > th {
+  font-weight: bold;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0 !important;
+  font-size: 16px !important;
+  background-color: #fafafa !important;
+  color: #333 !important;
+}
+
+/* Fix for Ghost Header in Scrollable Table */
+.custom-table .ant-table-body .ant-table-thead > tr > th {
+  padding: 0 !important;
+  height: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  color: transparent !important;
+}
+
+/* Group Headers - Distinct Colors (Low Saturation) */
+.custom-table .ant-table-thead > tr > th.group-header-arrival {
+  background-color: #e6f4ff !important;
+  color: #000 !important;
+  border-bottom: 2px solid #91caff !important;
+}
+
+.custom-table .ant-table-thead > tr > th.group-header-departure {
+  background-color: #fff7e6 !important;
+  color: #000 !important;
+  border-bottom: 2px solid #ffd591 !important;
+}
+
+.custom-table .ant-table-thead > tr > th.group-header-platform {
+  background-color: #f9fafb !important;
+  color: #333 !important;
+  border-bottom: 2px solid #e5e7eb !important;
+}
+
+/* Sub-headers - Matching Pale Colors */
+.custom-table .ant-table-thead > tr > th.header-arrival {
+  background-color: #f0f9ff !important;
+  color: #333 !important;
+  border-bottom: 1px solid #e6f7ff !important;
+}
+
+.custom-table .ant-table-thead > tr > th.header-departure {
+  background-color: #fffbe6 !important;
+  color: #333 !important;
+  border-bottom: 1px solid #fff7e6 !important;
+}
+
+.custom-table .ant-table-thead > tr > th.header-platform {
+  background-color: #f9fafb !important;
+  color: #333 !important;
+  border-bottom: 1px solid #f9fafb !important;
+}
+
+/* Compact Cells with Larger Font */
+.custom-table .ant-table-tbody > tr:not(.ant-table-measure-row) > td {
+  padding: 8px 12px !important;
+  font-size: 16px !important;
+}
+
+/* Explicitly hide measure row content */
+.custom-table .ant-table-tbody > tr.ant-table-measure-row > td {
+  padding: 0 !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  border: 0 !important;
+  font-size: 0 !important;
+}
+
+/* Column Backgrounds for Data Distinction */
+.custom-table .ant-table-tbody > tr:not(.ant-table-measure-row):not(.row-selected-custom) > td.header-arrival {
+  background-color: #ffffff !important;
+}
+
+.custom-table .ant-table-tbody > tr:not(.ant-table-measure-row):not(.row-selected-custom) > td.header-departure {
+  background-color: #ffffff !important;
+}
+
+.custom-table .ant-table-tbody > tr:not(.ant-table-measure-row):not(.row-selected-custom) > td.header-platform {
+  background-color: #ffffff !important;
+  color: #333 !important;
+}
+
+/* Hover effect disabled for unselected rows */
+.custom-table .ant-table-tbody > tr:not(.row-selected-custom):hover > td {
+  background-color: #ffffff !important;
+}
+
+/* Selected row style */
+.custom-table .ant-table-tbody > tr.row-selected-custom > td {
+  background-color: #bae7ff !important;
+}
+
+/* Selected row hover */
+.custom-table .ant-table-tbody > tr.row-selected-custom:hover > td {
+  background-color: #bae7ff !important;
+}
+
+/* Add left border to the first cell of selected row */
+.custom-table .ant-table-tbody > tr.row-selected-custom > td:first-child {
+  border-left: 4px solid #1890ff !important;
+}
+
+/* Train Code */
+.train-code {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Row Selection */
+.ant-table-row-selected > td {
+  background-color: #e6f7ff !important;
+}
+
+/* Task Status Pills */
+.task-pill {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  line-height: 20px;
+  color: white;
+  min-width: 40px;
+  text-align: center;
+}
+
+.task-bg-normal {
+  background-color: #52c41a;
+}
+.task-bg-late {
+  background-color: #faad14;
+}
+.task-bg-missing {
+  background-color: #ff4d4f;
+}
+.task-bg-pending {
+  background-color: #d9d9d9;
+}
+
+/* Train Type Tags */
+.train-type-tag {
+  font-size: 12px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin-right: 4px;
+}
+
+/* Train Number Pill */
+.train-no-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Oswald', 'Roboto Condensed', 'Impact', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 1px;
+  min-width: 80px;
+  max-width: 110px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  transform: scale(1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.train-no-pill:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+}
+
+.train-cyan {
+  background: linear-gradient(135deg, #e6fffb 0%, #b5f5ec 100%);
+  color: #006d75;
+  border: 1px solid #5cdbd3;
+}
+
+.train-purple {
+  background: linear-gradient(135deg, #f9f0ff 0%, #efdbff 100%);
+  color: #531dab;
+  border: 1px solid #b37feb;
+}
+
+.train-yellow {
+  background: linear-gradient(135deg, #fffbe6 0%, #ffe58f 100%);
+  color: #d48806;
+  border: 1px solid #ffc53d;
+}
+
+.train-default {
+  background: #f5f5f5;
+  color: #000;
+  border: 1px solid #d9d9d9;
+}
+
+/* Hide Scrollbar but keep functionality */
+.custom-table .ant-table-body::-webkit-scrollbar {
+  display: none;
+}
+
+.custom-table .ant-table-body {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

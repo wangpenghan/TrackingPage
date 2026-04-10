@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "updatedAt": "2026-04-07T08:21:07.044Z",
+  "prototypes": [
+    {
+      "id": "item-prototypes-passenger-template-v2",
+      "kind": "item",
+      "title": "passenger template v2",
+      "itemKey": "prototypes/passenger-template-v2"
+    },
+    {
+      "id": "item-prototypes-lighting-control",
+      "kind": "item",
+      "title": "lighting control",
+      "itemKey": "prototypes/lighting-control"
+    },
+    {
+      "id": "item-prototypes-passenger-template",
+      "kind": "item",
+      "title": "passenger template",
+      "itemKey": "prototypes/passenger-template"
+    },
+    {
+      "id": "item-prototypes-basic-plan",
+      "kind": "item",
+      "title": "basic plan",
+      "itemKey": "prototypes/basic-plan"
+    },
+    {
+      "id": "item-prototypes-dmr-control-system",
+      "kind": "item",
+      "title": "dmr control system",
+      "itemKey": "prototypes/dmr-control-system"
+    },
+    {
+      "id": "item-prototypes-managed-station-monitoring",
+      "kind": "item",
+      "title": "managed station monitoring",
+      "itemKey": "prototypes/managed-station-monitoring"
+    },
+    {
+      "id": "item-prototypes-arrival-departure-monitoring-v2",
+      "kind": "item",
+      "title": "arrival departure monitoring v2",
+      "itemKey": "prototypes/arrival-departure-monitoring-v2"
+    },
+    {
+      "id": "item-prototypes-arrival-departure-monitoring",
+      "kind": "item",
+      "title": "到发盯控",
+      "itemKey": "prototypes/arrival-departure-monitoring"
+    },
+    {
+      "id": "item-prototypes-operation-monitoring",
+      "kind": "item",
+      "title": "作业盯控",
+      "itemKey": "prototypes/operation-monitoring"
+    }
+  ],
+  "components": [
+    {
+      "id": "item-components-ref-line-chart",
+      "kind": "item",
+      "title": "ECharts 折线图",
+      "itemKey": "components/ref-line-chart"
+    },
+    {
+      "id": "item-components-ref-button",
+      "kind": "item",
+      "title": "按钮元素",
+      "itemKey": "components/ref-button"
+    },
+    {
+      "id": "item-components-side-menu",
+      "kind": "item",
+      "title": "侧边菜单",
+      "itemKey": "components/side-menu"
+    }
+  ],
+  "docs": [
+    {
+      "id": "item-docs--------md",
+      "kind": "item",
+      "title": "补充人员名单.md",
+      "itemKey": "docs/补充人员名单.md"
+    },
+    {
+      "id": "item-docs-managed-station-monitoring-dev-guide-md",
+      "kind": "item",
+      "title": "managed station monitoring dev guide.md",
+      "itemKey": "docs/managed-station-monitoring-dev-guide.md"
+    },
+    {
+      "id": "item-docs-managed-station-monitoring-ui-guide-md",
+      "kind": "item",
+      "title": "managed station monitoring ui guide.md",
+      "itemKey": "docs/managed-station-monitoring-ui-guide.md"
+    },
+    {
+      "id": "item-docs-requirements-2026-03-23------------md",
+      "kind": "item",
+      "title": "2026 03 23 代管盯控页面优化需求.md",
+      "itemKey": "docs/requirements/2026-03-23-代管盯控页面优化需求.md"
+    },
+    {
+      "id": "item-docs-requirements-requirement-registry-md",
+      "kind": "item",
+      "title": "requirement registry.md",
+      "itemKey": "docs/requirements/requirement-registry.md"
+    },
+    {
+      "id": "item-docs------md-2",
+      "kind": "item",
+      "title": "功能文档.md",
+      "itemKey": "docs/功能文档.md"
+    },
+    {
+      "id": "item-docs------md",
+      "kind": "item",
+      "title": "代管盯控.md",
+      "itemKey": "docs/代管盯控.md"
+    },
+    {
+      "id": "item-docs-requirements-2026-03-21------------md",
+      "kind": "item",
+      "title": "2026 03 21 到发盯控页面优化需求.md",
+      "itemKey": "docs/requirements/2026-03-21-到发盯控页面优化需求.md"
+    },
+    {
+      "id": "item-docs-arrival-departure-monitoring-design-spec-md",
+      "kind": "item",
+      "title": "arrival departure monitoring design spec.md",
+      "itemKey": "docs/arrival-departure-monitoring-design-spec.md"
+    },
+    {
+      "id": "item-docs-templates-memory-log-template-md",
+      "kind": "item",
+      "title": "memory log template.md",
+      "itemKey": "docs/templates/memory-log-template.md"
+    },
+    {
+      "id": "item-docs-templates-business-flow-template-md",
+      "kind": "item",
+      "title": "business flow template.md",
+      "itemKey": "docs/templates/business-flow-template.md"
+    },
+    {
+      "id": "item-docs-templates-data-model-template-md",
+      "kind": "item",
+      "title": "data model template.md",
+      "itemKey": "docs/templates/data-model-template.md"
+    },
+    {
+      "id": "item-docs-templates-information-architecture-template-md",
+      "kind": "item",
+      "title": "information architecture template.md",
+      "itemKey": "docs/templates/information-architecture-template.md"
+    },
+    {
+      "id": "item-docs-templates-lite-prd-template-md",
+      "kind": "item",
+      "title": "lite prd template.md",
+      "itemKey": "docs/templates/lite-prd-template.md"
+    },
+    {
+      "id": "item-docs-templates-page-map-template-md",
+      "kind": "item",
+      "title": "page map template.md",
+      "itemKey": "docs/templates/page-map-template.md"
+    },
+    {
+      "id": "item-docs-templates-permission-model-template-md",
+      "kind": "item",
+      "title": "permission model template.md",
+      "itemKey": "docs/templates/permission-model-template.md"
+    },
+    {
+      "id": "item-docs-templates-prd-template-md",
+      "kind": "item",
+      "title": "prd template.md",
+      "itemKey": "docs/templates/prd-template.md"
+    },
+    {
+      "id": "item-docs-templates-project-overview-template-md",
+      "kind": "item",
+      "title": "project overview template.md",
+      "itemKey": "docs/templates/project-overview-template.md"
+    },
+    {
+      "id": "item-docs-templates-spec-template-md",
+      "kind": "item",
+      "title": "spec template.md",
+      "itemKey": "docs/templates/spec-template.md"
+    },
+    {
+      "id": "item-docs-templates-state-lifecycle-template-md",
+      "kind": "item",
+      "title": "state lifecycle template.md",
+      "itemKey": "docs/templates/state-lifecycle-template.md"
+    },
+    {
+      "id": "folder-1772009037892-gyrfpg",
+      "kind": "folder",
+      "title": "演示文档",
+      "children": [
+        {
+          "id": "item-docs----------lite-prd----md",
+          "kind": "item",
+          "title": "售后诉求一键提取",
+          "itemKey": "docs/售后诉求一键提取.md"
+        },
+        {
+          "id": "item-docs-------------md",
+          "kind": "item",
+          "title": "评审工作台需求文档",
+          "itemKey": "docs/评审工作台需求文档.md"
+        }
+      ]
+    }
+  ],
+  "canvas": [],
+  "themes": [
+    "antd-new",
+    "trae-design",
+    "firecrawl"
+  ],
+  "data": [
+    "orders"
+  ],
+  "templates": [
+    "memory-log-template.md",
+    "business-flow-template.md",
+    "data-model-template.md",
+    "information-architecture-template.md",
+    "page-map-template.md",
+    "permission-model-template.md",
+    "project-overview-template.md",
+    "state-lifecycle-template.md",
+    "lite-prd-template.md",
+    "prd-template.md",
+    "spec-template.md"
+  ]
+}

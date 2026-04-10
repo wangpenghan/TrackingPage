@@ -1,0 +1,744 @@
+/**
+ * 上水吸污配置抽屉 - 样式文件
+ * 配色方案：macOS System Colors
+ */
+
+/* ========== CSS 变量定义 - macOS System Colors ========== */
+.water-sewage-drawer {
+  /* macOS 深色模式 (默认) */
+  --macos-window-bg: #1e1e1e;
+  --macos-control-bg: #2d2d2d;
+  --macos-elevated-bg: #3d3d3d;
+  
+  --macos-label: #ffffff;
+  --macos-secondary-label: #98989d;
+  --macos-tertiary-label: #6c6c70;
+  --macos-quaternary-label: #48484a;
+  
+  --macos-accent: #0a84ff;
+  --macos-accent-hover: #409cff;
+  --macos-accent-pressed: #0060df;
+  
+  --macos-separator: #38383a;
+  --macos-grid: #48484a;
+  
+  --macos-red: #ff453a;
+  --macos-orange: #ff9f0a;
+  --macos-yellow: #ffd60a;
+  --macos-green: #30d158;
+  --macos-teal: #40c8e0;
+  --macos-blue: #0a84ff;
+  --macos-indigo: #5e5ce6;
+  --macos-purple: #bf5af2;
+  --macos-pink: #ff375f;
+  --macos-brown: #ac8e68;
+  --macos-gray: #8e8e93;
+  
+  --macos-shadow: rgba(0, 0, 0, 0.4);
+  --macos-shadow-sm: rgba(0, 0, 0, 0.2);
+  
+  --drawer-width: 720px;
+  --header-height: 72px;
+  --footer-height: 60px;
+}
+
+/* macOS 浅色模式 */
+.water-sewage-drawer[data-theme="light"] {
+  --macos-window-bg: #f6f6f6;
+  --macos-control-bg: #ffffff;
+  --macos-elevated-bg: #e8e8e8;
+  
+  --macos-label: #000000;
+  --macos-secondary-label: #666666;
+  --macos-tertiary-label: #999999;
+  --macos-quaternary-label: #bbbbbb;
+  
+  --macos-accent: #007aff;
+  --macos-accent-hover: #3395ff;
+  --macos-accent-pressed: #0056cc;
+  
+  --macos-separator: #e5e5e5;
+  --macos-grid: #d1d1d6;
+  
+  --macos-shadow: rgba(0, 0, 0, 0.1);
+  --macos-shadow-sm: rgba(0, 0, 0, 0.05);
+}
+
+/* ========== 遮罩层 ========== */
+.water-sewage-drawer-overlay {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(2px);
+  z-index: 999;
+}
+
+/* ========== 抽屉面板容器 ========== */
+.water-sewage-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--drawer-width);
+  height: 100vh;
+  background: var(--macos-window-bg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  box-shadow: -20px 0 40px rgba(0, 0, 0, 0.35);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+/* ========== 头部区域 ========== */
+.ws-drawer-header {
+  height: var(--header-height);
+  background: var(--macos-window-bg);
+  border-bottom: 1px solid var(--macos-separator);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.ws-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ws-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--macos-label);
+  letter-spacing: -0.01em;
+}
+
+.ws-train-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ws-train-no {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--macos-label);
+  letter-spacing: -0.01em;
+}
+
+.ws-train-model {
+  font-size: 12px;
+  color: var(--macos-secondary-label);
+  font-weight: 400;
+}
+
+.ws-formation-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--macos-elevated-bg);
+  color: var(--macos-secondary-label);
+  border: 1px solid var(--macos-separator);
+}
+
+.ws-track-tag {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--macos-accent);
+  color: #ffffff;
+}
+
+.ws-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.ws-close-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--macos-secondary-label);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ws-close-btn:hover {
+  color: var(--macos-label);
+  background: var(--macos-elevated-bg);
+}
+
+/* ========== 主体内容区 ========== */
+.ws-drawer-body {
+  flex: 1;
+  display: flex;
+  padding: 16px;
+  gap: 16px;
+  overflow: hidden;
+  position: relative;
+  z-index: 5;
+}
+
+/* 左侧：编组可视化 */
+.ws-formation-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ws-formation-visualization {
+  flex: 1;
+  background: var(--macos-control-bg);
+  border-radius: 10px;
+  border: 1px solid var(--macos-separator);
+  padding: 20px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* 车厢包装器 - 垂直排列，确保16编组完整显示 */
+.ws-carriages-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 40px;
+}
+
+.ws-carriages-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 0;
+}
+
+/* 车厢节点 - macOS 风格，优化16编组显示 */
+.ws-carriage-node {
+  width: 88px;
+  height: 34px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  background: var(--macos-elevated-bg);
+  border: 1px solid var(--macos-separator);
+  color: var(--macos-label);
+  box-shadow: 0 1px 2px var(--macos-shadow-sm);
+  flex-shrink: 0;
+}
+
+.ws-carriage-node:hover {
+  background: var(--macos-grid);
+  transform: scale(1.02);
+}
+
+.ws-carriage-node:active {
+  transform: scale(0.98);
+}
+
+/* 选中状态 - 玻璃通透质感 */
+.ws-carriage-node.selected {
+  background: rgba(10, 132, 255, 0.15);
+  border-color: rgba(10, 132, 255, 0.6);
+  box-shadow: 
+    0 0 0 1px rgba(10, 132, 255, 0.3),
+    0 4px 20px rgba(10, 132, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.ws-carriage-node.selected:hover {
+  background: rgba(10, 132, 255, 0.22);
+  border-color: rgba(10, 132, 255, 0.8);
+  box-shadow: 
+    0 0 0 1px rgba(10, 132, 255, 0.4),
+    0 6px 24px rgba(10, 132, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* 浅色模式下的选中状态 */
+.water-sewage-drawer[data-theme="light"] .ws-carriage-node.selected {
+  background: rgba(0, 122, 255, 0.12);
+  border-color: rgba(0, 122, 255, 0.5);
+  box-shadow: 
+    0 0 0 1px rgba(0, 122, 255, 0.25),
+    0 4px 16px rgba(0, 122, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+.water-sewage-drawer[data-theme="light"] .ws-carriage-node.selected:hover {
+  background: rgba(0, 122, 255, 0.18);
+  border-color: rgba(0, 122, 255, 0.7);
+  box-shadow: 
+    0 0 0 1px rgba(0, 122, 255, 0.35),
+    0 6px 20px rgba(0, 122, 255, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.ws-carriage-number {
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+}
+
+/* 单个车厢包装 - 三列布局 */
+.ws-carriage-wrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* 服务标记列 */
+.ws-service-column {
+  width: 24px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* 上水标记列 - 左侧 */
+.ws-service-column.water-column {
+  order: -1;
+}
+
+/* 吸污标记列 - 右侧 */
+.ws-service-column.sewage-column {
+  order: 1;
+}
+
+/* 上水标记 */
+.ws-service-marker.water {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  background: linear-gradient(135deg, var(--macos-teal), #2aa8c0);
+  color: #ffffff;
+  box-shadow: 0 2px 4px var(--macos-shadow);
+  transition: transform 0.15s ease;
+}
+
+.ws-service-marker.water:hover {
+  transform: scale(1.1);
+}
+
+/* 吸污标记 */
+.ws-service-marker.sewage {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  background: linear-gradient(135deg, var(--macos-orange), #d4820a);
+  color: #ffffff;
+  box-shadow: 0 2px 4px var(--macos-shadow);
+  transition: transform 0.15s ease;
+}
+
+.ws-service-marker.sewage:hover {
+  transform: scale(1.1);
+}
+
+/* 图例 */
+.ws-legend {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--macos-elevated-bg);
+  border-radius: 8px;
+  border: 1px solid var(--macos-separator);
+  box-shadow: 0 2px 8px var(--macos-shadow-sm);
+}
+
+.ws-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--macos-secondary-label);
+  font-weight: 400;
+}
+
+.ws-legend-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+.ws-legend-icon.water {
+  background: linear-gradient(135deg, var(--macos-teal), #2aa8c0);
+  color: #ffffff;
+}
+
+.ws-legend-icon.sewage {
+  background: linear-gradient(135deg, var(--macos-orange), #d4820a);
+  color: #ffffff;
+}
+
+
+
+/* ========== 右侧：配置面板 ========== */
+.ws-config-section {
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* 服务类型切换 */
+.ws-service-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ws-service-tab {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--macos-control-bg);
+  border: 1px solid var(--macos-separator);
+  border-radius: 8px;
+  color: var(--macos-label);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px var(--macos-shadow-sm);
+}
+
+.ws-service-tab:hover {
+  background: var(--macos-elevated-bg);
+  border-color: var(--macos-grid);
+}
+
+.ws-service-tab.active {
+  background: rgba(10, 132, 255, 0.12);
+  border-color: var(--macos-accent);
+  color: var(--macos-accent);
+}
+
+.ws-count-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  background: var(--macos-accent);
+  color: #ffffff;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 配置卡片 */
+.ws-config-card {
+  background: var(--macos-control-bg);
+  border: 1px solid var(--macos-separator);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 1px 2px var(--macos-shadow-sm);
+}
+
+.ws-config-title {
+  font-size: 11px;
+  color: var(--macos-secondary-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ws-config-title::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  background: var(--macos-accent);
+  border-radius: 2px;
+  margin-right: 8px;
+}
+
+.ws-config-count {
+  color: var(--macos-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* 配置类型按钮 */
+.ws-config-types {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.ws-config-type-btn {
+  padding: 8px 4px;
+  background: var(--macos-elevated-bg);
+  border: 1px solid var(--macos-separator);
+  border-radius: 6px;
+  color: var(--macos-label);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ws-config-type-btn:hover {
+  background: var(--macos-grid);
+  border-color: var(--macos-accent);
+}
+
+.ws-config-type-btn.active {
+  background: var(--macos-accent);
+  border-color: var(--macos-accent);
+  color: #ffffff;
+}
+
+/* 已选车厢 */
+.ws-selected-carriages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 100px;
+  overflow-y: auto;
+}
+
+.ws-carriage-tag {
+  padding: 4px 10px;
+  background: rgba(10, 132, 255, 0.12);
+  border: 1px solid rgba(10, 132, 255, 0.25);
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--macos-accent);
+}
+
+.ws-empty-text {
+  font-size: 12px;
+  color: var(--macos-tertiary-label);
+  font-style: italic;
+}
+
+/* 提示卡片 */
+.ws-hint-card {
+  background: var(--macos-control-bg);
+  border: 1px solid var(--macos-separator);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 1px 2px var(--macos-shadow-sm);
+}
+
+.ws-hint-title {
+  font-size: 11px;
+  color: var(--macos-secondary-label);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 10px;
+}
+
+.ws-hint-list {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 11px;
+  color: var(--macos-secondary-label);
+  line-height: 1.7;
+}
+
+.ws-hint-list li {
+  margin-bottom: 4px;
+}
+
+/* ========== 底部操作栏 ========== */
+.ws-drawer-footer {
+  height: var(--footer-height);
+  background: var(--macos-window-bg);
+  border-top: 1px solid var(--macos-separator);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  position: relative;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.ws-footer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ws-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.ws-footer-btn.reset {
+  background: transparent;
+  color: var(--macos-secondary-label);
+  border: 1px solid transparent;
+}
+
+.ws-footer-btn.reset:hover {
+  color: var(--macos-label);
+  background: var(--macos-elevated-bg);
+}
+
+.ws-footer-btn.cancel {
+  background: var(--macos-elevated-bg);
+  color: var(--macos-label);
+  border: 1px solid var(--macos-separator);
+}
+
+.ws-footer-btn.cancel:hover {
+  background: var(--macos-grid);
+  border-color: var(--macos-grid);
+}
+
+.ws-footer-btn.confirm {
+  background: var(--macos-accent);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(10, 132, 255, 0.3);
+}
+
+.ws-footer-btn.confirm:hover {
+  background: var(--macos-accent-hover);
+  box-shadow: 0 2px 6px rgba(10, 132, 255, 0.4);
+}
+
+.ws-footer-btn.confirm:active {
+  background: var(--macos-accent-pressed);
+  transform: scale(0.98);
+}
+
+/* ========== 动画效果 ========== */
+@keyframes ws-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ws-carriage-wrapper {
+  animation: ws-slide-in 0.25s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+}
+
+.ws-carriage-wrapper:nth-child(1) { animation-delay: 0.02s; }
+.ws-carriage-wrapper:nth-child(2) { animation-delay: 0.04s; }
+.ws-carriage-wrapper:nth-child(3) { animation-delay: 0.06s; }
+.ws-carriage-wrapper:nth-child(4) { animation-delay: 0.08s; }
+.ws-carriage-wrapper:nth-child(5) { animation-delay: 0.10s; }
+.ws-carriage-wrapper:nth-child(6) { animation-delay: 0.12s; }
+.ws-carriage-wrapper:nth-child(7) { animation-delay: 0.14s; }
+.ws-carriage-wrapper:nth-child(8) { animation-delay: 0.16s; }
+.ws-carriage-wrapper:nth-child(9) { animation-delay: 0.18s; }
+.ws-carriage-wrapper:nth-child(10) { animation-delay: 0.20s; }
+.ws-carriage-wrapper:nth-child(11) { animation-delay: 0.22s; }
+.ws-carriage-wrapper:nth-child(12) { animation-delay: 0.24s; }
+.ws-carriage-wrapper:nth-child(13) { animation-delay: 0.26s; }
+.ws-carriage-wrapper:nth-child(14) { animation-delay: 0.28s; }
+.ws-carriage-wrapper:nth-child(15) { animation-delay: 0.30s; }
+.ws-carriage-wrapper:nth-child(16) { animation-delay: 0.32s; }
+
+/* ========== 滚动条美化 - macOS 风格 ========== */
+.ws-selected-carriages::-webkit-scrollbar,
+.ws-carriages-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ws-selected-carriages::-webkit-scrollbar-track,
+.ws-carriages-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ws-selected-carriages::-webkit-scrollbar-thumb,
+.ws-carriages-wrapper::-webkit-scrollbar-thumb {
+  background: var(--macos-quaternary-label);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.ws-selected-carriages::-webkit-scrollbar-thumb:hover,
+.ws-carriages-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--macos-tertiary-label);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ========== 响应式适配 ========== */
+@media (max-width: 768px) {
+  .water-sewage-drawer {
+    --drawer-width: 100vw;
+  }
+  
+  .ws-carriage-node {
+    width: 76px;
+    height: 36px;
+  }
+  
+  .ws-carriage-number {
+    font-size: 13px;
+  }
+}

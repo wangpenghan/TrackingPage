@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-03-28T08:18:36.760Z",
+  "items": {
+    "components/ref-button": {
+      "group": "components",
+      "name": "ref-button",
+      "js": "src/components/ref-button/index.tsx",
+      "html": "src/components/ref-button/index.html"
+    },
+    "components/ref-line-chart": {
+      "group": "components",
+      "name": "ref-line-chart",
+      "js": "src/components/ref-line-chart/index.tsx",
+      "html": "src/components/ref-line-chart/index.html"
+    },
+    "components/side-menu": {
+      "group": "components",
+      "name": "side-menu",
+      "js": "src/components/side-menu/index.tsx",
+      "html": "src/components/side-menu/index.html"
+    },
+    "prototypes/arrival-departure-monitoring": {
+      "group": "prototypes",
+      "name": "arrival-departure-monitoring",
+      "js": "src/prototypes/arrival-departure-monitoring/index.tsx",
+      "html": "src/prototypes/arrival-departure-monitoring/index.html"
+    },
+    "prototypes/arrival-departure-monitoring-v2": {
+      "group": "prototypes",
+      "name": "arrival-departure-monitoring-v2",
+      "js": "src/prototypes/arrival-departure-monitoring-v2/index.tsx",
+      "html": "src/prototypes/arrival-departure-monitoring-v2/index.html"
+    },
+    "prototypes/dmr-control-system": {
+      "group": "prototypes",
+      "name": "dmr-control-system",
+      "js": "src/prototypes/dmr-control-system/index.tsx",
+      "html": "src/prototypes/dmr-control-system/index.html"
+    },
+    "prototypes/managed-station-monitoring": {
+      "group": "prototypes",
+      "name": "managed-station-monitoring",
+      "js": "src/prototypes/managed-station-monitoring/index.tsx",
+      "html": "src/prototypes/managed-station-monitoring/index.html"
+    },
+    "prototypes/operation-monitoring": {
+      "group": "prototypes",
+      "name": "operation-monitoring",
+      "js": "src/prototypes/operation-monitoring/index.tsx",
+      "html": "src/prototypes/operation-monitoring/index.html"
+    },
+    "themes/antd-new": {
+      "group": "themes",
+      "name": "antd-new",
+      "js": "src/themes/antd-new/index.tsx",
+      "html": "src/themes/antd-new/index.html"
+    },
+    "themes/firecrawl": {
+      "group": "themes",
+      "name": "firecrawl",
+      "js": "src/themes/firecrawl/index.tsx",
+      "html": "src/themes/firecrawl/index.html"
+    },
+    "themes/trae-design": {
+      "group": "themes",
+      "name": "trae-design",
+      "js": "src/themes/trae-design/index.tsx",
+      "html": "src/themes/trae-design/index.html"
+    }
+  },
+  "js": {
+    "components/ref-button": "src/components/ref-button/index.tsx",
+    "components/ref-line-chart": "src/components/ref-line-chart/index.tsx",
+    "components/side-menu": "src/components/side-menu/index.tsx",
+    "prototypes/arrival-departure-monitoring": "src/prototypes/arrival-departure-monitoring/index.tsx",
+    "prototypes/arrival-departure-monitoring-v2": "src/prototypes/arrival-departure-monitoring-v2/index.tsx",
+    "prototypes/dmr-control-system": "src/prototypes/dmr-control-system/index.tsx",
+    "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.tsx",
+    "prototypes/operation-monitoring": "src/prototypes/operation-monitoring/index.tsx",
+    "themes/antd-new": "src/themes/antd-new/index.tsx",
+    "themes/firecrawl": "src/themes/firecrawl/index.tsx",
+    "themes/trae-design": "src/themes/trae-design/index.tsx"
+  },
+  "html": {
+    "components/ref-button": "src/components/ref-button/index.html",
+    "components/ref-line-chart": "src/components/ref-line-chart/index.html",
+    "components/side-menu": "src/components/side-menu/index.html",
+    "prototypes/arrival-departure-monitoring": "src/prototypes/arrival-departure-monitoring/index.html",
+    "prototypes/arrival-departure-monitoring-v2": "src/prototypes/arrival-departure-monitoring-v2/index.html",
+    "prototypes/dmr-control-system": "src/prototypes/dmr-control-system/index.html",
+    "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.html",
+    "prototypes/operation-monitoring": "src/prototypes/operation-monitoring/index.html",
+    "themes/antd-new": "src/themes/antd-new/index.html",
+    "themes/firecrawl": "src/themes/firecrawl/index.html",
+    "themes/trae-design": "src/themes/trae-design/index.html"
+  }
+}

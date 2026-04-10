@@ -1,0 +1,1096 @@
+/**
+ * @name 代管盯控 v8
+ *
+ * 参考 glass-gantt 风格的代管列车监控页面
+ * 高铁车头形状卡片 + 甘特图时间轴布局
+ */
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { Button, Tag, Tooltip, Checkbox, Popover, Slider, Modal } from 'antd';
+import {
+  SettingOutlined,
+  MoonOutlined,
+  SunOutlined,
+  ClockCircleOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
+  AimOutlined,
+  SearchOutlined,
+  FilterOutlined,
+  ReloadOutlined
+} from '@ant-design/icons';
+import {
+  TrainFront,
+  ArrowRight,
+  Droplets,
+  Trash2,
+  Ticket,
+  DoorOpen,
+  Timer
+} from 'lucide-react';
+import { TrainData, Connection, TrainTask } from './types';
+import {
+  timeToMinutes,
+  calculateTrainPosition,
+  sortTrainsByArrival,
+  getStatusColor,
+  getTrainTypeColor,
+  calculateStopBarWidth,
+  calculateOptimalTimeRange,
+  checkTrainDensity,
+  calculateConnections
+} from './utils';
+import './style.css';
+
+// ============ 类型定义 ============
+type TaskType = '检票' | '站台' | '出站' | '上水' | '吸污';
+type TaskStatus = 'pending' | 'running' | 'completed' | 'error';
+
+interface StationRowConfig {
+  id: string;
+  name: string;
+  color: string;
+  stationName?: string;
+}
+
+// ============ 站点行配置 ============
+const stationRows: StationRowConfig[] = [
+  {
+    id: 'yuxia',
+    name: '渝厦高铁场',
+    color: '#3b82f6',
+    stationName: '重庆东'
+  },
+  {
+    id: 'donghuan',
+    name: '东环城际场',
+    color: '#ef4444',
+    stationName: '重庆东'
+  },
+  {
+    id: 'banan',
+    name: '巴南',
+    color: '#10b981'
+  },
+  {
+    id: 'nanchuanbei',
+    name: '南川北',
+    color: '#f59e0b'
+  },
+  {
+    id: 'shuijiangxi',
+    name: '水江西',
+    color: '#8b5cf6'
+  }
+];
+
+// ============ 地标颜色规则 ============
+const getPlatformColor = (count: 8 | 16, sequence: '正' | '倒', line: '上' | '下'): string => {
+  if (count === 16) {
+    return sequence === '正' ? '#eab308' : '#22c55e';
+  } else {
+    if (sequence === '正') {
+      return line === '上' ? '#3b82f6' : '#eab308';
+    } else {
+      return line === '上' ? '#22c55e' : '#7c3aed';
+    }
+  }
+};
+
+// ============ 作业状态颜色 ============
+const STATUS_BUTTON_COLORS: Record<TaskStatus, { bg: string; text: string }> = {
+  pending: { bg: '#F5F5F5', text: '#1D1D1F' },
+  running: { bg: '#A5D6A7', text: '#1D1D1F' },
+  completed: { bg: '#90CAF9', text: '#1D1D1F' },
+  error: { bg: '#EF9A9A', text: '#1D1D1F' },
+};
+
+// ============ 生成模拟数据 ============
+const generateMockData = (): Map<string, TrainData[]> => {
+  const trainsByStation = new Map<string, TrainData[]>();
+  const taskTypes: TaskType[] = ['检票', '站台', '出站', '上水', '吸污'];
+  
+  const routes = [
+    ['重庆东', '成都东'], ['重庆东', '贵阳北'], ['成都东', '重庆东'],
+    ['巴南', '南川北'], ['南川北', '水江西'], ['水江西', '巴南'],
+    ['重庆东', '武汉'], ['武汉', '重庆东']
+  ];
+
+  stationRows.forEach((station, stationIdx) => {
+    const trains: TrainData[] = [];
+    const trainCount = 3 + Math.floor(Math.random() * 3);
+    
+    for (let i = 0; i < trainCount; i++) {
+      const trainType = ['G', 'D', 'C'][Math.floor(Math.random() * 3)] as 'G' | 'D' | 'C';
+      const [from, to] = routes[Math.floor(Math.random() * routes.length)];
+      
+      const baseHour = 8 + i * 2;
+      const baseMinute = Math.floor(Math.random() * 50);
+      const arrivalTime = `${String(baseHour).padStart(2, '0')}:${String(baseMinute).padStart(2, '0')}`;
+      const stopMinutes = 8 + Math.floor(Math.random() * 10);
+      const departureMinute = (baseMinute + stopMinutes) % 60;
+      const departureHour = baseHour + Math.floor((baseMinute + stopMinutes) / 60);
+      const departureTime = `${String(departureHour).padStart(2, '0')}:${String(departureMinute).padStart(2, '0')}`;
+      
+      const taskCount = 3 + Math.floor(Math.random() * 3);
+      const selectedTasks = [...taskTypes].slice(0, taskCount);
+      const tasks: TrainTask[] = selectedTasks.map((type, idx) => {
+        const rand = Math.random();
+        let status: TaskStatus;
+        if (rand < 0.7) status = 'completed';
+        else if (rand < 0.85) status = 'running';
+        else if (rand < 0.95) status = 'pending';
+        else status = 'error';
+        
+        return {
+          id: `task-${stationIdx}-${i}-${idx}`,
+          type,
+          status,
+          progress: status === 'running' ? Math.floor(Math.random() * 60) + 20 : undefined
+        };
+      });
+      
+      const formationCount: 8 | 16 = Math.random() > 0.5 ? 16 : 8;
+      const sequenceType: '正' | '倒' = Math.random() > 0.5 ? '正' : '倒';
+      const lineDirection: '上' | '下' = Math.random() > 0.5 ? '上' : '下';
+      const stopTypes: ('origin' | 'transit' | 'destination')[] = ['origin', 'transit', 'destination'];
+      const serviceType = stopTypes[Math.floor(Math.random() * 3)];
+      
+      trains.push({
+        id: `train-${stationIdx}-${i}`,
+        trainNo: `${trainType}${100 + Math.floor(Math.random() * 900)}`,
+        trainType,
+        arrivalTime,
+        departureTime,
+        track: String(Math.floor(Math.random() * 8) + 1),
+        delayMinutes: Math.random() > 0.9 ? Math.floor(Math.random() * 10) : 0,
+        stopMinutes,
+        from,
+        to,
+        tasks,
+        formationCount,
+        sequenceType,
+        lineDirection,
+        serviceType,
+        direction: lineDirection === '上' ? 'up' : 'down',
+        panelId: station.id,
+        workStatus: tasks[0]?.status === 'completed' ? 'completed' : tasks[0]?.status === 'running' ? 'executing' : tasks[0]?.status === 'error' ? 'abnormal' : 'notExecuted',
+        runningSection: { from, to },
+        passengerFlow: {
+          boarding: 200 + Math.floor(Math.random() * 300),
+          alighting: 150 + Math.floor(Math.random() * 200),
+          transfer: 50 + Math.floor(Math.random() * 100)
+        },
+        trainMaster: `张${stationIdx}${i}`,
+        tags: {
+          water: tasks.some(t => t.type === '上水'),
+          sewage: tasks.some(t => t.type === '吸污'),
+          parcel: Math.random() > 0.7,
+          meal: Math.random() > 0.8,
+          overnight: Math.random() > 0.9,
+          turnaround: Math.random() > 0.85,
+          overcrowd: Math.random() > 0.9,
+          special: Math.random() > 0.95,
+          checkInReady: Math.random() > 0.5
+        },
+        status: 'normal'
+      });
+    }
+    
+    trains.sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
+    trainsByStation.set(station.id, trains);
+  });
+  
+  return trainsByStation;
+};
+
+// ============ 车次卡片组件 ============
+const TrainCardComponent = ({ 
+  train, 
+  left, 
+  width, 
+  top, 
+  isSelected,
+  onSelect,
+  isDark
+}: { 
+  train: TrainData; 
+  left: number; 
+  width: number; 
+  top: number;
+  isSelected: boolean;
+  onSelect: () => void;
+  isDark: boolean;
+}) => {
+  const isUpDirection = train.lineDirection === '上';
+  
+  // 获取作业状态颜色
+  const getTaskButtonColor = (label: string): string => {
+    const task = train.tasks?.find(t => {
+      if (label === '水污') return t.type === '上水' || t.type === '吸污';
+      return t.type === label;
+    });
+    
+    if (!task || task.status === 'pending') return '#F2F2F2'; // 灰色 - 未开始
+    if (task.status === 'running') {
+      if (label === '检票' || label === '水污') return '#CAF982'; // 浅绿色 - 进行中
+      return '#81D3F8'; // 浅蓝色 - 进行中
+    }
+    if (task.status === 'completed') {
+      if (label === '检票' || label === '水污') return '#CAF982'; // 浅绿色 - 已完成
+      if (label === '站台') return '#81D3F8'; // 浅蓝色 - 已完成
+      return '#F2F2F2'; // 灰色
+    }
+    return '#EF9A9A'; // 红色 - 异常
+  };
+
+  const taskLabels = ['检票', '站台', '出站', '水污'];
+
+  return (
+    <div
+      className="train-card-wrapper"
+      onClick={onSelect}
+      style={{ 
+        position: 'absolute',
+        left: `${left}px`, 
+        top: `${top}px`,
+        width: '280px', 
+        height: '125px',
+        zIndex: isSelected ? 100 : 1,
+        opacity: 1,
+        transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        cursor: 'pointer'
+      }}
+    >
+      {/* 卡片主体 */}
+      <div
+        className="train-card"
+        style={{
+          width: '280px',
+          height: '125px',
+          backgroundColor: '#FFFFFF',
+          boxShadow: isSelected
+            ? '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 2px #F59A23'
+            : '0 2px 8px rgba(0, 0, 0, 0.08)',
+          border: '1px solid #E0E0E0',
+          borderRadius: '16px',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        {/* 顶部区域 - 车次信息 */}
+        <div 
+          className="card-header"
+          style={{ 
+            height: '40px',
+            padding: '8px 16px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+        >
+          {/* 左侧：车次标签 + 运行区间 */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {/* 车次号 - 橙色标签 */}
+            <div
+              style={{ 
+                backgroundColor: '#F59A23',
+                padding: '6px 18px',
+                borderRadius: '20px',
+                display: 'inline-block',
+                width: 'fit-content'
+              }}
+            >
+              <span style={{ color: '#000000', fontWeight: 'bold', fontSize: '20px', letterSpacing: '0.5px' }}>{train.trainNo}</span>
+            </div>
+            {/* 运行区间 */}
+            <span style={{ color: '#666', fontSize: '13px', marginLeft: '6px', fontWeight: 500 }}>
+              {train.runningSection?.from} → {train.runningSection?.to}
+            </span>
+          </div>
+
+          {/* 右侧：地标指示器 - 蓝色圆点 + 文字 */}
+          <div 
+            style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              backgroundColor: '#F0F8FF',
+              padding: '6px 12px',
+              borderRadius: '18px',
+              border: '1px solid #E3F2FD'
+            }}
+          >
+            {/* 蓝色圆点 */}
+            <div 
+              style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: '#2196F3',
+                flexShrink: 0
+              }}
+            />
+            <span style={{ color: '#333', fontSize: '14px', fontWeight: 600, letterSpacing: '0.3px' }}>
+              {train.formationCount}{train.sequenceType}{train.lineDirection === '上' ? '北' : '南'}
+            </span>
+          </div>
+        </div>
+
+        {/* 中部数据区 - 到点、发点、股道 */}
+        <div 
+          className="card-data"
+          style={{ 
+            height: '40px',
+            backgroundColor: '#FFFFFF',
+            padding: '0 16px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center'
+          }}
+        >
+          {/* 到点 */}
+          <div 
+            style={{ 
+              flex: 1,
+              height: '36px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#F5F5F5',
+              border: '1px solid #E0E0E0'
+            }}
+          >
+            <span style={{ color: '#333', fontSize: '18px', fontFamily: 'monospace', fontWeight: 600 }}>
+              {train.arrivalTime}
+            </span>
+            {train.delayMinutes > 0 && (
+              <span style={{ color: '#ef4444', fontSize: '12px', marginLeft: '6px' }}>+{train.delayMinutes}</span>
+            )}
+          </div>
+          
+          {/* 发点 */}
+          <div 
+            style={{ 
+              flex: 1,
+              height: '36px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#F5F5F5',
+              border: '1px solid #E0E0E0'
+            }}
+          >
+            <span style={{ color: '#333', fontSize: '18px', fontFamily: 'monospace', fontWeight: 600 }}>
+              {train.departureTime}
+            </span>
+          </div>
+          
+          {/* 股道 */}
+          <div 
+            style={{ 
+              width: '60px',
+              height: '36px',
+              borderRadius: '12px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: '#FFEB3B',
+              border: '1px solid #FFC107'
+            }}
+          >
+            <span style={{ color: '#000000', fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.5px' }}>{train.track}</span>
+          </div>
+        </div>
+
+        {/* 底部作业按钮区 */}
+        <div 
+          className="card-actions"
+          style={{ 
+            backgroundColor: '#FFFFFF',
+            padding: '0 16px 10px 16px',
+            display: 'flex',
+            gap: '8px'
+          }}
+        >
+          {taskLabels.map((label) => {
+            const bgColor = getTaskButtonColor(label);
+            const isLightGreen = bgColor === '#CAF982';
+            const isLightBlue = bgColor === '#81D3F8';
+            
+            return (
+              <div
+                key={label}
+                style={{
+                  flex: 1,
+                  height: '28px',
+                  borderRadius: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  backgroundColor: bgColor,
+                  border: isLightGreen || isLightBlue ? 'none' : '1px solid #D0D0D0',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <span style={{ 
+                  fontSize: '14px', 
+                  fontWeight: 600,
+                  color: '#333'
+                }}>
+                  {label}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 选中状态的角标 */}
+      {isSelected && (
+        <div 
+          style={{
+            position: 'absolute',
+            top: '-8px',
+            right: '-8px',
+            width: '24px',
+            height: '24px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #F59A23 0%, #FFB74D 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(245, 154, 35, 0.4)'
+          }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============ 主页面组件 ============
+const Component: React.FC = () => {
+  const [theme, setTheme] = useState<'dark' | 'light'>('light');
+  const [trainsByStation] = useState<Map<string, TrainData[]>>(() => generateMockData());
+  const [selectedTrainId, setSelectedTrainId] = useState<string | null>(null);
+  const [configVisible, setConfigVisible] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [scrollLeft, setScrollLeft] = useState(0);
+  const [pixelsPerMinute, setPixelsPerMinute] = useState(5);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [rowHeights, setRowHeights] = useState<Record<string, number>>({});
+  
+  // 鼠标拖拽状态
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragStartScroll, setDragStartScroll] = useState(0);
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const startHour = 6;
+  const endHour = 24;
+  const leftPanelWidth = 150;
+  const totalWidth = (endHour - startHour) * 60 * pixelsPerMinute;
+  
+  const isDark = theme === 'dark';
+
+  useEffect(() => {
+    document.body.classList.toggle('dark', isDark);
+  }, [isDark]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const heights: Record<string, number> = {};
+    stationRows.forEach(station => {
+      const trains = trainsByStation.get(station.id) || [];
+      heights[station.id] = calculateRowHeight(trains);
+    });
+    setRowHeights(heights);
+  }, [trainsByStation]);
+
+  const timeToPixels = (time: string) => {
+    const [h, m] = time.split(':').map(Number);
+    return (h * 60 + m - startHour * 60) * pixelsPerMinute;
+  };
+
+  const durationToPixels = (arrival: string, departure: string) => {
+    const [arrH, arrM] = arrival.split(':').map(Number);
+    const [depH, depM] = departure.split(':').map(Number);
+    return ((depH * 60 + depM) - (arrH * 60 + arrM)) * pixelsPerMinute;
+  };
+
+  const calculateRowHeight = (trains: TrainData[]): number => {
+    const sortedTrains = [...trains].sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
+    const rowEndTimes: number[] = [];
+    
+    sortedTrains.forEach(train => {
+      const [arrH, arrM] = train.arrivalTime.split(':').map(Number);
+      const [depH, depM] = train.departureTime.split(':').map(Number);
+      const start = arrH * 60 + arrM;
+      const end = depH * 60 + depM;
+      
+      let placedRow = -1;
+      for (let i = 0; i < rowEndTimes.length; i++) {
+        if (rowEndTimes[i] + 5 <= start) {
+          placedRow = i;
+          break;
+        }
+      }
+      
+      if (placedRow === -1) {
+        rowEndTimes.push(end);
+      } else {
+        rowEndTimes[placedRow] = end;
+      }
+    });
+    
+    return Math.max(rowEndTimes.length, 1) * 150;
+  };
+
+  const getTrainPositions = (trains: TrainData[]) => {
+    const sortedTrains = [...trains].sort((a, b) => a.arrivalTime.localeCompare(b.arrivalTime));
+    const rows: { train: TrainData; row: number }[] = [];
+    const rowEndTimes: number[] = [];
+    
+    sortedTrains.forEach(train => {
+      const [arrH, arrM] = train.arrivalTime.split(':').map(Number);
+      const [depH, depM] = train.departureTime.split(':').map(Number);
+      const start = arrH * 60 + arrM;
+      const end = depH * 60 + depM;
+      
+      let placedRow = -1;
+      for (let i = 0; i < rowEndTimes.length; i++) {
+        if (rowEndTimes[i] + 5 <= start) {
+          placedRow = i;
+          break;
+        }
+      }
+      
+      if (placedRow === -1) {
+        placedRow = rowEndTimes.length;
+        rowEndTimes.push(end);
+      } else {
+        rowEndTimes[placedRow] = end;
+      }
+      
+      rows.push({ train, row: placedRow });
+    });
+    
+    return rows;
+  };
+
+  // 鼠标滚轮处理
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    if (e.deltaY !== 0) {
+      setScrollLeft(prev => Math.max(0, Math.min(totalWidth - 800, prev + e.deltaY * 0.5)));
+    }
+  }, [totalWidth]);
+
+  // 鼠标拖拽开始
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button, a, .train-card')) return;
+    
+    setIsDragging(true);
+    setDragStartX(e.clientX);
+    setDragStartScroll(scrollLeft);
+    e.preventDefault();
+  }, [scrollLeft]);
+
+  // 鼠标拖拽移动
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    
+    const deltaX = e.clientX - dragStartX;
+    const newScrollLeft = Math.max(0, Math.min(totalWidth - 800, dragStartScroll - deltaX));
+    setScrollLeft(newScrollLeft);
+  }, [isDragging, dragStartX, dragStartScroll, totalWidth]);
+
+  // 鼠标拖拽结束
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // 鼠标离开区域
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+  const timeLineLeft = (currentMinutes - startHour * 60) * pixelsPerMinute - scrollLeft;
+
+  return (
+    <div 
+      ref={containerRef}
+      className="monitoring-page"
+      style={{
+        height: '100vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        background: isDark ? '#0f172a' : '#f8fafc'
+      }}
+    >
+      {/* 顶部工具栏 */}
+      <header style={{
+        flexShrink: 0,
+        borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`,
+        background: isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(10px)'
+      }}>
+        <div style={{
+          padding: '0 20px',
+          height: '56px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #06b6d4, #3b82f6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 12px rgba(6, 182, 212, 0.3)'
+            }}>
+              <TrainFront size={20} color="white" />
+            </div>
+            <div>
+              <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: isDark ? '#fff' : '#1e293b' }}>代管盯控</h1>
+              <p style={{ margin: 0, fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.5)' : '#64748b' }}>甘特图风格</p>
+            </div>
+          </div>
+          
+          {/* 搜索框 */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 12px',
+            borderRadius: '10px',
+            background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`
+          }}>
+            <SearchOutlined style={{ color: isDark ? 'rgba(255,255,255,0.5)' : '#94a3b8' }} />
+            <input
+              type="text"
+              placeholder="搜索车次..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                fontSize: '13px',
+                width: '120px',
+                color: isDark ? '#fff' : '#334155'
+              }}
+            />
+          </div>
+          
+          {/* 缩放控制 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button 
+              onClick={() => setPixelsPerMinute(prev => Math.max(prev - 0.5, 2))}
+              style={{
+                padding: '8px',
+                borderRadius: '10px',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
+                cursor: 'pointer'
+              }}
+            >
+              <ZoomOutOutlined style={{ fontSize: '16px', color: isDark ? 'rgba(255,255,255,0.7)' : '#64748b' }} />
+            </button>
+            <span style={{ 
+              width: '80px', 
+              textAlign: 'center', 
+              fontSize: '13px', 
+              fontFamily: 'monospace',
+              color: isDark ? 'rgba(255,255,255,0.7)' : '#64748b'
+            }}>
+              {pixelsPerMinute.toFixed(1)} px/分
+            </span>
+            <button 
+              onClick={() => setPixelsPerMinute(prev => Math.min(prev + 0.5, 12))}
+              style={{
+                padding: '8px',
+                borderRadius: '10px',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
+                cursor: 'pointer'
+              }}
+            >
+              <ZoomInOutlined style={{ fontSize: '16px', color: isDark ? 'rgba(255,255,255,0.7)' : '#64748b' }} />
+            </button>
+            <button 
+              onClick={() => { setPixelsPerMinute(5); setScrollLeft(0); }}
+              style={{
+                padding: '8px',
+                borderRadius: '10px',
+                border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
+                cursor: 'pointer',
+                marginLeft: '8px'
+              }}
+            >
+              <ReloadOutlined style={{ fontSize: '16px', color: isDark ? 'rgba(255,255,255,0.7)' : '#64748b' }} />
+            </button>
+          </div>
+          
+          {/* 时间和主题切换 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '6px 12px',
+              borderRadius: '10px',
+              background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`
+            }}>
+              <ClockCircleOutlined style={{ color: '#06b6d4' }} />
+              <span style={{ 
+                fontSize: '15px', 
+                fontFamily: 'monospace', 
+                fontWeight: 600,
+                color: isDark ? '#fff' : '#334155'
+              }}>
+                {currentTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+            </div>
+            
+            <Tooltip title={isDark ? '浅色模式' : '深色模式'}>
+              <button 
+                onClick={() => setTheme(isDark ? 'light' : 'dark')}
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  background: isDark ? '#fbbf24' : '#6366f1',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                {isDark ? <SunOutlined style={{ color: '#fff' }} /> : <MoonOutlined style={{ color: '#fff' }} />}
+              </button>
+            </Tooltip>
+            
+            <Tooltip title="设置">
+              <button 
+                onClick={() => setConfigVisible(true)}
+                style={{
+                  padding: '8px',
+                  borderRadius: '10px',
+                  border: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}`,
+                  background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.8)',
+                  cursor: 'pointer'
+                }}
+              >
+                <SettingOutlined style={{ fontSize: '16px', color: isDark ? 'rgba(255,255,255,0.7)' : '#64748b' }} />
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+      </header>
+      
+      {/* 主内容区 */}
+      <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        {/* 左侧站点列表 */}
+        <div 
+          style={{
+            flexShrink: 0,
+            width: `${leftPanelWidth}px`,
+            borderRight: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`,
+            background: isDark ? 'rgba(15, 23, 42, 0.6)' : 'rgba(255, 255, 255, 0.6)',
+            backdropFilter: 'blur(10px)',
+            overflow: 'hidden'
+          }}
+        >
+          {/* 站点列表头部 */}
+          <div style={{
+            height: '40px',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 16px',
+            background: isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)'
+          }}>
+            <span style={{ fontSize: '13px', fontWeight: 600, color: isDark ? 'rgba(255,255,255,0.7)' : '#64748b' }}>站点</span>
+          </div>
+          
+          {/* 站点行 */}
+          <div style={{ overflowY: 'auto', height: 'calc(100% - 40px)' }}>
+            {stationRows.map(station => {
+              const rowHeight = rowHeights[station.id] || 150;
+              const displayName = station.stationName 
+                ? `${station.stationName} ${station.name}`
+                : station.name;
+              
+              return (
+                <div 
+                  key={station.id}
+                  style={{
+                    height: `${rowHeight}px`,
+                    borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: '0 16px'
+                  }}
+                >
+                  <div 
+                    style={{
+                      width: '4px',
+                      height: '28px',
+                      borderRadius: '2px',
+                      backgroundColor: station.color,
+                      marginRight: '12px'
+                    }}
+                  />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    {station.stationName && (
+                      <span style={{ fontSize: '11px', color: isDark ? 'rgba(255,255,255,0.4)' : '#94a3b8' }}>
+                        {station.stationName}
+                      </span>
+                    )}
+                    <span style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#fff' : '#334155' }}>
+                      {station.name}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        
+        {/* 右侧甘特图区域 */}
+        <div 
+          style={{
+            flex: 1,
+            overflow: 'hidden',
+            position: 'relative',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            userSelect: 'none'
+          }}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onWheel={handleWheel}
+        >
+          {/* 时间刻度行 */}
+          <div style={{
+            height: '40px',
+            borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`,
+            background: isDark ? 'rgba(15, 23, 42, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+            backdropFilter: 'blur(10px)',
+            overflow: 'hidden'
+          }}>
+            <div 
+              style={{ 
+                position: 'relative', 
+                height: '100%', 
+                width: `${totalWidth}px`,
+                transform: `translateX(-${scrollLeft}px)`
+              }}
+            >
+              {Array.from({ length: endHour - startHour + 1 }).map((_, i) => (
+                <div 
+                  key={i}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    left: `${i * 60 * pixelsPerMinute}px`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <div style={{
+                    width: '1px',
+                    height: '100%',
+                    background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'
+                  }} />
+                  <span style={{
+                    position: 'absolute',
+                    left: '8px',
+                    fontSize: '12px',
+                    fontFamily: 'monospace',
+                    fontWeight: 500,
+                    color: isDark ? 'rgba(255,255,255,0.5)' : '#94a3b8'
+                  }}>
+                    {String(startHour + i).padStart(2, '0')}:00
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* 甘特图内容 */}
+          <div style={{ overflowY: 'auto', height: 'calc(100% - 40px)' }}>
+            <div style={{ position: 'relative', width: `${totalWidth}px` }}>
+              {stationRows.map(station => {
+                const trains = trainsByStation.get(station.id) || [];
+                const positions = getTrainPositions(trains);
+                const rowHeight = rowHeights[station.id] || 150;
+                
+                return (
+                  <div 
+                    key={station.id}
+                    style={{
+                      position: 'relative',
+                      height: `${rowHeight}px`,
+                      borderBottom: `1px solid ${isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)'}`,
+                      overflow: 'hidden'
+                    }}
+                  >
+                    {/* 网格背景 */}
+                    <div 
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        transform: `translateX(-${scrollLeft}px)`
+                      }}
+                    >
+                      {Array.from({ length: endHour - startHour }).map((_, i) => (
+                        <div 
+                          key={i}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            bottom: 0,
+                            width: '1px',
+                            background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.04)',
+                            left: `${i * 60 * pixelsPerMinute}px`
+                          }}
+                        />
+                      ))}
+                    </div>
+                    
+                    {/* 车次卡片 */}
+                    {positions.map(({ train, row }) => (
+                      <TrainCardComponent 
+                        key={train.id} 
+                        train={train}
+                        left={timeToPixels(train.arrivalTime) - scrollLeft}
+                        width={Math.max(durationToPixels(train.arrivalTime, train.departureTime), 280)}
+                        top={row * 150 + 10}
+                        isSelected={selectedTrainId === train.id}
+                        onSelect={() => setSelectedTrainId(selectedTrainId === train.id ? null : train.id)}
+                        isDark={isDark}
+                      />
+                    ))}
+                  </div>
+                );
+              })}
+              
+              {/* 当前时间线 */}
+              {timeLineLeft >= 0 && timeLineLeft <= totalWidth && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    width: '2px',
+                    background: '#ef4444',
+                    left: `${timeLineLeft}px`,
+                    pointerEvents: 'none',
+                    zIndex: 20
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: '10px',
+                    height: '10px',
+                    borderRadius: '50%',
+                    background: '#ef4444',
+                    boxShadow: '0 0 8px rgba(239, 68, 68, 0.5)'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '50%',
+                      background: '#ef4444',
+                      animation: 'pulse 1.5s ease-in-out infinite'
+                    }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 配置弹窗 */}
+      <Modal
+        open={configVisible}
+        title="监控配置"
+        onCancel={() => setConfigVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setConfigVisible(false)}>取消</Button>,
+          <Button key="ok" type="primary" onClick={() => setConfigVisible(false)}>确定</Button>
+        ]}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <h4 style={{ marginBottom: '12px', fontWeight: 600 }}>站点配置</h4>
+          {stationRows.map(station => (
+            <div 
+              key={station.id}
+              style={{
+                marginBottom: '12px',
+                padding: '12px',
+                borderRadius: '8px',
+                background: isDark ? 'rgba(255,255,255,0.05)' : '#f1f5f9'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div 
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    backgroundColor: station.color
+                  }}
+                />
+                <span style={{ color: isDark ? '#fff' : '#334155' }}>
+                  {station.stationName ? `${station.stationName} ${station.name}` : station.name}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Modal>
+
+      {/* 脉冲动画 */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(1.5); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Component;

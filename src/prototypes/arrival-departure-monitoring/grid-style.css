@@ -1,0 +1,92 @@
+/* 网格布局样式 */
+
+.train-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+
+@media (max-width: 640px) {
+  .train-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .train-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .train-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1441px) {
+  .train-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 简洁模式网格 */
+.train-grid.simple {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+}
+
+@media (max-width: 640px) {
+  .train-grid.simple {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .train-grid.simple {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .train-grid.simple {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1441px) {
+  .train-grid.simple {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* 卡片网格项 */
+.grid-item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 响应式间距 */
+@media (max-width: 768px) {
+  .train-grid,
+  .train-grid.simple {
+    gap: 12px;
+    padding: 12px;
+  }
+}
+
+/* 全宽卡片 */
+.grid-item.full-width {
+  grid-column: 1 / -1;
+}
+
+/* 展开状态的卡片 */
+.grid-item.expanded {
+  grid-column: span 2;
+}
+
+@media (max-width: 1024px) {
+  .grid-item.expanded {
+    grid-column: 1 / -1;
+  }
+}
