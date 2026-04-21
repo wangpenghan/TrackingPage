@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-07T08:21:07.044Z",
+  "updatedAt": "2026-04-11T08:30:05.719Z",
   "prototypes": [
     {
       "id": "item-prototypes-passenger-template-v2",
@@ -78,6 +78,18 @@
     }
   ],
   "docs": [
+    {
+      "id": "item-docs-requirements-HeTong----md",
+      "kind": "item",
+      "title": "素材.md",
+      "itemKey": "docs/requirements/HeTong/素材.md"
+    },
+    {
+      "id": "item-docs-requirements-HeTong-----_----md",
+      "kind": "item",
+      "title": "评审意见 整理版.md",
+      "itemKey": "docs/requirements/HeTong/评审意见_整理版.md"
+    },
     {
       "id": "item-docs--------md",
       "kind": "item",
@@ -225,6 +237,7 @@
     "firecrawl"
   ],
   "data": [
+    "personnel",
     "orders"
   ],
   "templates": [

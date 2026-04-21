@@ -5,7 +5,7 @@
   },
   "server": {
     "host": "localhost",
-    "allowLAN": false,
+    "allowLAN": true,
     "enableCommandAPI": false
   },
   "projectDefaults": {

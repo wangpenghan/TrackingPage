@@ -14,6 +14,7 @@ import { FilterBar } from './FilterBar';
 import { TrainTable } from './TrainTable';
 import { mockTrainSchedules } from './mock-data';
 import { PlanChangeOverview } from './components/PlanChangeOverview';
+import { PlanMonitoring } from './PlanMonitoring';
 import './style.css';
 import './grid-style.css';
 
@@ -515,20 +516,29 @@ const Component = forwardRef<AxureHandle, AxureProps>(function ArrivalDepartureM
 
   // ============ 渲染 ============
   return (
-    <div className={`flex flex-col h-screen ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? '#0f172a' : '#f5f5f5' }}>
+    <div className={`flex flex-col h-screen ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? '#1E293B' : '#F8FAFC' }}>
 
-      <div className="monitoring-page flex-1 overflow-auto" style={{ background: darkMode ? '#0f172a' : '#f0f2f5' }}>
+      <div className="monitoring-page flex-1 flex flex-col overflow-hidden" style={{ background: darkMode ? '#0F172A' : '#E2E8F0' }}>
+        {/* 计划监测 */}
+        <PlanMonitoring darkMode={darkMode} />
+
         {/* 顶部面包屑 */}
         <div style={{
-          padding: '8px 16px',
-          background: darkMode ? '#1e293b' : '#fff',
+          padding: '8px 20px',
+          background: darkMode ? '#1E293B' : '#FFFFFF',
           fontSize: '14px',
-          color: darkMode ? '#94a3b8' : '#666',
-          borderBottom: darkMode ? '1px solid #334155' : '1px solid #f0f0f0',
+          color: darkMode ? '#94A3B8' : '#64748B',
+          borderBottom: darkMode ? '1px solid #334155' : '1px solid #E2E8F0',
           position: 'relative',
-          zIndex: 110
+          zIndex: 110,
+          boxShadow: darkMode ? '0 2px 8px rgba(0, 0, 0, 0.15)' : '0 1px 3px rgba(0, 0, 0, 0.08)'
         }}>
-          首页 / 综合指挥 / 到发盯控
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div>首页 / 综合指挥 / 到发盯控</div>
+            <div style={{ fontSize: '12px', color: darkMode ? '#64748B' : '#94A3B8' }}>
+              {new Date().toLocaleString('zh-CN', { hour12: false })}
+            </div>
+          </div>
         </div>
 
         {/* 代管站盯控全局面板 */}
@@ -599,28 +609,30 @@ const Component = forwardRef<AxureHandle, AxureProps>(function ArrivalDepartureM
           }}
         />
 
-        <TrainTable
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-          selectedTrainId={selectedTrainId}
-          onSelectTrain={handleSelectTrain}
-          onDataChange={handleDataChange}
-          searchTerm={searchTerm}
-          planFilters={planFilters}
-          dataVersion={dataVersion}
-          darkMode={darkMode}
-          operationDrawerVisible={operationDrawerVisible}
-          onOperationDrawerClose={handleCloseOperationDrawer}
-          operationTrainId={operationTrainId}
-          operationType={operationType}
-          onOpenOperationDrawer={handleOpenOperationDrawer}
-          simpleMode={simpleMode}
-          passengerFlowThreshold={passengerFlowThreshold}
-          currentStation={currentStation}
-          controlMode={controlMode}
-          quickFilterType={quickFilterType}
-          columnOrder={columnOrder}
-        />
+        <div className="flex-1 overflow-auto" style={{ minHeight: 0 }}>
+          <TrainTable
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            selectedTrainId={selectedTrainId}
+            onSelectTrain={handleSelectTrain}
+            onDataChange={handleDataChange}
+            searchTerm={searchTerm}
+            planFilters={planFilters}
+            dataVersion={dataVersion}
+            darkMode={darkMode}
+            operationDrawerVisible={operationDrawerVisible}
+            onOperationDrawerClose={handleCloseOperationDrawer}
+            operationTrainId={operationTrainId}
+            operationType={operationType}
+            onOpenOperationDrawer={handleOpenOperationDrawer}
+            simpleMode={simpleMode}
+            passengerFlowThreshold={passengerFlowThreshold}
+            currentStation={currentStation}
+            controlMode={controlMode}
+            quickFilterType={quickFilterType}
+            columnOrder={columnOrder}
+          />
+        </div>
       </div>
     </div>
   );

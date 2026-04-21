@@ -1,8 +1,8 @@
 /**
- * @name 代管盯控 v8
+ * @name 代管盯控 v9
  *
- * 参考 glass-gantt 风格的代管列车监控页面
- * 高铁车头形状卡片 + 甘特图时间轴布局
+ * 火车文化主题的图形化监控页面
+ * 融入铁路元素、蒸汽朋克风格和现代高铁美学
  */
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Button, Tag, Tooltip, Checkbox, Popover, Slider, Modal } from 'antd';
@@ -13,10 +13,8 @@ import {
   ClockCircleOutlined,
   ZoomInOutlined,
   ZoomOutOutlined,
-  AimOutlined,
-  SearchOutlined,
-  FilterOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import {
   TrainFront,
@@ -25,20 +23,14 @@ import {
   Trash2,
   Ticket,
   DoorOpen,
-  Timer
+  Timer,
+  Train,
+  Activity,
+  BarChart3,
+  AlertTriangle,
+  ChevronRight
 } from 'lucide-react';
 import { TrainData, Connection, TrainTask } from './types';
-import {
-  timeToMinutes,
-  calculateTrainPosition,
-  sortTrainsByArrival,
-  getStatusColor,
-  getTrainTypeColor,
-  calculateStopBarWidth,
-  calculateOptimalTimeRange,
-  checkTrainDensity,
-  calculateConnections
-} from './utils';
 import './style.css';
 
 // ============ 类型定义 ============
@@ -215,263 +207,216 @@ const TrainCardComponent = ({
 }: { 
   train: TrainData; 
   left: number; 
-  width: number; 
+  width: number;
   top: number;
   isSelected: boolean;
   onSelect: () => void;
   isDark: boolean;
 }) => {
-  const isUpDirection = train.lineDirection === '上';
+  const [isHovered, setIsHovered] = React.useState(false);
   
-  // 获取作业状态颜色
-  const getTaskButtonColor = (label: string): string => {
-    const task = train.tasks?.find(t => {
-      if (label === '水污') return t.type === '上水' || t.type === '吸污';
-      return t.type === label;
-    });
-    
-    if (!task || task.status === 'pending') return '#F2F2F2'; // 灰色 - 未开始
-    if (task.status === 'running') {
-      if (label === '检票' || label === '水污') return '#CAF982'; // 浅绿色 - 进行中
-      return '#81D3F8'; // 浅蓝色 - 进行中
-    }
-    if (task.status === 'completed') {
-      if (label === '检票' || label === '水污') return '#CAF982'; // 浅绿色 - 已完成
-      if (label === '站台') return '#81D3F8'; // 浅蓝色 - 已完成
-      return '#F2F2F2'; // 灰色
-    }
-    return '#EF9A9A'; // 红色 - 异常
+  // 是否有异常
+  const hasAbnormal = train.delayMinutes > 0 || train.status !== 'normal';
+
+  // 处理悬停状态
+  const handleMouseEnter = () => {
+    setIsHovered(true);
   };
 
-  const taskLabels = ['检票', '站台', '出站', '水污'];
+  const handleMouseLeave = () => {
+    setIsHovered(false);
+  };
+
+  // 获取作业标签颜色
+  const getTaskColor = (type: TaskType) => {
+    switch (type) {
+      case '检票':
+        return { bg: '#4caf50', text: 'white' };
+      case '站台':
+        return { bg: '#4caf50', text: 'white' };
+      case '出站':
+        return { bg: '#2196f3', text: 'white' };
+      case '上水':
+        return { bg: '#f44336', text: 'white' };
+      case '吸污':
+        return { bg: '#2196f3', text: 'white' };
+      default:
+        return { bg: '#9e9e9e', text: 'white' };
+    }
+  };
 
   return (
     <div
-      className="train-card-wrapper"
+      className="train-card-wrapper-new"
       onClick={onSelect}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{ 
         position: 'absolute',
         left: `${left}px`, 
         top: `${top}px`,
-        width: '280px', 
-        height: '125px',
-        zIndex: isSelected ? 100 : 1,
+        width: '200px', 
+        height: '140px',
+        zIndex: isSelected || isHovered ? 100 : 1,
         opacity: 1,
-        transform: isSelected ? 'scale(1.02)' : 'scale(1)',
+        transform: isSelected || isHovered ? 'scale(1.05) translateY(-4px)' : 'scale(1)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'pointer'
       }}
     >
       {/* 卡片主体 */}
       <div
-        className="train-card"
+        className="train-card-main"
         style={{
-          width: '280px',
-          height: '125px',
-          backgroundColor: '#FFFFFF',
-          boxShadow: isSelected
-            ? '0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 2px #F59A23'
-            : '0 2px 8px rgba(0, 0, 0, 0.08)',
-          border: '1px solid #E0E0E0',
-          borderRadius: '16px',
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          background: '#e0e0e0',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
           overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column'
+          border: '2px solid #bdbdbd'
         }}
       >
-        {/* 顶部区域 - 车次信息 */}
-        <div 
-          className="card-header"
-          style={{ 
-            height: '40px',
-            padding: '8px 16px',
+        {/* 顶部车次号和编组信息 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            right: '8px',
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            alignItems: 'center'
           }}
         >
-          {/* 左侧：车次标签 + 运行区间 */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {/* 车次号 - 橙色标签 */}
-            <div
-              style={{ 
-                backgroundColor: '#F59A23',
-                padding: '6px 18px',
-                borderRadius: '20px',
-                display: 'inline-block',
-                width: 'fit-content'
+          {/* 车次号 */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, #ff9800 0%, #f57c00 100%)',
+              padding: '4px 12px',
+              borderRadius: '16px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+            }}
+          >
+            <span
+              style={{
+                fontFamily: "'Bebas Neue', sans-serif",
+                fontSize: '18px',
+                fontWeight: 'bold',
+                color: 'white',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.3)'
               }}
             >
-              <span style={{ color: '#000000', fontWeight: 'bold', fontSize: '20px', letterSpacing: '0.5px' }}>{train.trainNo}</span>
-            </div>
-            {/* 运行区间 */}
-            <span style={{ color: '#666', fontSize: '13px', marginLeft: '6px', fontWeight: 500 }}>
-              {train.runningSection?.from} → {train.runningSection?.to}
+              {train.trainNo}
             </span>
           </div>
 
-          {/* 右侧：地标指示器 - 蓝色圆点 + 文字 */}
-          <div 
-            style={{ 
+          {/* 编组信息 */}
+          <div
+            style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              backgroundColor: '#F0F8FF',
-              padding: '6px 12px',
-              borderRadius: '18px',
-              border: '1px solid #E3F2FD'
+              gap: '4px'
             }}
           >
-            {/* 蓝色圆点 */}
-            <div 
+            <div
               style={{
-                width: '12px',
-                height: '12px',
+                width: '20px',
+                height: '20px',
                 borderRadius: '50%',
-                backgroundColor: '#2196F3',
-                flexShrink: 0
+                background: 'linear-gradient(135deg, #2196f3 0%, #1976d2 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
               }}
-            />
-            <span style={{ color: '#333', fontSize: '14px', fontWeight: 600, letterSpacing: '0.3px' }}>
-              {train.formationCount}{train.sequenceType}{train.lineDirection === '上' ? '北' : '南'}
+            >
+              <span style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>倒</span>
+            </div>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
+              {train.lineDirection}
             </span>
           </div>
         </div>
 
-        {/* 中部数据区 - 到点、发点、股道 */}
-        <div 
-          className="card-data"
-          style={{ 
-            height: '40px',
-            backgroundColor: '#FFFFFF',
-            padding: '0 16px',
+        {/* 运行区段 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '40px',
+            left: '12px',
+            right: '12px',
+            fontSize: '12px',
+            color: '#666',
+            textAlign: 'left'
+          }}
+        >
+          {train.runningSection?.from}→{train.runningSection?.to}
+        </div>
+
+        {/* 时间信息区域 */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '60px',
+            left: '12px',
+            right: '12px',
             display: 'flex',
-            gap: '12px',
+            justifyContent: 'space-between',
             alignItems: 'center'
           }}
         >
-          {/* 到点 */}
-          <div 
-            style={{ 
-              flex: 1,
-              height: '36px',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#F5F5F5',
-              border: '1px solid #E0E0E0'
-            }}
-          >
-            <span style={{ color: '#333', fontSize: '18px', fontFamily: 'monospace', fontWeight: 600 }}>
+          {/* 到达和出发时间 */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
               {train.arrivalTime}
             </span>
-            {train.delayMinutes > 0 && (
-              <span style={{ color: '#ef4444', fontSize: '12px', marginLeft: '6px' }}>+{train.delayMinutes}</span>
-            )}
-          </div>
-          
-          {/* 发点 */}
-          <div 
-            style={{ 
-              flex: 1,
-              height: '36px',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#F5F5F5',
-              border: '1px solid #E0E0E0'
-            }}
-          >
-            <span style={{ color: '#333', fontSize: '18px', fontFamily: 'monospace', fontWeight: 600 }}>
+            <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
               {train.departureTime}
             </span>
           </div>
           
-          {/* 股道 */}
-          <div 
-            style={{ 
-              width: '60px',
-              height: '36px',
-              borderRadius: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor: '#FFEB3B',
-              border: '1px solid #FFC107'
-            }}
-          >
-            <span style={{ color: '#000000', fontSize: '20px', fontWeight: 'bold', letterSpacing: '0.5px' }}>{train.track}</span>
-          </div>
+          {/* 轨道信息 */}
+          <span style={{ fontSize: '14px', fontWeight: 'bold', color: '#333' }}>
+            {train.track}
+          </span>
         </div>
 
-        {/* 底部作业按钮区 */}
-        <div 
-          className="card-actions"
-          style={{ 
-            backgroundColor: '#FFFFFF',
-            padding: '0 16px 10px 16px',
+        {/* 作业标签 */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '8px',
+            left: '12px',
+            right: '12px',
             display: 'flex',
-            gap: '8px'
+            flexWrap: 'wrap',
+            gap: '6px'
           }}
         >
-          {taskLabels.map((label) => {
-            const bgColor = getTaskButtonColor(label);
-            const isLightGreen = bgColor === '#CAF982';
-            const isLightBlue = bgColor === '#81D3F8';
-            
+          {train.tasks.map((task, idx) => {
+            const taskColor = getTaskColor(task.type);
+
             return (
               <div
-                key={label}
+                key={idx}
                 style={{
-                  flex: 1,
-                  height: '28px',
-                  borderRadius: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer',
-                  backgroundColor: bgColor,
-                  border: isLightGreen || isLightBlue ? 'none' : '1px solid #D0D0D0',
-                  transition: 'all 0.2s ease'
+                  background: taskColor.bg,
+                  color: taskColor.text,
+                  padding: '4px 10px',
+                  borderRadius: '4px',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}
               >
-                <span style={{ 
-                  fontSize: '14px', 
-                  fontWeight: 600,
-                  color: '#333'
-                }}>
-                  {label}
-                </span>
+                {task.type}
               </div>
             );
           })}
         </div>
       </div>
-
-      {/* 选中状态的角标 */}
-      {isSelected && (
-        <div 
-          style={{
-            position: 'absolute',
-            top: '-8px',
-            right: '-8px',
-            width: '24px',
-            height: '24px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #F59A23 0%, #FFB74D 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 12px rgba(245, 154, 35, 0.4)'
-          }}
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
-      )}
     </div>
   );
 };
@@ -556,7 +501,7 @@ const Component: React.FC = () => {
       }
     });
     
-    return Math.max(rowEndTimes.length, 1) * 150;
+    return Math.max(rowEndTimes.length, 1) * 160;
   };
 
   const getTrainPositions = (trains: TrainData[]) => {
@@ -991,8 +936,8 @@ const Component: React.FC = () => {
                         key={train.id} 
                         train={train}
                         left={timeToPixels(train.arrivalTime) - scrollLeft}
-                        width={Math.max(durationToPixels(train.arrivalTime, train.departureTime), 280)}
-                        top={row * 150 + 10}
+                        width={Math.max(durationToPixels(train.arrivalTime, train.departureTime), 220)}
+                        top={row * 160 + 10}
                         isSelected={selectedTrainId === train.id}
                         onSelect={() => setSelectedTrainId(selectedTrainId === train.id ? null : train.id)}
                         isDark={isDark}

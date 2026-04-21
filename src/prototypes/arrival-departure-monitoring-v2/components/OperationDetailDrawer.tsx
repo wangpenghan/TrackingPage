@@ -802,9 +802,26 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
 }) => {
   const [dispatchModalVisible, setDispatchModalVisible] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [remarkModalVisible, setRemarkModalVisible] = useState(false);
+  const [remarkContent, setRemarkContent] = useState('');
+  const [savedRemark, setSavedRemark] = useState('');
+  const [completeConfirmVisible, setCompleteConfirmVisible] = useState(false);
+  const [updatedJobs, setUpdatedJobs] = useState<Array<{key: string; jobType: string; workerName: string; location: string}>>([]);
+
+  // 初始化备注内容
+  useEffect(() => {
+    if (trainId) {
+      // 这里可以从实际数据中获取备注，现在使用默认值
+      setSavedRemark('');
+      setRemarkContent('');
+    }
+  }, [trainId]);
 
   const train = mockTrainSchedules.find(t => t.id === trainId);
   const operationGroups = train ? getOperationDetails(train) : [];
+
+  // 初始化表格数据状态
+  const [tableDataState, setTableDataState] = useState<Array<{key: string; jobType: string; workerName: string; location: string; taskContent: string; planTime: string; actualTime?: string; status: 'completed' | 'pending'; rowSpan?: number}>>([]);
 
   // 将分组数据转换为表格数据
   const tableData = useMemo(() => {
@@ -838,6 +855,11 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
 
     return data;
   }, [operationGroups]);
+
+  // 同步表格数据状态
+  useEffect(() => {
+    setTableDataState(tableData);
+  }, [tableData]);
 
   // 判断实际时间是否异常（晚于计划时间）
   const isTimeAbnormal = (planTime: string, actualTime?: string) => {
@@ -878,6 +900,89 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
     } else {
       callback();
     }
+  };
+
+  // 处理备注编辑
+  const handleRemarkClick = () => {
+    setRemarkContent(savedRemark);
+    setRemarkModalVisible(true);
+  };
+
+  const handleRemarkSave = () => {
+    setSavedRemark(remarkContent);
+    setRemarkModalVisible(false);
+    setHasUnsavedChanges(true);
+    // 这里可以添加保存到实际数据的逻辑
+    console.log('保存备注:', remarkContent);
+  };
+
+  const handleRemarkCancel = () => {
+    setRemarkContent(savedRemark);
+    setRemarkModalVisible(false);
+  };
+
+  // 处理作业完成
+  const handleCompleteClick = () => {
+    // 找出所有未完成的作业
+    const pendingJobs = tableDataState.filter(job => job.status === 'pending');
+    
+    if (pendingJobs.length === 0) {
+      // 所有作业都已完成
+      Modal.info({
+        title: '作业状态',
+        content: '所有作业都已完成，无需操作',
+        style: {
+          background: darkMode ? '#1E293B' : '#FFFFFF',
+          borderRadius: '12px',
+          border: darkMode ? '1px solid rgba(42, 107, 124, 0.3)' : '1px solid rgba(29, 78, 95, 0.1)'
+        },
+        okButtonProps: {
+          style: {
+            background: darkMode ? '#0A84FF' : '#007AFF',
+            border: 'none',
+            color: '#FFFFFF'
+          }
+        }
+      });
+      return;
+    }
+    
+    // 准备更新的作业列表
+    setUpdatedJobs(pendingJobs.map(job => ({
+      key: job.key,
+      jobType: job.jobType,
+      workerName: job.workerName,
+      location: job.location
+    })));
+    
+    setCompleteConfirmVisible(true);
+  };
+
+  // 确认作业完成
+  const handleCompleteConfirm = () => {
+    // 更新作业状态和时间
+    const updatedTableData = tableDataState.map(job => {
+      if (job.status === 'pending') {
+        return {
+          ...job,
+          status: 'completed' as const,
+          actualTime: dayjs().format('HH:mm')
+        };
+      }
+      return job;
+    });
+    
+    setTableDataState(updatedTableData);
+    setHasUnsavedChanges(true);
+    setCompleteConfirmVisible(false);
+    
+    // 这里可以添加保存到实际数据的逻辑
+    console.log('作业完成更新:', updatedTableData);
+  };
+
+  // 取消作业完成
+  const handleCompleteCancel = () => {
+    setCompleteConfirmVisible(false);
   };
 
   const handleClose = () => {
@@ -1134,7 +1239,7 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
             </Button>
             <Button
               icon={<FileText size={16} />}
-              onClick={() => console.log('点击备注按钮')}
+              onClick={handleRemarkClick}
               style={{
                 height: '36px',
                 padding: '0 16px',
@@ -1152,7 +1257,7 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
             <Button
               type="primary"
               icon={<CheckCircle2 size={16} />}
-              onClick={() => console.log('点击作业完成按钮')}
+              onClick={handleCompleteClick}
               style={{
                 height: '36px',
                 padding: '0 20px',
@@ -1190,7 +1295,7 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
           }}>
             <Table
               columns={columns}
-              dataSource={tableData}
+              dataSource={tableDataState}
               pagination={false}
               size="small"
               bordered={false}
@@ -1210,14 +1315,19 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
             borderRadius: '8px',
             border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)',
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start',
             gap: '8px'
           }}>
-            <FileText size={14} color={darkMode ? '#64748B' : '#9CA3AF'} />
-            <span style={{
+            <FileText size={14} color={darkMode ? '#64748B' : '#9CA3AF'} style={{ marginTop: '2px' }} />
+            <div style={{
+              flex: 1,
               fontSize: '12px',
-              color: darkMode ? '#94A3B8' : '#6B7280'
-            }}>备注：无</span>
+              color: darkMode ? '#94A3B8' : '#6B7280',
+              lineHeight: '1.4'
+            }}>
+              <div style={{ fontWeight: 500, marginBottom: '4px' }}>备注：</div>
+              <div>{savedRemark || '无'}</div>
+            </div>
           </div>
         </div>
       </div>
@@ -1230,6 +1340,239 @@ export const OperationDetailDrawer: React.FC<OperationDetailDrawerProps> = ({
         trainNo={train?.trainNo || '-'}
         darkMode={darkMode}
       />
+
+      {/* 备注编辑弹窗 */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <FileText size={16} />
+            <span style={{ fontSize: '16px', fontWeight: 600 }}>编辑备注</span>
+          </div>
+        }
+        open={remarkModalVisible}
+        onCancel={handleRemarkCancel}
+        width={500}
+        zIndex={10000}
+        getContainer={() => document.body}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={handleRemarkCancel}
+            style={{
+              padding: '0 16px',
+              fontSize: '13px',
+              height: '36px',
+              fontWeight: 500,
+              borderRadius: '8px',
+              background: darkMode ? '#2C2C2E' : '#FFFFFF',
+              color: darkMode ? '#F5F5F7' : '#1D1D1F',
+              border: `1px solid ${darkMode ? '#38383A' : '#D2D2D7'}`,
+              boxShadow: 'none'
+            }}
+          >
+            取消
+          </Button>,
+          <Button 
+            key="save" 
+            type="primary" 
+            onClick={handleRemarkSave}
+            style={{
+              padding: '0 20px',
+              fontSize: '13px',
+              height: '36px',
+              fontWeight: 500,
+              borderRadius: '8px',
+              background: darkMode ? '#0A84FF' : '#007AFF',
+              border: 'none',
+              color: '#FFFFFF',
+              boxShadow: 'none'
+            }}
+          >
+            保存
+          </Button>
+        ]}
+        styles={{
+          mask: {
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(3px)'
+          },
+          content: {
+            background: darkMode ? MACOS_COLORS.bg.dark : MACOS_COLORS.bg.light,
+            borderRadius: '10px',
+            overflow: 'hidden'
+          },
+          header: {
+            borderBottom: `1px solid ${darkMode ? MACOS_COLORS.border.dark : MACOS_COLORS.border.light}`,
+            padding: '16px 20px'
+          },
+          footer: {
+            borderTop: `1px solid ${darkMode ? MACOS_COLORS.border.dark : MACOS_COLORS.border.light}`,
+            padding: '16px 20px'
+          }
+        }}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <div style={{ marginBottom: '12px' }}>
+            <span style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: darkMode ? MACOS_COLORS.text.dark : MACOS_COLORS.text.light,
+              display: 'block',
+              marginBottom: '8px'
+            }}>备注内容</span>
+            <textarea
+              value={remarkContent}
+              onChange={(e) => setRemarkContent(e.target.value)}
+              style={{
+                width: '100%',
+                minHeight: '120px',
+                padding: '12px',
+                borderRadius: '8px',
+                background: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                border: `1px solid ${darkMode ? MACOS_COLORS.border.dark : MACOS_COLORS.border.light}`,
+                color: darkMode ? MACOS_COLORS.text.dark : MACOS_COLORS.text.light,
+                fontSize: '14px',
+                lineHeight: '1.4',
+                resize: 'vertical'
+              }}
+              placeholder="请输入备注内容..."
+            />
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: darkMode ? MACOS_COLORS.textSecondary.dark : MACOS_COLORS.textSecondary.light,
+            marginTop: '8px'
+          }}>
+            备注将保存在作业监控记录中，用于记录特殊情况和处理说明。
+          </div>
+        </div>
+      </Modal>
+
+      {/* 作业完成确认弹窗 */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <CheckCircle2 size={16} />
+            <span style={{ fontSize: '16px', fontWeight: 600 }}>确认作业完成</span>
+          </div>
+        }
+        open={completeConfirmVisible}
+        onCancel={handleCompleteCancel}
+        width={500}
+        zIndex={10000}
+        getContainer={() => document.body}
+        footer={[
+          <Button 
+            key="cancel" 
+            onClick={handleCompleteCancel}
+            style={{
+              padding: '0 16px',
+              fontSize: '13px',
+              height: '36px',
+              fontWeight: 500,
+              borderRadius: '8px',
+              background: darkMode ? '#2C2C2E' : '#FFFFFF',
+              color: darkMode ? '#F5F5F7' : '#1D1D1F',
+              border: `1px solid ${darkMode ? '#38383A' : '#D2D2D7'}`,
+              boxShadow: 'none'
+            }}
+          >
+            取消
+          </Button>,
+          <Button 
+            key="confirm" 
+            type="primary" 
+            onClick={handleCompleteConfirm}
+            style={{
+              padding: '0 20px',
+              fontSize: '13px',
+              height: '36px',
+              fontWeight: 500,
+              borderRadius: '8px',
+              background: darkMode ? '#0A84FF' : '#007AFF',
+              border: 'none',
+              color: '#FFFFFF',
+              boxShadow: 'none'
+            }}
+          >
+            确认完成
+          </Button>
+        ]}
+        styles={{
+          mask: {
+            backgroundColor: 'rgba(0, 0, 0, 0.4)',
+            backdropFilter: 'blur(3px)'
+          },
+          content: {
+            background: darkMode ? MACOS_COLORS.bg.dark : MACOS_COLORS.bg.light,
+            borderRadius: '10px',
+            overflow: 'hidden'
+          },
+          header: {
+            borderBottom: `1px solid ${darkMode ? MACOS_COLORS.border.dark : MACOS_COLORS.border.light}`,
+            padding: '16px 20px'
+          },
+          footer: {
+            borderTop: `1px solid ${darkMode ? MACOS_COLORS.border.dark : MACOS_COLORS.border.light}`,
+            padding: '16px 20px'
+          }
+        }}
+      >
+        <div style={{ padding: '16px 0' }}>
+          <div style={{ marginBottom: '16px' }}>
+            <span style={{
+              fontSize: '14px',
+              fontWeight: 500,
+              color: darkMode ? MACOS_COLORS.text.dark : MACOS_COLORS.text.light,
+              display: 'block',
+              marginBottom: '12px'
+            }}>以下作业将被标记为已完成：</span>
+            <div style={{
+              maxHeight: '200px',
+              overflowY: 'auto',
+              background: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+              border: `1px solid ${darkMode ? MACOS_COLORS.border.dark : MACOS_COLORS.border.light}`,
+              borderRadius: '8px',
+              padding: '12px'
+            }}>
+              {updatedJobs.map((job, index) => (
+                <div key={job.key} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '8px 0',
+                  borderBottom: index < updatedJobs.length - 1 ? `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'} ` : 'none'
+                }}>
+                  <CheckCircle2 size={16} color="#10B981" />
+                  <div style={{ flex: 1 }}>
+                    <div style={{
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: darkMode ? MACOS_COLORS.text.dark : MACOS_COLORS.text.light
+                    }}>{job.jobType}</div>
+                    <div style={{
+                      fontSize: '12px',
+                      color: darkMode ? MACOS_COLORS.textSecondary.dark : MACOS_COLORS.textSecondary.light,
+                      marginTop: '2px'
+                    }}>
+                      {job.workerName} - {job.location}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{
+            fontSize: '12px',
+            color: darkMode ? MACOS_COLORS.textSecondary.dark : MACOS_COLORS.textSecondary.light,
+            lineHeight: '1.4'
+          }}>
+            <div>• 操作将自动更新作业状态为已完成</div>
+            <div>• 系统将记录当前时间作为实际完成时间</div>
+            <div>• 此操作不可撤销，请确认后执行</div>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };

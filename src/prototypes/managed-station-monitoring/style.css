@@ -1,3 +1,6 @@
+/* 字体导入 */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Courier+Prime:wght@400;700&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -5,36 +8,52 @@
 }
 
 :root {
-  /* 现代简洁配色 */
-  --bg-primary: #f8f9fa;
-  --bg-secondary: #ffffff;
-  --bg-card: #ffffff;
-  --text-primary: #1a1a2e;
-  --text-secondary: #4a4a6a;
-  --text-muted: #8a8a9a;
+  /* 火车文化主题配色 */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: #334155;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
   
-  /* 车次类型颜色 */
-  --train-g: #e74c3c;
-  --train-d: #3498db;
-  --train-c: #2ecc71;
-  --train-z: #9b59b6;
-  --train-t: #f39c12;
-  --train-k: #e67e22;
+  /* 铁路主题颜色 */
+  --railway-red: #dc2626;
+  --railway-blue: #0ea5e9;
+  --railway-green: #10b981;
+  --railway-yellow: #f59e0b;
+  --railway-orange: #f97316;
+  --railway-gray: #64748b;
+  
+  /* 蒸汽朋克元素 */
+  --steam-brown: #78350f;
+  --steam-copper: #b45309;
+  --steam-bronze: #92400e;
   
   /* 状态颜色 */
-  --status-normal: #27ae60;
-  --status-early: #3498db;
-  --status-late: #e74c3c;
+  --status-normal: #10b981;
+  --status-early: #0ea5e9;
+  --status-late: #dc2626;
+  --status-warning: #f59e0b;
   
   /* 阴影 */
-  --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
-  --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+  --shadow-sm: 0 2px 4px rgba(0,0,0,0.2);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.3);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.4);
   
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --font-sans: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'SF Mono', 'JetBrains Mono', monospace;
+  /* 边框和圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  
+  /* 字体 */
+  --font-sans: 'Bebas Neue', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Courier Prime', 'SF Mono', 'JetBrains Mono', monospace;
+  --font-display: 'Bebas Neue', Impact, sans-serif;
+  
+  /* 动画 */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
 }
 
 html, body {
@@ -50,521 +69,37 @@ html, body {
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
-}
-
-/* 工具栏 */
-.toolbar {
-  height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  box-shadow: var(--shadow-sm);
-}
-
-.toolbar-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.traffic-lights {
-  display: flex;
-  gap: 8px;
-}
-
-.traffic-light {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.traffic-light.red { background: #ff5f57; }
-.traffic-light.yellow { background: #febc2e; }
-.traffic-light.green { background: #28c840; }
-
-.toolbar-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-}
-
-.toolbar-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.time-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  padding: 8px 14px;
-  background: rgba(0,0,0,0.03);
-  border-radius: 20px;
-}
-
-.scale-control {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 14px;
-  background: rgba(0,0,0,0.03);
-  border-radius: 20px;
-}
-
-.scale-slider {
-  width: 100px;
-}
-
-.scale-slider .ant-slider-track {
-  background: var(--train-d);
-}
-
-.scale-slider .ant-slider-handle {
-  border-color: var(--train-d);
-}
-
-/* 主内容区 */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* 时间轴 */
-.timeline {
-  height: 44px;
-  display: flex;
-  background: var(--bg-secondary);
-  border-bottom: 1px solid rgba(0,0,0,0.06);
-  cursor: grab;
-  user-select: none;
   position: relative;
   overflow: hidden;
 }
 
-.timeline.dragging {
-  cursor: grabbing;
+/* 新火车卡片样式 */
+.train-card-wrapper-new {
+  position: absolute;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.timeline-track {
-  flex: 1;
+.train-card-wrapper-new:hover {
+  z-index: 100;
+}
+
+.train-card-main {
   position: relative;
-  height: 100%;
-  overflow: visible;
-}
-
-.timeline-tick {
-  position: absolute;
-  top: 0;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.tick-line {
-  width: 1px;
-  height: 12px;
-  background: rgba(0,0,0,0.1);
-  margin-top: 8px;
-}
-
-.tick-label {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-.current-time-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg, var(--train-d) 0%, var(--train-d) 100%);
-  box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
-  z-index: 10;
-}
-
-.current-time-indicator {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 8px solid var(--train-d);
-}
-
-.current-time-label {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--train-d);
-  font-weight: 600;
-  background: var(--bg-secondary);
-  padding: 2px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-  box-shadow: var(--shadow-sm);
-}
-
-/* 面板容器 */
-.panels-container {
-  flex: 1;
-  overflow: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  cursor: grab;
-  user-select: none;
-  position: relative;
-}
-
-.panels-container.dragging {
-  cursor: grabbing;
-}
-
-.panels-container::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.panels-container::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.panels-container::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.1);
-  border-radius: 3px;
-}
-
-.panels-container::-webkit-scrollbar-thumb:hover {
-  background: rgba(0,0,0,0.2);
-}
-
-/* 单个面板 */
-.panel {
-  display: flex;
-  background: var(--bg-secondary);
-  border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.04);
-}
-
-.panel-sidebar {
-  flex-shrink: 0;
-  background: linear-gradient(180deg, #f8f9fa 0%, #f1f3f4 100%);
-  border-right: 1px solid rgba(0,0,0,0.06);
-  display: flex;
-  flex-direction: column;
-}
-
-.lane-label {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  color: var(--text-secondary);
-  border-bottom: 1px solid rgba(0,0,0,0.04);
-  text-align: center;
-  padding: 8px 6px;
-  line-height: 1.4;
-  font-weight: 500;
-}
-
-.lane-label:last-child {
-  border-bottom: none;
-}
-
-.label-line {
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.label-line:first-child {
-  font-weight: 600;
-  color: var(--text-primary);
-}
-
-.panel-lanes {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-/* 车道 */
-.lane {
-  position: relative;
-  border-bottom: 1px solid rgba(0,0,0,0.04);
-  overflow: visible;
-}
-
-.lane:last-child {
-  border-bottom: none;
-}
-
-/* 车次卡片包装器 */
-.train-card-wrapper {
-  position: absolute;
-  height: 46px;
-  z-index: 1;
-  transition: opacity 0.2s ease, transform 0.15s ease;
-}
-
-.train-card-wrapper.hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.train-card-wrapper:hover {
-  z-index: 5;
-  transform: translateY(-2px);
-}
-
-.train-card-wrapper.selected {
-  z-index: 6;
-}
-
-/* 列车卡片 - 全新设计 */
-.train-card {
-  position: relative;
-  height: 42px;
-  width: 180px;
-  background: var(--bg-card);
-  border-radius: 21px;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  box-shadow: var(--shadow-sm);
-  border: 1px solid rgba(0,0,0,0.06);
-  overflow: hidden;
-  transition: all 0.2s ease;
-}
-
-.train-card:hover {
-  box-shadow: var(--shadow-md);
-}
-
-.train-card-wrapper.selected .train-card {
-  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2), var(--shadow-md);
-}
-
-/* 卡片状态条 - 左侧彩色条 */
-.card-status-bar {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-}
-
-/* 卡片内容区 */
-.card-main-row {
-  display: flex;
-  align-items: center;
-  flex: 1;
-  padding: 0 12px 0 10px;
-  gap: 10px;
-}
-
-/* 正晚点标签 */
-.card-delay {
-  min-width: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.delay-badge {
-  font-size: 10px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  padding: 2px 5px;
-  border-radius: 10px;
-  background: rgba(0,0,0,0.06);
-  color: var(--text-secondary);
-}
-
-.delay-badge.status-late {
-  color: #fff;
-  background: var(--status-late);
-}
-
-.delay-badge.status-early {
-  color: #fff;
-  background: var(--status-early);
-}
-
-/* 车次信息区 */
-.card-train-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.train-no {
-  font-size: 17px;
-  font-weight: 800;
-  font-family: var(--font-mono);
-  letter-spacing: -0.5px;
-}
-
-.track-badge {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-  background: rgba(0,0,0,0.06);
-  padding: 3px 8px;
-  border-radius: 10px;
-  font-family: var(--font-mono);
-}
-
-/* 时间显示 - 右侧 */
-.card-time {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  color: var(--text-muted);
-  font-weight: 500;
-}
-
-/* 站停时间柱 */
-.stop-bar {
-  position: absolute;
-  top: 44px;
-  height: 3px;
-  border-radius: 2px;
-  opacity: 0.7;
-}
-
-/* SVG 连接线 */
-.connections-svg {
-  position: absolute;
-  top: 0;
-  left: 0;
   width: 100%;
   height: 100%;
-  pointer-events: none;
-  z-index: 0;
+  border-radius: 16px;
+  overflow: hidden;
 }
 
-.connection-line {
-  fill: none;
-  stroke: #cbd5e1;
-  stroke-width: 2;
-  opacity: 0.6;
-}
-
-.connection-line.selected {
-  stroke: var(--train-d);
-  stroke-width: 3;
-  opacity: 1;
-}
-
-/* 作业状态指示器 */
-.work-status-indicator {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-}
-
-.work-status-dot {
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.work-status-dot[data-status="notExecuted"] {
-  background: var(--text-muted);
-}
-
-.work-status-dot[data-status="executing"] {
-  background: var(--train-d);
-  box-shadow: 0 0 6px var(--train-d);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-.work-status-dot[data-status="completed"] {
-  background: var(--status-normal);
-}
-
-.work-status-dot[data-status="abnormal"] {
-  background: var(--status-late);
-  box-shadow: 0 0 6px var(--status-late);
-  animation: pulse 1s ease-in-out infinite;
-}
-
+/* 脉冲动画 */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-
-/* 响应式 */
-@media (max-width: 1199px) {
-  .toolbar {
-    padding: 0 16px;
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
   }
-
-  .panel-sidebar {
-    width: 80px;
+  50% { 
+    opacity: 0.6; 
+    transform: scale(1.2);
   }
 }
 
-@media (max-width: 767px) {
-  .toolbar-title {
-    display: none;
-  }
-
-  .time-display {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-
-  .scale-control {
-    display: none;
-  }
-
-  .panel {
-    flex-direction: column;
-  }
-
-  .panel-sidebar {
-    width: 100%;
-    flex-direction: row;
-    border-right: none;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
-  }
-
-  .lane-label {
-    flex: 1;
-    height: 36px;
-    border-bottom: none;
-    border-right: 1px solid rgba(0,0,0,0.06);
-  }
-
-  .lane-label:last-child {
-    border-right: none;
-  }
-}

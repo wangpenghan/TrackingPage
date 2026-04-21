@@ -792,14 +792,13 @@
 }
 
 .task-person {
-  background: #e4e4e7;
   padding: 0 4px;
   border-radius: 4px;
+  color: #6b7280;
 }
 .task-person.error {
-  background: #fef2f2;
   color: #ef4444;
-  border: 1px solid #fca5a5;
+  font-weight: 600;
 }
 
 /* Status Block */
@@ -987,9 +986,11 @@
 }
 
 .dark .task-person {
-  background: linear-gradient(135deg, rgba(42, 107, 124, 0.3) 0%, rgba(29, 78, 95, 0.25) 100%);
-  border-color: rgba(42, 107, 124, 0.4);
-  color: #5DA3B3;
+  color: #94A3B8;
+}
+.dark .task-person.error {
+  color: #FCA5A5;
+  font-weight: 600;
 }
 
 .dark .train-main-pill {
@@ -1024,27 +1025,22 @@
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
-  background-color: #f3f4f6;
   color: #6b7280;
 }
 .person-label.normal {
-  background-color: #f3f4f6;
   color: #6b7280;
 }
 .person-label.error {
-  background-color: #fef2f2;
   color: #ef4444;
+  font-weight: 600;
 }
 
 .dark .person-label.normal {
-  background: linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(29, 78, 95, 0.15) 100%);
   color: #94A3B8;
-  border: 1px solid rgba(42, 107, 124, 0.3);
 }
 .dark .person-label.error {
-  background: linear-gradient(135deg, rgba(185, 28, 28, 0.2) 0%, rgba(127, 29, 29, 0.15) 100%);
   color: #FCA5A5;
-  border: 1px solid rgba(185, 28, 28, 0.3);
+  font-weight: 600;
 }
 
 /* Additional Dark Mode Badge Styles */

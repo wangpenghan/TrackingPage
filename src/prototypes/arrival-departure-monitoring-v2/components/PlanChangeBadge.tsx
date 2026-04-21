@@ -1,12 +1,13 @@
 import React from 'react';
-import { AlertTriangle, History, GitCompare, AlertCircle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 interface PlanChangeBadgeProps {
-  changeType: 'none' | 'yesterday' | 'kemo' | 'both';
+  changeType?: 'none' | 'yesterday' | 'kemo' | 'both';
   changeCount?: number;
   size?: 'small' | 'medium' | 'large';
   darkMode?: boolean;
   onDoubleClick?: (e: React.MouseEvent) => void;
+  hasAnyChange?: boolean;
 }
 
 export const PlanChangeBadge: React.FC<PlanChangeBadgeProps> = ({
@@ -14,9 +15,11 @@ export const PlanChangeBadge: React.FC<PlanChangeBadgeProps> = ({
   changeCount = 0,
   size = 'medium',
   darkMode = false,
-  onDoubleClick
+  onDoubleClick,
+  hasAnyChange
 }) => {
-  if (changeType === 'none') return null;
+  const shouldShow = hasAnyChange || (changeType && changeType !== 'none');
+  if (!shouldShow) return null;
 
   const sizeMap = {
     small: { icon: 14, badge: 10, padding: '2px 4px', fontSize: '11px' },
@@ -26,49 +29,14 @@ export const PlanChangeBadge: React.FC<PlanChangeBadgeProps> = ({
 
   const currentSize = sizeMap[size];
 
-  // 根据变更类型返回对应的颜色和图标
-  const getChangeTypeConfig = () => {
-    switch (changeType) {
-      case 'yesterday':
-        return {
-          icon: <History size={currentSize.icon} />,
-          label: '昨日变更',
-          bgColor: darkMode ? 'rgba(0, 122, 255, 0.2)' : 'rgba(0, 122, 255, 0.1)',
-          borderColor: darkMode ? 'rgba(0, 122, 255, 0.4)' : 'rgba(0, 122, 255, 0.3)',
-          textColor: '#007AFF',
-          hoverBg: darkMode ? 'rgba(0, 122, 255, 0.3)' : 'rgba(0, 122, 255, 0.2)'
-        };
-      case 'kemo':
-        return {
-          icon: <GitCompare size={currentSize.icon} />,
-          label: '客模变更',
-          bgColor: darkMode ? 'rgba(255, 149, 0, 0.2)' : 'rgba(255, 149, 0, 0.1)',
-          borderColor: darkMode ? 'rgba(255, 149, 0, 0.4)' : 'rgba(255, 149, 0, 0.3)',
-          textColor: '#FF9500',
-          hoverBg: darkMode ? 'rgba(255, 149, 0, 0.3)' : 'rgba(255, 149, 0, 0.2)'
-        };
-      case 'both':
-        return {
-          icon: <AlertCircle size={currentSize.icon} />,
-          label: '多方变更',
-          bgColor: darkMode ? 'rgba(255, 59, 48, 0.2)' : 'rgba(255, 59, 48, 0.1)',
-          borderColor: darkMode ? 'rgba(255, 59, 48, 0.4)' : 'rgba(255, 59, 48, 0.3)',
-          textColor: '#FF3B30',
-          hoverBg: darkMode ? 'rgba(255, 59, 48, 0.3)' : 'rgba(255, 59, 48, 0.2)'
-        };
-      default:
-        return {
-          icon: <AlertTriangle size={currentSize.icon} />,
-          label: '变更',
-          bgColor: darkMode ? 'rgba(142, 142, 147, 0.2)' : 'rgba(142, 142, 147, 0.1)',
-          borderColor: darkMode ? 'rgba(142, 142, 147, 0.4)' : 'rgba(142, 142, 147, 0.3)',
-          textColor: '#8E8E93',
-          hoverBg: darkMode ? 'rgba(142, 142, 147, 0.3)' : 'rgba(142, 142, 147, 0.2)'
-        };
-    }
+  const config = {
+    icon: <AlertTriangle size={currentSize.icon} />,
+    label: '计划变更',
+    bgColor: darkMode ? 'rgba(255, 59, 48, 0.2)' : 'rgba(255, 59, 48, 0.1)',
+    borderColor: darkMode ? 'rgba(255, 59, 48, 0.4)' : 'rgba(255, 59, 48, 0.3)',
+    textColor: '#FF3B30',
+    hoverBg: darkMode ? 'rgba(255, 59, 48, 0.3)' : 'rgba(255, 59, 48, 0.2)'
   };
-
-  const config = getChangeTypeConfig();
 
   return (
     <div
@@ -76,7 +44,7 @@ export const PlanChangeBadge: React.FC<PlanChangeBadgeProps> = ({
         display: 'inline-flex',
         alignItems: 'center',
         gap: '4px',
-        padding: currentSize.padding,
+        padding: '4px',
         cursor: onDoubleClick ? 'pointer' : 'default',
         borderRadius: '6px',
         transition: 'all 0.2s ease',
@@ -87,7 +55,7 @@ export const PlanChangeBadge: React.FC<PlanChangeBadgeProps> = ({
         fontWeight: 500
       }}
       onDoubleClick={onDoubleClick}
-      title={`${config.label}，双击查看详情`}
+      title={`计划变更，双击查看详情`}
       onMouseEnter={(e) => {
         e.currentTarget.style.backgroundColor = config.hoverBg;
       }}
@@ -96,7 +64,6 @@ export const PlanChangeBadge: React.FC<PlanChangeBadgeProps> = ({
       }}
     >
       {config.icon}
-      <span>{config.label}</span>
       {changeCount > 0 && (
         <span
           style={{

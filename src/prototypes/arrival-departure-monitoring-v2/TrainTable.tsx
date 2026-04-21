@@ -1375,19 +1375,7 @@ export const TrainTable: React.FC<TrainTableProps> = ({
                   >
                     {item.runningSection?.from || '-'}→{item.runningSection?.to || '-'}
                   </div>
-                  {/* 计划变更标记 */}
-                  {item.planChangeInfo?.hasAnyChange && (
-                    <PlanChangeBadge
-                      changeType={item.planChangeInfo.changeType}
-                      changeCount={item.planChangeInfo.changeCount}
-                      size="medium"
-                      darkMode={darkMode}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenPlanChange(item.id);
-                      }}
-                    />
-                  )}
+
                   {/* 编组信息组 - 双击打开编组维护 */}
                   <div 
                     className="formation-info-group"
@@ -1483,6 +1471,19 @@ export const TrainTable: React.FC<TrainTableProps> = ({
                   )}
                 </div>
                 <div className="topbar-right hide-on-collapse">
+                  {/* 计划变更标记 */}
+                  {item.planChangeInfo?.hasAnyChange && (
+                    <PlanChangeBadge
+                      changeType={item.planChangeInfo.changeType}
+                      changeCount={item.planChangeInfo.changeCount}
+                      size="medium"
+                      darkMode={darkMode}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        handleOpenPlanChange(item.id);
+                      }}
+                    />
+                  )}
                   {/* 不常用标签 */}
                   {/* 临站发车标记 - 使用indigo色 */}
                   {index === 1 && <div className="service-tag indigo"><TrainFront size={14}/> 临站发车</div>}
@@ -2789,7 +2790,6 @@ export const TrainTable: React.FC<TrainTableProps> = ({
         onClose={handleClosePlanChange}
         trainId={planChangeTrainId}
         darkMode={darkMode}
-        onDataChange={() => setLocalDataVersion(v => v + 1)}
       />
 
       {/* 计划变更总览 */}
