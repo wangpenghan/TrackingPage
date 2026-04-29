@@ -30,8 +30,8 @@
 ```
 [原型/组件名称]
 ├── [模块A]
-│   ├── [子模块A1]
-│   └── [子模块A2]
+│   ├── [内容项A1]
+│   └── [内容项A2]
 ├── [模块B]
 └── [模块C]
 ```
@@ -75,7 +75,7 @@
 ## 🎨 视觉规范
 
 ### 4.1 设计规范来源
-> 优先级：用户规范 > 主题（DESIGN-SPEC.md）> 内置（interface-design / frontend-design）
+> 优先级：用户规范 > 主题（DESIGN.md）> 内置（interface-design / frontend-design）
 
 **设计规范来源**：`[只写最终采用的一条：用户规范 <path>｜主题 /src/themes/<name>｜内置 interface-design｜内置 frontend-design]`
 

@@ -9,6 +9,7 @@ import { allowedItemKeysByTab, scanEntries, type SidebarTreeTab } from './utils/
 import { createSidebarTreeStore, type SidebarTreeNode, type ResourceOrderType } from './utils/sidebarTreeStore';
 import { buildAttachmentContentDisposition } from './utils/contentDisposition';
 import { ensureTemplatesDirMigrated, getTemplatesDir } from './utils/docUtils';
+import { getInstallSkillTargetDir } from './utils/installSkillTargets';
 import { runCommand, runCommandSync } from '../scripts/utils/command-runtime.mjs';
 
 /**
@@ -67,6 +68,28 @@ function sanitizeFolderName(name: string) {
     .toLowerCase();
 }
 
+function buildSafeImportFolderName(
+  candidates: Array<string | null | undefined>,
+  fallbackPrefix: string,
+  maxLength = 60,
+) {
+  for (const candidate of candidates) {
+    const sanitized = truncateName(sanitizeFolderName(String(candidate || '')), maxLength);
+    if (sanitized) {
+      return sanitized;
+    }
+  }
+
+  return `${fallbackPrefix}-${Date.now()}`;
+}
+
+function isSafeChildDir(baseDir: string, candidateDir: string) {
+  const resolvedBaseDir = path.resolve(baseDir);
+  const resolvedCandidateDir = path.resolve(candidateDir);
+  return resolvedCandidateDir !== resolvedBaseDir
+    && resolvedCandidateDir.startsWith(`${resolvedBaseDir}${path.sep}`);
+}
+
 function inferExtractedRootFolder(extractDir: string) {
   if (!fs.existsSync(extractDir)) {
     return { entryCount: 0, hasRootFolder: false, rootFolderName: '' };
@@ -114,7 +137,7 @@ function moveFileWithFallback(srcPath: string, destPath: string) {
 }
 
 const SUPPORTED_UPLOAD_TARGET_TYPES = ['prototypes', 'components', 'themes'] as const;
-const THEME_IMPORT_SUPPORTED_UPLOAD_TYPES = new Set(['local_axure', 'v0', 'google_aistudio']);
+const THEME_IMPORT_SUPPORTED_UPLOAD_TYPES = new Set(['local_axure', 'v0', 'google_aistudio', 'figma_make']);
 const THEME_IMPORT_SUB_SKILL_DOCS = [
   '/skills/axure-prototype-workflow/theme-generation.md',
   '/skills/axure-prototype-workflow/doc-generation.md',
@@ -202,6 +225,17 @@ export function fileSystemApiPlugin(): Plugin {
         }
 
         const usedIds = new Set<string>();
+        const seenItemKeys = new Set<string>();
+        const makeUniqueId = (seed: string) => {
+          let candidate = seed;
+          let count = 1;
+          while (usedIds.has(candidate)) {
+            count += 1;
+            candidate = `${seed}-${count}`;
+          }
+          usedIds.add(candidate);
+          return candidate;
+        };
         const normalizeNodes = (nodes: any[], depth: number): SidebarTreeNode[] | null => {
           if (depth > 32) {
             return null;
@@ -215,21 +249,22 @@ export function fileSystemApiPlugin(): Plugin {
             const kind = rawNode.kind;
             const title = typeof rawNode.title === 'string' ? rawNode.title.trim() : '';
             if (!id || !title) return null;
-            if (usedIds.has(id)) {
-              return null;
-            }
             if (kind !== 'folder' && kind !== 'item') {
               return null;
             }
-            usedIds.add(id);
+            const nextId = makeUniqueId(id);
 
             if (kind === 'item') {
               const itemKey = typeof rawNode.itemKey === 'string' ? rawNode.itemKey.trim() : '';
               if (!itemKey || !itemKey.startsWith(`${tab}/`) || !allowedItemKeys.has(itemKey)) {
                 return null;
               }
+              if (seenItemKeys.has(itemKey)) {
+                continue;
+              }
+              seenItemKeys.add(itemKey);
               normalized.push({
-                id,
+                id: nextId,
                 kind: 'item',
                 title,
                 itemKey,
@@ -242,10 +277,18 @@ export function fileSystemApiPlugin(): Plugin {
             if (!children) {
               return null;
             }
+            const rawItemKey = typeof rawNode.itemKey === 'string' ? rawNode.itemKey.trim() : '';
+            const itemKey = rawItemKey && rawItemKey.startsWith(`${tab}/`) && allowedItemKeys.has(rawItemKey)
+              ? rawItemKey
+              : undefined;
+            if (itemKey) {
+              seenItemKeys.add(itemKey);
+            }
             normalized.push({
-              id,
+              id: nextId,
               kind: 'folder',
               title,
+              ...(itemKey ? { itemKey } : {}),
               children,
             });
           }
@@ -300,7 +343,18 @@ export function fileSystemApiPlugin(): Plugin {
             }
             if (rawNode.kind === 'folder') {
               const children = normalizeNodes(Array.isArray(rawNode.children) ? rawNode.children : [], depth + 1);
-              result.push({ id, kind: 'folder', title, children });
+              const rawFolderItemKey = typeof rawNode.itemKey === 'string' ? rawNode.itemKey.trim() : '';
+              const folderItemKey = rawFolderItemKey
+                && rawFolderItemKey.startsWith(`${tab}/`)
+                && allowedItemKeys.has(rawFolderItemKey)
+                ? rawFolderItemKey
+                : undefined;
+              const folderNode: SidebarTreeNode = { id, kind: 'folder' as const, title, children };
+              if (folderItemKey) {
+                seenItemKeys.add(folderItemKey);
+                folderNode.itemKey = folderItemKey;
+              }
+              result.push(folderNode);
             }
           }
           return result;
@@ -310,7 +364,7 @@ export function fileSystemApiPlugin(): Plugin {
         const missingItemKeys = Array.from(allowedItemKeys).filter((itemKey) => !seenItemKeys.has(itemKey));
         const nextMissingNodes = missingItemKeys.sort((a, b) => a.localeCompare(b)).map((itemKey) => ({
             id: makeUniqueId(`item-${sanitizeNodeId(itemKey)}`),
-            kind: 'item',
+            kind: 'item' as const,
             title: toDefaultTreeTitle(itemKey),
             itemKey,
           }));
@@ -555,7 +609,229 @@ export function fileSystemApiPlugin(): Plugin {
 
       const normalizePath = (filePath: string) => filePath.split(path.sep).join('/');
 
-      server.middlewares.use('/api/prototype-admin/project-title', async (req: any, res: any) => {
+      const isSafeSrcTargetPath = (targetPath: string) => {
+        return Boolean(targetPath)
+          && !targetPath.includes('..')
+          && !targetPath.startsWith('/')
+          && !path.isAbsolute(targetPath);
+      };
+
+      const countFilesRecursive = (dirPath: string): number => {
+        if (!fs.existsSync(dirPath)) {
+          return 0;
+        }
+
+        let total = 0;
+        const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+        for (const entry of entries) {
+          const entryPath = path.join(dirPath, entry.name);
+          if (entry.isDirectory()) {
+            total += countFilesRecursive(entryPath);
+          } else if (entry.isFile()) {
+            total += 1;
+          }
+        }
+        return total;
+      };
+
+      const readJsonFileIfExists = (filePath: string) => {
+        if (!fs.existsSync(filePath)) {
+          return null;
+        }
+        try {
+          return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+        } catch (error) {
+          console.warn('[文件系统 API] 读取 JSON 失败:', filePath, error);
+          return null;
+        }
+      };
+
+      const createDefaultMakeMeta = (baseName: string) => ({
+        client_meta: {
+          background_color: { r: 0.96, g: 0.96, b: 0.96, a: 1 },
+          thumbnail_size: { width: 400, height: 300 },
+          render_coordinates: { x: 0, y: 0, width: 1280, height: 960 },
+        },
+        file_name: baseName,
+        developer_related_links: [],
+        exported_at: new Date().toISOString(),
+      });
+
+      const analyzeMakeAssets = (itemDir: string, targetPath: string) => {
+        const canvasFigPath = path.join(itemDir, 'canvas.fig');
+        const metaJsonPath = path.join(itemDir, 'meta.json');
+        const aiChatPath = path.join(itemDir, 'ai_chat.json');
+        const thumbnailPath = path.join(itemDir, 'thumbnail.png');
+        const manifestPath = path.join(itemDir, 'canvas.code-manifest.json');
+        const imagesDir = path.join(itemDir, 'images');
+        const rootIndexPath = path.join(itemDir, 'index.tsx');
+        const rootStylePath = path.join(itemDir, 'style.css');
+        const appTsxPath = path.join(itemDir, 'src', 'App.tsx');
+        const indexCssPath = path.join(itemDir, 'src', 'index.css');
+        const meta = readJsonFileIfExists(metaJsonPath);
+        const baseName = path.basename(targetPath) || 'project';
+        const rawFileName = typeof meta?.file_name === 'string' ? meta.file_name.trim() : '';
+        const normalizedFileName = rawFileName || baseName;
+        const imageCount = countFilesRecursive(imagesDir);
+        const driftReasons: string[] = [];
+
+        if (fs.existsSync(rootIndexPath) && fs.existsSync(appTsxPath)) {
+          const rootIndexStat = fs.statSync(rootIndexPath);
+          const appTsxStat = fs.statSync(appTsxPath);
+          if (rootIndexStat.mtimeMs > appTsxStat.mtimeMs + 1000) {
+            driftReasons.push('根目录 index.tsx 比 src/App.tsx 更新，Figma 导出壳子可能未同步最新页面逻辑。');
+          }
+        }
+
+        if (fs.existsSync(rootStylePath) && fs.existsSync(indexCssPath)) {
+          const rootStyleStat = fs.statSync(rootStylePath);
+          const indexCssStat = fs.statSync(indexCssPath);
+          if (rootStyleStat.mtimeMs > indexCssStat.mtimeMs + 1000) {
+            driftReasons.push('根目录 style.css 比 src/index.css 更新，Figma 导出壳子的样式可能未同步。');
+          }
+        }
+
+        return {
+          hasCanvasFig: fs.existsSync(canvasFigPath),
+          hasMetaJson: fs.existsSync(metaJsonPath),
+          hasAiChat: fs.existsSync(aiChatPath),
+          hasThumbnail: fs.existsSync(thumbnailPath),
+          hasManifest: fs.existsSync(manifestPath),
+          hasImagesDir: fs.existsSync(imagesDir),
+          imageCount,
+          hasMakeAssets: fs.existsSync(canvasFigPath),
+          lastExportedAt: typeof meta?.exported_at === 'string' ? meta.exported_at : null,
+          fileName: normalizedFileName.endsWith('.fig') ? normalizedFileName : `${normalizedFileName}.fig`,
+          hasDriftRisk: driftReasons.length > 0,
+          driftReasons,
+          itemDir,
+          canvasFigPath,
+          metaJsonPath,
+          aiChatPath,
+          thumbnailPath,
+          manifestPath,
+          imagesDir,
+          rootIndexPath,
+          rootStylePath,
+          appTsxPath,
+          indexCssPath,
+          meta,
+        };
+      };
+
+      const ensureMakeMeta = (itemDir: string, targetPath: string) => {
+        const snapshot = analyzeMakeAssets(itemDir, targetPath);
+        const baseName = path.basename(targetPath) || 'project';
+        const existingMeta = snapshot.meta && typeof snapshot.meta === 'object' ? snapshot.meta : {};
+        const nextMeta = {
+          ...createDefaultMakeMeta(baseName),
+          ...existingMeta,
+          client_meta: {
+            ...createDefaultMakeMeta(baseName).client_meta,
+            ...(existingMeta as any)?.client_meta,
+          },
+          developer_related_links: Array.isArray((existingMeta as any)?.developer_related_links)
+            ? (existingMeta as any).developer_related_links
+            : [],
+          file_name: typeof (existingMeta as any)?.file_name === 'string' && (existingMeta as any).file_name.trim()
+            ? (existingMeta as any).file_name.trim()
+            : baseName,
+          exported_at: new Date().toISOString(),
+        };
+
+        fs.writeFileSync(snapshot.metaJsonPath, JSON.stringify(nextMeta, null, 2), 'utf8');
+        return nextMeta;
+      };
+
+      const ensureMakeAiChat = (itemDir: string) => {
+        const aiChatPath = path.join(itemDir, 'ai_chat.json');
+        if (!fs.existsSync(aiChatPath)) {
+          fs.writeFileSync(aiChatPath, '{}\n', 'utf8');
+        }
+      };
+
+      const buildMakeExportPrompt = (targetPath: string) => {
+        const itemDir = path.join(projectRoot, 'src', targetPath);
+        const snapshot = analyzeMakeAssets(itemDir, targetPath);
+        const relativeItemDir = normalizePath(path.relative(projectRoot, itemDir));
+        const relativeCanvasFig = normalizePath(path.relative(projectRoot, snapshot.canvasFigPath));
+        const relativeMeta = normalizePath(path.relative(projectRoot, snapshot.metaJsonPath));
+        const relativeManifest = normalizePath(path.relative(projectRoot, snapshot.manifestPath));
+        const relativeAiChat = normalizePath(path.relative(projectRoot, snapshot.aiChatPath));
+        const relativeImagesDir = normalizePath(path.relative(projectRoot, snapshot.imagesDir));
+        const templateCanvasPath = 'scripts/templates/empty-canvas.fig';
+        const sceneLabel = snapshot.hasCanvasFig ? '场景 A（已有 Figma 导出资产）' : '场景 B（原生 Axhub 页面，需要补齐导出壳子）';
+
+        let prompt = `请将当前页面补齐为可导出的 Figma 资产结构，并确保最终可通过 \`/api/export-make?path=${targetPath}\` 下载产物 \`${snapshot.fileName}\`。\n\n`;
+        prompt += `请先阅读以下技能文档：\n`;
+        prompt += `- \`/skills/figma-make-exporter/SKILL.md\`\n`;
+        prompt += `- \`/skills/figma-make-project-converter/SKILL.md\`\n\n`;
+        prompt += `目标目录：\`${relativeItemDir}/\`\n`;
+        prompt += `当前判定：${sceneLabel}\n`;
+        prompt += `最终产物说明：接口最终下载的是原始 \`canvas.fig\`，文件名为 \`${snapshot.fileName}\`，不是 \`.make\` 压缩包。\n\n`;
+        prompt += `当前资产状态：\n`;
+        prompt += `- canvas.fig：${snapshot.hasCanvasFig ? '已存在' : '缺失'}\n`;
+        prompt += `- meta.json：${snapshot.hasMetaJson ? '已存在' : '缺失'}\n`;
+        prompt += `- ai_chat.json：${snapshot.hasAiChat ? '已存在' : '缺失'}\n`;
+        prompt += `- thumbnail.png：${snapshot.hasThumbnail ? '已存在' : '缺失'}\n`;
+        prompt += `- images/：${snapshot.hasImagesDir ? `已存在（${snapshot.imageCount} 个文件）` : '缺失'}\n\n`;
+        if (snapshot.hasDriftRisk) {
+          prompt += `当前检测到导出壳子可能未同步：\n`;
+          snapshot.driftReasons.forEach((reason: string) => {
+            prompt += `- ${reason}\n`;
+          });
+          prompt += `\n`;
+        }
+        prompt += `执行要求：\n`;
+        prompt += `1. 不要删除已有业务源码，也不要删除任何已存在的 Figma 原始资产（如 \`canvas.fig\`、\`meta.json\`、\`ai_chat.json\`、\`thumbnail.png\`、\`images/\`）。\n`;
+        prompt += `2. 先确保当前 Axhub 页面真实入口 \`index.tsx\` / \`style.css\` 的页面结果已经同步到导出壳子 \`src/App.tsx\` / \`src/index.css\` / \`src/components/**\`。\n`;
+        prompt += `3. 目录结构按固定职责维护：根目录 \`index.tsx\` 仅做 Axhub runtime adapter，\`src/App.tsx\` 仅做 Figma export shell，真实页面主体优先放在 \`src/components/**\` / \`src/styles/**\`。\n`;
+        prompt += `4. 同步时优先把 \`src/App.tsx\` 做成薄壳，尽量直接复用当前页面组件；不要再维护一份容易过时的旧页面副本。\n`;
+        prompt += `5. 如果 \`src/index.css\` 与根目录 \`style.css\` 都存在，优先复用或同步根目录样式来源，避免导出样式与当前页面不一致。\n`;
+        prompt += `6. 在 \`index.tsx\`、\`src/App.tsx\`、\`src/main.tsx\` 顶部补充职责注释，明确哪些文件只能做适配层/挂载层，防止后续继续漂移。\n`;
+        prompt += `   若最终项目不符合这套固定职责结构，视为任务未完成，必须先重构到位再继续导出。\n`;
+        prompt += `   导出前还必须同步 \`CODE_FILE.sourceCode\` 与 \`CODE_FILE.collaborativeSourceCode\`，再清理 \`canvas.fig\` 内部旧代码历史：移除过期 \`CODE_LIBRARY.chatMessages\` / \`chatCompressionState\`，清空旧 \`CODE_INSTANCE.codeSnapshot\` 预览缓存，并裁掉悬空的 \`CODE_COMPONENT\` 引用，避免 Figma Make 导入后恢复旧文件树。\n`;
+        if (snapshot.hasCanvasFig) {
+          prompt += `7. 直接复用已有 \`${relativeCanvasFig}\`，运行以下命令把当前源码回写进去：\n`;
+          prompt += `   \`node scripts/canvas-fig-sync.mjs pack --fig ${relativeCanvasFig} --from ${relativeItemDir} --prune-missing --sanitize-for-export\`\n`;
+        } else {
+          prompt += `7. 使用内置空白模板 \`${templateCanvasPath}\` 作为基座，在 \`${relativeCanvasFig}\` 生成新的 \`canvas.fig\`，然后运行：\n`;
+          prompt += `   \`node scripts/canvas-fig-sync.mjs pack --fig ${relativeCanvasFig} --from ${relativeItemDir} --prune-missing --sanitize-for-export\`\n`;
+        }
+        prompt += `8. 生成或更新 \`${relativeManifest}\`：\n`;
+        prompt += `   \`node scripts/canvas-fig-sync.mjs inspect --fig ${relativeCanvasFig} --manifest ${relativeManifest}\`\n`;
+        prompt += `9. 生成或更新 \`${relativeMeta}\`，至少包含 \`file_name\`、\`exported_at\`、\`client_meta\`、\`developer_related_links\`。其中 \`file_name\` 应与最终下载名一致，不要再写成 \`.make\`。\n`;
+        prompt += `10. 确保 \`${relativeAiChat}\` 至少是空 JSON 对象 \`{}\`。\n`;
+        prompt += `11. 如页面依赖图片资源，请把导出所需图片保留或同步到 \`${relativeImagesDir}/\`；不要随意改名已有 hash 文件。\n`;
+        prompt += `12. 如果当前目录缺少导出壳子（如 \`src/App.tsx\`、\`src/main.tsx\`、\`package.json\`、\`vite.config.ts\`、\`index.html\`），请按技能文档补齐到 Figma 兼容结构。\n\n`;
+        prompt += `验收要求：\n`;
+        prompt += `- \`node scripts/canvas-fig-sync.mjs inspect --fig ${relativeCanvasFig}\` 能成功执行\n`;
+        prompt += `- \`${relativeMeta}\` 中 \`exported_at\` 为最新时间\n`;
+        prompt += `- \`${relativeMeta}\` 中 \`file_name\` 对应最终下载文件名 \`${snapshot.fileName}\`\n`;
+        prompt += `- 导出壳子展示结果必须与当前页面一致，不能还是旧的 Figma 壳子内容\n`;
+        prompt += `- ` + '`index.tsx` / `src/App.tsx` / `src/main.tsx`' + ` 顶部存在职责注释，且符合固定目录结构\n`;
+        prompt += `- 再次访问 \`/api/export-make?path=${targetPath}&probe=1\` 时，返回 \`hasMakeAssets: true\`\n`;
+        return prompt;
+      };
+
+      const WORKSPACE_API_ROUTES = {
+        project: ['/api/workspace/project', '/api/prototype-admin/project-title'],
+        installSkill: ['/api/workspace/skills/install', '/api/prototype-admin/install-skill'],
+        navigationFolders: ['/api/workspace/navigation/folders', '/api/prototype-admin/sidebar-tree/folder'],
+        navigation: ['/api/workspace/navigation', '/api/prototype-admin/sidebar-tree'],
+        resourcesOrder: ['/api/workspace/resources/order', '/api/prototype-admin/resource-order'],
+      } as const;
+
+      const registerWorkspaceRoute = (
+        paths: readonly string[],
+        handler: (req: any, res: any) => Promise<any> | any,
+      ) => {
+        paths.forEach((routePath) => {
+          server.middlewares.use(routePath, handler);
+        });
+      };
+
+      registerWorkspaceRoute(WORKSPACE_API_ROUTES.project, async (req: any, res: any) => {
         if (req.method === 'GET') {
           return sendJSON(res, 200, { title: readProjectTitle() });
         }
@@ -592,7 +868,50 @@ export function fileSystemApiPlugin(): Plugin {
         }
       });
 
-      server.middlewares.use('/api/prototype-admin/sidebar-tree/folder', async (req: any, res: any) => {
+      // ─── Skill Install API ──────────────────────────────────────────────
+      registerWorkspaceRoute(WORKSPACE_API_ROUTES.installSkill, async (req: any, res: any) => {
+        if (req.method !== 'POST') {
+          return sendJSON(res, 405, { error: 'Method not allowed' });
+        }
+
+        try {
+          const body = await parseBody(req);
+          const skillId = typeof body?.skillId === 'string' ? body.skillId.trim() : '';
+          const client = typeof body?.client === 'string' ? body.client.trim() : '';
+
+          if (!skillId || !client) {
+            return sendJSON(res, 400, { error: 'skillId and client are required' });
+          }
+
+          const targetDir = getInstallSkillTargetDir(client);
+          if (!targetDir) {
+            return sendJSON(res, 400, {
+              error: 'not_supported',
+              message: `${client} 暂不支持自动安装技能`,
+            });
+          }
+
+          const sourceDir = path.join(projectRoot, 'skills', skillId);
+          if (!fs.existsSync(sourceDir)) {
+            return sendJSON(res, 404, { error: `Skill '${skillId}' not found at skills/${skillId}` });
+          }
+
+          const destDir = path.join(projectRoot, targetDir, skillId);
+          fs.mkdirSync(destDir, { recursive: true });
+          copyDirRecursive(sourceDir, destDir);
+
+          return sendJSON(res, 200, {
+            success: true,
+            skillId,
+            client,
+            installedTo: `${targetDir}/${skillId}`,
+          });
+        } catch (e: any) {
+          return sendJSON(res, 500, { error: e?.message || 'Install skill failed' });
+        }
+      });
+
+      registerWorkspaceRoute(WORKSPACE_API_ROUTES.navigationFolders, async (req: any, res: any) => {
         const tab = getTabFromRequest(req);
         if (!tab) {
           return sendJSON(res, 400, { error: 'Invalid tab, expected prototypes|components|docs|canvas' });
@@ -635,7 +954,7 @@ export function fileSystemApiPlugin(): Plugin {
         }
       });
 
-      server.middlewares.use('/api/prototype-admin/sidebar-tree', async (req: any, res: any) => {
+      registerWorkspaceRoute(WORKSPACE_API_ROUTES.navigation, async (req: any, res: any) => {
         const tab = getTabFromRequest(req);
         if (!tab) {
           return sendJSON(res, 400, { error: 'Invalid tab, expected prototypes|components|docs|canvas' });
@@ -679,7 +998,7 @@ export function fileSystemApiPlugin(): Plugin {
         }
       });
 
-      server.middlewares.use('/api/prototype-admin/resource-order', async (req: any, res: any) => {
+      registerWorkspaceRoute(WORKSPACE_API_ROUTES.resourcesOrder, async (req: any, res: any) => {
         const type = getResourceOrderTypeFromRequest(req);
         if (!type) {
           return sendJSON(res, 400, { error: 'Invalid type, expected themes|data|templates' });
@@ -778,9 +1097,10 @@ export function fileSystemApiPlugin(): Plugin {
         ];
         const allowedExt = new Set(['.ts', '.tsx', '.js', '.jsx', '.md', '.css']);
         const references = new Set<string>();
-        const escapedName = itemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const normalizedItemName = String(itemName || '').trim();
+        const escapedName = normalizedItemName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const nameRegex = new RegExp(`(?:^|[\\\\/])${escapedName}(?:$|[\\\\/'"\\s])`);
-        const targetDir = path.resolve(projectRoot, 'src', itemType, itemName);
+        const targetDir = path.resolve(projectRoot, 'src', itemType, normalizedItemName);
 
         const walkDir = (dirPath: string) => {
           if (!fs.existsSync(dirPath)) return;
@@ -949,22 +1269,44 @@ export function fileSystemApiPlugin(): Plugin {
           }
 
           const parts = String(targetPath).split('/').filter(Boolean);
-          const isElementsOrPages = parts.length >= 2 && (parts[0] === 'components' || parts[0] === 'prototypes');
+          const isElementsOrPages = parts.length === 2 && (parts[0] === 'components' || parts[0] === 'prototypes');
           const deletePath = isElementsOrPages
             ? path.join(projectRoot, 'src', parts[0], parts[1])
             : path.join(projectRoot, 'src', targetPath);
+          const srcRoot = path.join(projectRoot, 'src');
+          const resolvedDeletePath = path.resolve(deletePath);
+          const relativeToSrc = path.relative(srcRoot, resolvedDeletePath);
+          const relativeParts = relativeToSrc.split(path.sep).filter(Boolean);
+
+          if (
+            !relativeToSrc
+            || relativeToSrc.startsWith('..')
+            || path.isAbsolute(relativeToSrc)
+            || relativeParts.length < 2
+          ) {
+            return sendJSON(res, 403, { error: 'Refuse to delete protected root directory' });
+          }
 
           if (!fs.existsSync(deletePath)) {
             return sendJSON(res, 404, { error: 'Directory not found' });
           }
 
+          if (isElementsOrPages) {
+            fs.rmSync(deletePath, { recursive: true, force: true });
+
+            return sendJSON(res, 200, {
+              success: true,
+              deletedPaths: [targetPath],
+            });
+          }
+
           // 删除目录
           fs.rmSync(deletePath, { recursive: true, force: true });
 
-          sendJSON(res, 200, { success: true });
+          return sendJSON(res, 200, { success: true });
         } catch (e: any) {
           console.error('[文件系统 API] 删除失败:', e);
-          sendJSON(res, 500, { error: e.message || 'Delete failed' });
+          return sendJSON(res, 500, { error: e.message || 'Delete failed' });
         }
       });
 
@@ -1157,6 +1499,15 @@ export function fileSystemApiPlugin(): Plugin {
                 fileCount: fileList.length,
                 isFolderUpload,
               });
+
+              if (uploadType === 'figma_make') {
+                if (isFolderUpload) {
+                  return sendJSON(res, 400, { error: 'figma_make 仅支持上传 Figma 原始导出的 ZIP 工程包，请不要上传文件夹' });
+                }
+                if (!String(originalFilename).toLowerCase().endsWith('.zip')) {
+                  return sendJSON(res, 400, { error: 'figma_make 仅支持 ZIP 文件，请上传 Figma 原始导出的 ZIP 工程包' });
+                }
+              }
 
               if (!isFolderUpload) {
                 if (!tempFilePath || !fs.existsSync(tempFilePath)) {
@@ -1457,15 +1808,20 @@ export function fileSystemApiPlugin(): Plugin {
                 }
               }
 
-              // AI 处理类型：v0, google_aistudio
-              if (['v0', 'google_aistudio'].includes(uploadType)) {
+              // AI 处理类型：v0, google_aistudio, figma_make
+              if (['v0', 'google_aistudio', 'figma_make'].includes(uploadType)) {
                 try {
                   // 解压到 temp 目录
                   const timestamp = Date.now();
                   const basename = isFolderUpload
                     ? (folderUploadContext?.fallbackName || folderNameField || derivedRootName || `upload-${timestamp}`)
                     : path.basename(originalFilename, path.extname(originalFilename));
-                  const extractDirName = `${uploadType}-${truncateName(sanitizeFolderName(basename), 40)}-${timestamp}`;
+                  const inferredRootFolderName = folderUploadContext?.inferred.rootFolderName || derivedRootName || '';
+                  const safeBaseName = buildSafeImportFolderName(
+                    [basename, inferredRootFolderName],
+                    uploadType,
+                  );
+                  const extractDirName = `${uploadType}-${truncateName(safeBaseName, 40)}-${timestamp}`;
                   const extractDir = isFolderUpload
                     ? (folderUploadContext!.inferred.hasRootFolder
                         ? path.join(folderUploadContext!.tempExtractDir, folderUploadContext!.inferred.rootFolderName)
@@ -1478,132 +1834,97 @@ export function fileSystemApiPlugin(): Plugin {
                     fs.unlinkSync(tempFilePath);
                   }
 
-                  const pageName = basename
-                    .replace(/[^a-z0-9-]/gi, '-')
-                    .replace(/-+/g, '-')
-                    .replace(/^-|-$/g, '')
-                    .toLowerCase();
+                  const pageName = buildSafeImportFolderName(
+                    [basename, inferredRootFolderName, extractDirName],
+                    uploadType,
+                  );
                   const isThemeTarget = targetType === 'themes';
 
-                  // V0 项目：自动执行预处理脚本（同步等待完成）
-                  if (uploadType === 'v0') {
-                    const scriptPath = path.join(projectRoot, 'scripts', 'v0-converter.mjs');
-                    const tasksFileName = isThemeTarget ? '.v0-theme-tasks.md' : '.v0-tasks.md';
-                    const commandArgs = [scriptPath, extractDir, pageName, '--target-type', String(targetType)];
-                    
-                    console.log('[V0 转换] 执行预处理脚本:', `node ${commandArgs.join(' ')}`);
-                    
-                    // 同步执行，等待完成
-                    try {
-                      const commandResult = runCommandSync({
-                        command: nodeCommand,
-                        args: commandArgs,
-                        cwd: projectRoot,
-                      });
+                  const converterConfigs: Record<string, {
+                    label: string;
+                    scriptFile: string;
+                    tasksFileName: string;
+                    themeTasksFileName: string;
+                  }> = {
+                    v0: {
+                      label: 'V0',
+                      scriptFile: 'v0-converter.mjs',
+                      tasksFileName: '.v0-tasks.md',
+                      themeTasksFileName: '.v0-theme-tasks.md',
+                    },
+                    google_aistudio: {
+                      label: 'AI Studio',
+                      scriptFile: 'ai-studio-converter.mjs',
+                      tasksFileName: '.ai-studio-tasks.md',
+                      themeTasksFileName: '.ai-studio-theme-tasks.md',
+                    },
+                    figma_make: {
+                      label: 'Figma Make',
+                      scriptFile: 'figma-make-converter.mjs',
+                      tasksFileName: '.figma-make-tasks.md',
+                      themeTasksFileName: '.figma-make-theme-tasks.md',
+                    },
+                  };
 
-                      if (commandResult.status !== 0) {
-                        throw new Error(commandResult.stderr || commandResult.stdout || `exit=${commandResult.status}`);
-                      }
-                      const output = commandResult.stdout;
-                      
-                      console.log('[V0 转换] 执行成功:', output);
-                      
-                      // 验证任务文档是否生成
-                      const tasksFilePath = path.join(projectRoot, 'src', targetType, pageName, tasksFileName);
-                      if (!fs.existsSync(tasksFilePath)) {
-                        throw new Error(`任务文档生成失败: ${tasksFileName}`);
-                      }
-                      
-                      // 返回任务文档路径
-                      const tasksFileRelPath = `src/${targetType}/${pageName}/${tasksFileName}`;
-                      const ruleFile = '/rules/v0-project-converter.md';
-                      const prompt = isThemeTarget
-                        ? `V0 项目已上传并预处理完成（主题模式）。\n\n请阅读以下文件：\n1. 主题任务清单: ${tasksFileRelPath}\n2. 转换规范: ${ruleFile}\n\n请同时阅读主题拆分技能文档：\n${formatReferenceList(THEME_IMPORT_SUB_SKILL_DOCS)}\n\n然后基于任务清单生成主题/文档/数据（输出到 \`src/themes/${pageName}/\`、\`src/docs/\`、\`src/database/\`）。`
-                        : `V0 项目已上传并预处理完成。\n\n请阅读以下文件：\n1. 任务清单: ${tasksFileRelPath}\n2. 转换规范: ${ruleFile}\n\n然后根据任务清单完成转换工作。`;
-                      
-                      return sendJSON(res, 200, {
-                        success: true,
-                        uploadType,
-                        pageName,
-                        tasksFile: tasksFileRelPath,
-                        ruleFile,
-                        prompt,
-                        message: isThemeTarget ? '主题预处理完成，请查看任务文档' : '预处理完成，请查看任务文档'
-                      });
-                    } catch (scriptError: any) {
-                      console.error('[V0 转换] 执行失败:', scriptError);
-                      
-                      // 清理已创建的目录
-                      const pageDir = path.join(projectRoot, 'src', targetType, pageName);
-                      if (fs.existsSync(pageDir)) {
-                        fs.rmSync(pageDir, { recursive: true, force: true });
-                      }
-                      
-                      return sendJSON(res, 500, { 
-                        error: `预处理脚本执行失败: ${scriptError.message}`,
-                        details: scriptError.stderr || scriptError.stdout || scriptError.message
-                      });
-                    }
+                  const converterConfig = converterConfigs[String(uploadType)];
+                  if (!converterConfig) {
+                    throw new Error(`未知的上传类型: ${uploadType}`);
                   }
 
-                  // Google AI Studio 项目：自动执行预处理脚本（同步等待完成）
-                  if (uploadType === 'google_aistudio') {
-                    const scriptPath = path.join(projectRoot, 'scripts', 'ai-studio-converter.mjs');
-                    const tasksFileName = isThemeTarget ? '.ai-studio-theme-tasks.md' : '.ai-studio-tasks.md';
-                    const commandArgs = [scriptPath, extractDir, pageName, '--target-type', String(targetType)];
-                    
-                    console.log('[AI Studio 转换] 执行预处理脚本:', `node ${commandArgs.join(' ')}`);
-                    
-                    // 同步执行，等待完成
-                    try {
-                      const commandResult = runCommandSync({
-                        command: nodeCommand,
-                        args: commandArgs,
-                        cwd: projectRoot,
-                      });
-                      if (commandResult.status !== 0) {
-                        throw new Error(commandResult.stderr || commandResult.stdout || `exit=${commandResult.status}`);
-                      }
-                      const output = commandResult.stdout;
-                      
-                      console.log('[AI Studio 转换] 执行成功:', output);
-                      
-                      // 验证任务文档是否生成
-                      const tasksFilePath = path.join(projectRoot, 'src', targetType, pageName, tasksFileName);
-                      if (!fs.existsSync(tasksFilePath)) {
-                        throw new Error(`任务文档生成失败: ${tasksFileName}`);
-                      }
-                      
-                      // 返回任务文档路径
-                      const tasksFileRelPath = `src/${targetType}/${pageName}/${tasksFileName}`;
-                      const ruleFile = '/rules/ai-studio-project-converter.md';
-                      const prompt = isThemeTarget
-                        ? `AI Studio 项目已上传并预处理完成（主题模式）。\n\n请阅读以下文件：\n1. 主题任务清单: ${tasksFileRelPath}\n2. 转换规范: ${ruleFile}\n\n请同时阅读主题拆分技能文档：\n${formatReferenceList(THEME_IMPORT_SUB_SKILL_DOCS)}\n\n然后基于任务清单生成主题/文档/数据（输出到 \`src/themes/${pageName}/\`、\`src/docs/\`、\`src/database/\`）。`
-                        : `AI Studio 项目已上传并预处理完成。\n\n请阅读以下文件：\n1. 任务清单: ${tasksFileRelPath}\n2. 转换规范: ${ruleFile}\n\n然后根据任务清单完成转换工作。`;
-                      
-                      return sendJSON(res, 200, {
-                        success: true,
-                        uploadType,
-                        pageName,
-                        tasksFile: tasksFileRelPath,
-                        ruleFile,
-                        prompt,
-                        message: isThemeTarget ? '主题预处理完成，请查看任务文档' : '预处理完成，请查看任务文档'
-                      });
-                    } catch (scriptError: any) {
-                      console.error('[AI Studio 转换] 执行失败:', scriptError);
-                      
-                      // 清理已创建的目录
-                      const pageDir = path.join(projectRoot, 'src', targetType, pageName);
-                      if (fs.existsSync(pageDir)) {
-                        fs.rmSync(pageDir, { recursive: true, force: true });
-                      }
-                      
-                      return sendJSON(res, 500, { 
-                        error: `预处理脚本执行失败: ${scriptError.message}`,
-                        details: scriptError.stderr || scriptError.stdout || scriptError.message
-                      });
+                  const scriptPath = path.join(projectRoot, 'scripts', converterConfig.scriptFile);
+                  const tasksFileName = isThemeTarget ? converterConfig.themeTasksFileName : converterConfig.tasksFileName;
+                  const commandArgs = [scriptPath, extractDir, pageName, '--target-type', String(targetType)];
+
+                  console.log(`[${converterConfig.label} 转换] 执行预处理脚本:`, `node ${commandArgs.join(' ')}`);
+
+                  try {
+                    const commandResult = runCommandSync({
+                      command: nodeCommand,
+                      args: commandArgs,
+                      cwd: projectRoot,
+                    });
+
+                    if (commandResult.status !== 0) {
+                      throw new Error(commandResult.stderr || commandResult.stdout || `exit=${commandResult.status}`);
                     }
+                    const output = commandResult.stdout;
+
+                    console.log(`[${converterConfig.label} 转换] 执行成功:`, output);
+
+                    const tasksFilePath = path.join(projectRoot, 'src', targetType, pageName, tasksFileName);
+                    if (!fs.existsSync(tasksFilePath)) {
+                      throw new Error(`任务文档生成失败: ${tasksFileName}`);
+                    }
+
+                    const tasksFileRelPath = `src/${targetType}/${pageName}/${tasksFileName}`;
+                    const prompt = isThemeTarget
+                      ? `${converterConfig.label} 项目已上传并预处理完成（主题模式）。\n\n请先在仓库中读取以下主题任务清单：\n- ${tasksFileRelPath}\n\n然后基于该任务清单和技能文档，完成主题拆分（输出到 \`src/themes/${pageName}/\`、\`src/docs/\`、\`src/database/\`）。`
+                      : `${converterConfig.label} 项目已上传并预处理完成。\n\n请先在仓库中读取以下转换任务清单：\n- ${tasksFileRelPath}\n\n然后根据该任务清单和技能文档，完成具体的转换工作。`;
+
+                    return sendJSON(res, 200, {
+                      success: true,
+                      uploadType,
+                      pageName,
+                      tasksFile: tasksFileRelPath,
+                      prompt,
+                      message: isThemeTarget ? '主题文件已导入完成，可继续交给 AI 进行主题拆分。' : '页面文件已导入完成，可继续交给 AI 完成转换。',
+                      hint: '继续时直接把提示词发给 AI 即可，无需手动查看内部任务文档。',
+                    });
+                  } catch (scriptError: any) {
+                    console.error(`[${converterConfig.label} 转换] 执行失败:`, scriptError);
+
+                    const pageBaseDir = path.join(projectRoot, 'src', targetType);
+                    const pageDir = path.join(pageBaseDir, pageName);
+                    if (fs.existsSync(pageDir) && isSafeChildDir(pageBaseDir, pageDir)) {
+                      fs.rmSync(pageDir, { recursive: true, force: true });
+                    } else if (fs.existsSync(pageDir)) {
+                      console.error(`[${converterConfig.label} 转换] 跳过不安全目录清理:`, pageDir);
+                    }
+
+                    return sendJSON(res, 500, {
+                      error: `预处理脚本执行失败: ${scriptError.message}`,
+                      details: scriptError.stderr || scriptError.stdout || scriptError.message
+                    });
                   }
                 } catch (e: any) {
                   console.error('[文件系统 API] 解压失败:', e);
@@ -1764,6 +2085,166 @@ ${filePaths.map(p => `- \`${p}\``).join('\n')}
         } catch (e: any) {
           console.error('[文件系统 API] 截图上传失败:', e);
           return sendJSON(res, 500, { error: e.message || 'Upload failed' });
+        }
+      });
+
+      // ==================== /api/export-make ====================
+      server.middlewares.use('/api/export-make', async (req: any, res: any) => {
+        if (req.method !== 'GET') {
+          return sendJSON(res, 405, { error: 'Method not allowed' });
+        }
+
+        try {
+          const url = new URL(req.url, `http://${req.headers.host}`);
+          const targetPath = (url.searchParams.get('path') || '').trim();
+
+          if (!targetPath) {
+            return sendJSON(res, 400, { error: 'Missing path parameter' });
+          }
+
+          if (!isSafeSrcTargetPath(targetPath)) {
+            return sendJSON(res, 403, { error: 'Invalid path' });
+          }
+
+          const itemDir = path.join(projectRoot, 'src', targetPath);
+          if (!fs.existsSync(itemDir) || !fs.statSync(itemDir).isDirectory()) {
+            return sendJSON(res, 404, { error: 'Directory not found' });
+          }
+
+          const probe = url.searchParams.get('probe') === '1';
+          const promptMode = url.searchParams.get('prompt') === '1';
+          const snapshot = analyzeMakeAssets(itemDir, targetPath);
+
+          if (probe) {
+            return sendJSON(res, 200, {
+              ok: true,
+              path: targetPath,
+              hasMakeAssets: snapshot.hasMakeAssets,
+              lastExportedAt: snapshot.lastExportedAt,
+              fileName: snapshot.fileName,
+              hasCanvasFig: snapshot.hasCanvasFig,
+              hasMetaJson: snapshot.hasMetaJson,
+              hasAiChat: snapshot.hasAiChat,
+              hasThumbnail: snapshot.hasThumbnail,
+              hasManifest: snapshot.hasManifest,
+              hasImagesDir: snapshot.hasImagesDir,
+              imageCount: snapshot.imageCount,
+              hasDriftRisk: snapshot.hasDriftRisk,
+              driftReasons: snapshot.driftReasons,
+            });
+          }
+
+          if (promptMode) {
+            return sendJSON(res, 200, {
+              ok: true,
+              path: targetPath,
+              hasMakeAssets: snapshot.hasMakeAssets,
+              fileName: snapshot.fileName,
+              hasDriftRisk: snapshot.hasDriftRisk,
+              driftReasons: snapshot.driftReasons,
+              prompt: buildMakeExportPrompt(targetPath),
+            });
+          }
+
+          if (!snapshot.hasCanvasFig) {
+            return sendJSON(res, 409, {
+              error: '当前页面尚未生成 .fig 导出所需资产，请先复制 Prompt 让 AI 补齐。',
+              hasMakeAssets: false,
+              fileName: snapshot.fileName,
+              hasDriftRisk: snapshot.hasDriftRisk,
+              driftReasons: snapshot.driftReasons,
+              prompt: buildMakeExportPrompt(targetPath),
+            });
+          }
+
+          if (snapshot.hasDriftRisk) {
+            return sendJSON(res, 409, {
+              error: '检测到当前页面与 Figma 导出壳子可能未同步，请先按 Prompt 同步后再导出 .fig。',
+              hasMakeAssets: true,
+              fileName: snapshot.fileName,
+              hasDriftRisk: true,
+              driftReasons: snapshot.driftReasons,
+              prompt: buildMakeExportPrompt(targetPath),
+            });
+          }
+
+          const scriptPath = path.join(projectRoot, 'scripts', 'canvas-fig-sync.mjs');
+
+          const packResult = runCommandSync({
+            command: nodeCommand,
+            args: [
+              scriptPath,
+              'pack',
+              '--fig',
+              snapshot.canvasFigPath,
+              '--from',
+              itemDir,
+              '--prune-missing',
+              '--sanitize-for-export',
+              '--manifest',
+              snapshot.manifestPath,
+            ],
+            cwd: projectRoot,
+          });
+          if (packResult.status !== 0) {
+            throw new Error(packResult.stderr || packResult.stdout || `pack failed: exit=${packResult.status}`);
+          }
+
+          const inspectResult = runCommandSync({
+            command: nodeCommand,
+            args: [
+              scriptPath,
+              'inspect',
+              '--fig',
+              snapshot.canvasFigPath,
+              '--manifest',
+              snapshot.manifestPath,
+            ],
+            cwd: projectRoot,
+          });
+          if (inspectResult.status !== 0) {
+            throw new Error(inspectResult.stderr || inspectResult.stdout || `inspect failed: exit=${inspectResult.status}`);
+          }
+
+          const meta = ensureMakeMeta(itemDir, targetPath);
+          ensureMakeAiChat(itemDir);
+
+          const fileNameBase = typeof meta?.file_name === 'string' && meta.file_name.trim()
+            ? meta.file_name.trim()
+            : path.basename(targetPath);
+          const downloadFileName = fileNameBase.endsWith('.fig') ? fileNameBase : `${fileNameBase}.fig`;
+
+          res.setHeader('Content-Type', 'application/octet-stream');
+          res.setHeader('Content-Disposition', buildAttachmentContentDisposition(downloadFileName));
+
+          try {
+            const stream = fs.createReadStream(snapshot.canvasFigPath);
+            stream.on('error', (streamError: any) => {
+              console.error('[文件系统 API] export-make fig 读取失败:', streamError);
+              if (!res.headersSent) {
+                sendJSON(res, 500, { error: `读取 .fig 失败: ${streamError.message}` });
+              } else {
+                res.end();
+              }
+            });
+
+            await new Promise<void>((resolve, reject) => {
+              stream.on('end', resolve);
+              stream.on('error', reject);
+              res.on('close', resolve);
+              stream.pipe(res);
+            });
+          } catch (streamError: any) {
+            console.error('[文件系统 API] export-make fig 输出失败:', streamError);
+            if (!res.headersSent) {
+              return sendJSON(res, 500, { error: `输出 .fig 失败: ${streamError.message}` });
+            }
+          }
+        } catch (e: any) {
+          console.error('[文件系统 API] export-make 失败:', e);
+          if (!res.headersSent) {
+            sendJSON(res, 500, { error: e.message || 'Export make failed' });
+          }
         }
       });
 

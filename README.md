@@ -31,7 +31,7 @@ https://raw.githubusercontent.com/lintendo/Axhub-Make/refs/heads/main/README.md
 
 ```
 请根据这里的说明安装并配置 Axhub Make：
-https://raw.githubusercontent.com/lintendo/Axhub-Make/refs/heads/main/rules/installation-guide.md
+https://raw.githubusercontent.com/lintendo/Axhub-Make/refs/heads/main/rules/installation.md
 ```
 
 ---
@@ -63,7 +63,7 @@ Axhub Make 把「原型生成」变成「可执行工作流」，核心能力如
     <tr>
       <td style="white-space: nowrap;">原型</td>
       <td><code>src/prototypes/</code></td>
-      <td>用于评审真实交互和业务流程，不再只看静态稿</td>
+      <td>用于评审真实交互和业务流程，不再只看静态稿。可通过普通原型目录和原型内部模块组织页面结构</td>
     </tr>
     <tr>
       <td style="white-space: nowrap;">文档</td>

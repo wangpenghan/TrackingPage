@@ -17,6 +17,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { assertValidGeneratedTsx } from './utils/generatedTsxValidator.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -209,11 +210,49 @@ function escapeTextBraces(html) {
 function convertCommonAttributesToJSX(content) {
   let nextContent = content;
 
+  nextContent = nextContent.replace(/\s(?:srcset|sizes)=(["'])\1/gi, '');
+
   JSX_ATTRIBUTE_REPLACEMENTS.forEach(([from, to]) => {
     nextContent = nextContent.replace(new RegExp(`(\\s)${from}=`, 'gi'), `$1${to}=`);
   });
 
   return nextContent;
+}
+
+function findCompatibleImageAsset(filename, availableAssets) {
+  if (!filename || availableAssets.has(filename)) {
+    return filename;
+  }
+
+  const extension = path.extname(filename);
+  const basename = path.basename(filename, extension);
+  const dedupeMatch = basename.match(/^(.*?)-\d+$/);
+  if (!dedupeMatch) {
+    return filename;
+  }
+
+  const fallbackName = `${dedupeMatch[1]}${extension}`;
+  return availableAssets.has(fallbackName) ? fallbackName : filename;
+}
+
+function reconcileImageAssetReferences(content, imagesPath) {
+  if (!content || !fs.existsSync(imagesPath)) {
+    return content;
+  }
+
+  const availableAssets = new Set(
+    fs.readdirSync(imagesPath, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name),
+  );
+
+  return content.replace(/assets\/images\/([^"')\s>]+)/g, (fullMatch, filename) => {
+    const resolvedFilename = findCompatibleImageAsset(filename, availableAssets);
+    if (resolvedFilename === filename) {
+      return fullMatch;
+    }
+    return `assets/images/${resolvedFilename}`;
+  });
 }
 
 function createCommentPlaceholders(content) {
@@ -270,10 +309,15 @@ function convertHtmlToJSX(content) {
  * 提取并转换 body 内容
  */
 function extractBodyContent(html) {
-  const bodyMatch = html.match(/(<body[^>]*>)([\s\S]*?)(<\/body>)/i);
-  if (!bodyMatch) return '';
-  
-  const [, openTag, innerContent] = bodyMatch;
+  const openTagMatch = html.match(/<body\b[^>]*>/i);
+  if (!openTagMatch || openTagMatch.index === undefined) return '';
+
+  const openTag = openTagMatch[0];
+  const contentStart = openTagMatch.index + openTag.length;
+  const closeTagIndex = html.toLowerCase().lastIndexOf('</body>');
+  if (closeTagIndex < contentStart) return '';
+
+  const innerContent = html.slice(contentStart, closeTagIndex);
   
   // 移除 <root> 标签（Chrome 扩展导出特有的包装标签）
   let cleanedContent = innerContent.trim()
@@ -476,7 +520,10 @@ class ErrorBoundary extends React.Component<
   }
 }
 
-const Component = forwardRef<AxureHandle, AxureProps>(function ${componentName}(innerProps, ref) {
+const Component = forwardRef(function ${componentName}(
+  innerProps: AxureProps,
+  ref: React.ForwardedRef<AxureHandle>,
+) {
   console.log('[${pageSlug}] 组件开始渲染');
   
   useImperativeHandle(ref, function () {
@@ -503,11 +550,16 @@ ${finalContent.split('\n').map(line => '      ' + line).join('\n')}
   }
 });
 
-const WrappedComponent = forwardRef<AxureHandle, AxureProps>((props, ref) => (
-  <ErrorBoundary>
-    <Component {...props} ref={ref} />
-  </ErrorBoundary>
-));
+const WrappedComponent = forwardRef(function WrappedComponent(
+  props: AxureProps,
+  ref: React.ForwardedRef<AxureHandle>,
+) {
+  return (
+    <ErrorBoundary>
+      <Component {...props} ref={ref} />
+    </ErrorBoundary>
+  );
+});
 
 export default WrappedComponent;
 `;
@@ -626,7 +678,10 @@ function convertPage(sourcePath, outputDir, pageSlug, displayName) {
   const html = fs.readFileSync(htmlPath, 'utf8');
   
   const headContent = extractHeadContent(html);
-  const bodyContent = extractBodyContent(html);
+  const bodyContent = reconcileImageAssetReferences(
+    extractBodyContent(html),
+    path.join(sourcePath, 'assets', 'images'),
+  );
   
   // 从外部 CSS 文件提取字体
   const externalCSSPath = path.join(sourcePath, 'style.css');
@@ -643,8 +698,11 @@ function convertPage(sourcePath, outputDir, pageSlug, displayName) {
   // 生成组件和样式
   const componentCode = generateComponent(pageSlug, displayName, bodyContent, headContent);
   const styleCSS = generateStyleCSS(fonts, sourcePath);
+  const outputTsxPath = path.join(outputDir, 'index.tsx');
+
+  assertValidGeneratedTsx(componentCode, outputTsxPath);
   
-  fs.writeFileSync(path.join(outputDir, 'index.tsx'), componentCode);
+  fs.writeFileSync(outputTsxPath, componentCode);
   fs.writeFileSync(path.join(outputDir, 'style.css'), styleCSS);
   
   // 复制静态资源
@@ -810,4 +868,6 @@ export {
   convertHtmlToJSX,
   convertStyleToJSX,
   extractBodyContent,
+  generateComponent,
+  reconcileImageAssetReferences,
 };
