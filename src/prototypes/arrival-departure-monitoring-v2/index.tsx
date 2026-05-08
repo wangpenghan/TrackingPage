@@ -14,7 +14,6 @@ import { FilterBar } from './FilterBar';
 import { TrainTable } from './TrainTable';
 import { mockTrainSchedules } from './mock-data';
 import { PlanChangeOverview } from './components/PlanChangeOverview';
-import { PlanMonitoring } from './PlanMonitoring';
 import './style.css';
 import './grid-style.css';
 
@@ -519,9 +518,6 @@ const Component = forwardRef<AxureHandle, AxureProps>(function ArrivalDepartureM
     <div className={`flex flex-col h-screen ${darkMode ? 'dark' : ''}`} style={{ background: darkMode ? '#1E293B' : '#F8FAFC' }}>
 
       <div className="monitoring-page flex-1 flex flex-col overflow-hidden" style={{ background: darkMode ? '#0F172A' : '#E2E8F0' }}>
-        {/* 计划监测 */}
-        <PlanMonitoring darkMode={darkMode} />
-
         {/* 顶部面包屑 */}
         <div style={{
           padding: '8px 20px',

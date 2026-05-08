@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-04-24T02:18:13.641Z",
+  "generatedAt": "2026-05-08T08:08:16.442Z",
   "items": {
     "components/ref-button": {
       "group": "components",
@@ -62,17 +62,17 @@
       "js": "src/prototypes/operation-monitoring/index.tsx",
       "html": "src/prototypes/operation-monitoring/index.html"
     },
-    "prototypes/passenger-template": {
+    "prototypes/plan-comparison": {
       "group": "prototypes",
-      "name": "passenger-template",
-      "js": "src/prototypes/passenger-template/index.tsx",
-      "html": "src/prototypes/passenger-template/index.html"
+      "name": "plan-comparison",
+      "js": "src/prototypes/plan-comparison/index.tsx",
+      "html": "src/prototypes/plan-comparison/index.html"
     },
-    "prototypes/passenger-template-v2": {
+    "prototypes/station-passenger-template": {
       "group": "prototypes",
-      "name": "passenger-template-v2",
-      "js": "src/prototypes/passenger-template-v2/index.tsx",
-      "html": "src/prototypes/passenger-template-v2/index.html"
+      "name": "station-passenger-template",
+      "js": "src/prototypes/station-passenger-template/index.tsx",
+      "html": "src/prototypes/station-passenger-template/index.html"
     },
     "themes/antd-new": {
       "group": "themes",
@@ -104,8 +104,8 @@
     "prototypes/lighting-control": "src/prototypes/lighting-control/index.tsx",
     "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.tsx",
     "prototypes/operation-monitoring": "src/prototypes/operation-monitoring/index.tsx",
-    "prototypes/passenger-template": "src/prototypes/passenger-template/index.tsx",
-    "prototypes/passenger-template-v2": "src/prototypes/passenger-template-v2/index.tsx",
+    "prototypes/plan-comparison": "src/prototypes/plan-comparison/index.tsx",
+    "prototypes/station-passenger-template": "src/prototypes/station-passenger-template/index.tsx",
     "themes/antd-new": "src/themes/antd-new/index.tsx",
     "themes/firecrawl": "src/themes/firecrawl/index.tsx",
     "themes/trae-design": "src/themes/trae-design/index.tsx"
@@ -121,8 +121,8 @@
     "prototypes/lighting-control": "src/prototypes/lighting-control/index.html",
     "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.html",
     "prototypes/operation-monitoring": "src/prototypes/operation-monitoring/index.html",
-    "prototypes/passenger-template": "src/prototypes/passenger-template/index.html",
-    "prototypes/passenger-template-v2": "src/prototypes/passenger-template-v2/index.html",
+    "prototypes/plan-comparison": "src/prototypes/plan-comparison/index.html",
+    "prototypes/station-passenger-template": "src/prototypes/station-passenger-template/index.html",
     "themes/antd-new": "src/themes/antd-new/index.html",
     "themes/firecrawl": "src/themes/firecrawl/index.html",
     "themes/trae-design": "src/themes/trae-design/index.html"

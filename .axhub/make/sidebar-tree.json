@@ -1,57 +1,57 @@
 {
   "version": 1,
-  "updatedAt": "2026-04-11T08:30:05.719Z",
+  "updatedAt": "2026-05-08T07:07:26.034Z",
   "prototypes": [
     {
-      "id": "item-prototypes-passenger-template-v2",
+      "id": "item:prototypes:basic-plan",
       "kind": "item",
-      "title": "passenger template v2",
-      "itemKey": "prototypes/passenger-template-v2"
-    },
-    {
-      "id": "item-prototypes-lighting-control",
-      "kind": "item",
-      "title": "lighting control",
-      "itemKey": "prototypes/lighting-control"
-    },
-    {
-      "id": "item-prototypes-passenger-template",
-      "kind": "item",
-      "title": "passenger template",
-      "itemKey": "prototypes/passenger-template"
-    },
-    {
-      "id": "item-prototypes-basic-plan",
-      "kind": "item",
-      "title": "basic plan",
+      "title": "基本计划",
       "itemKey": "prototypes/basic-plan"
     },
     {
-      "id": "item-prototypes-dmr-control-system",
+      "id": "item:prototypes:station-passenger-template",
       "kind": "item",
-      "title": "dmr control system",
-      "itemKey": "prototypes/dmr-control-system"
+      "title": "客运模板",
+      "itemKey": "prototypes/station-passenger-template"
     },
     {
-      "id": "item-prototypes-managed-station-monitoring",
+      "id": "item:prototypes:plan-comparison",
       "kind": "item",
-      "title": "managed station monitoring",
-      "itemKey": "prototypes/managed-station-monitoring"
+      "title": "计划比对",
+      "itemKey": "prototypes/plan-comparison"
     },
     {
-      "id": "item-prototypes-arrival-departure-monitoring-v2",
+      "id": "item:prototypes:arrival-departure-monitoring-v2",
       "kind": "item",
-      "title": "arrival departure monitoring v2",
+      "title": "到发盯控",
       "itemKey": "prototypes/arrival-departure-monitoring-v2"
     },
     {
-      "id": "item-prototypes-arrival-departure-monitoring",
+      "id": "item:prototypes:lighting-control",
       "kind": "item",
-      "title": "到发盯控",
+      "title": "照明控制",
+      "itemKey": "prototypes/lighting-control"
+    },
+    {
+      "id": "item:prototypes:dmr-control-system",
+      "kind": "item",
+      "title": "DMR 系统",
+      "itemKey": "prototypes/dmr-control-system"
+    },
+    {
+      "id": "item:prototypes:managed-station-monitoring",
+      "kind": "item",
+      "title": "代管盯控 v9",
+      "itemKey": "prototypes/managed-station-monitoring"
+    },
+    {
+      "id": "item:prototypes:arrival-departure-monitoring",
+      "kind": "item",
+      "title": "到发盯控-看板",
       "itemKey": "prototypes/arrival-departure-monitoring"
     },
     {
-      "id": "item-prototypes-operation-monitoring",
+      "id": "item:prototypes:operation-monitoring",
       "kind": "item",
       "title": "作业盯控",
       "itemKey": "prototypes/operation-monitoring"
@@ -241,6 +241,9 @@
     "orders"
   ],
   "templates": [
+    "design-md-template.md",
+    "review-log-template.md",
+    "work-summary-template.md",
     "memory-log-template.md",
     "business-flow-template.md",
     "data-model-template.md",

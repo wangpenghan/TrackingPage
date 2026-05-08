@@ -1,4 +1,7 @@
+## 📌 项目信息
 
+- 项目名称：盯控页面
+- 项目总文档：`src/docs/project-overview.md`
 
 # Agents 工作流程说明
 

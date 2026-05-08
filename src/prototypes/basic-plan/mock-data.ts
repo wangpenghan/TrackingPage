@@ -35,7 +35,7 @@ export interface Train {
 }
 
 export const stationNames = [
-  '北京西', '石家庄', '郑州东', '武汉', '长沙南', '广州南', '深圳北',
+  '重庆东', '北京西', '石家庄', '郑州东', '武汉', '长沙南', '广州南', '深圳北',
   '上海虹桥', '南京南', '杭州东', '合肥南', '西安北', '成都东', '重庆西',
   '天津西', '济南西', '徐州东', '南昌西', '福州', '厦门北'
 ];
@@ -135,7 +135,11 @@ const generateTrain = (id: number): Train => {
     formationCount: Math.random() > 0.5 ? 16 : 8,
     capacity: 500 + Math.floor(Math.random() * 800),
     turningStation: Math.random() > 0.7 ? stations[Math.floor(stations.length / 2)].stationName : undefined,
-    routeInfo: `${trainNo}-${trainNo}${100 + Math.floor(Math.random() * 900)}`,
+    routeInfo: Array.from({ length: 3 + Math.floor(Math.random() * 8) }, (_, i) => {
+      if (i === 0) return trainNo;
+      const prefix = Math.random() > 0.5 ? 'G' : 'D';
+      return `${prefix}${100 + Math.floor(Math.random() * 900)}`;
+    }).join('-'),
     passingLines: passingLinesList[Math.floor(Math.random() * passingLinesList.length)],
     passingBureaus: passingBureausList[Math.floor(Math.random() * passingBureausList.length)],
     remarks: Math.random() > 0.6 ? '编组乘务员使用' : undefined,
@@ -154,11 +158,135 @@ export const generateDiagramTrains = (diagramNo: string, baseId: number, count: 
   return trains;
 };
 
+// 需要数据维护的问题车次（注入到最新图号 2025-Q4）
+const problematicTrains: Train[] = [
+  {
+    id: 'problem-1',
+    trainNo: 'G8801',
+    trainType: 'high-speed',
+    diagramNo: '2025-Q4',
+    operationRule: 'daily',
+    operationCycle: 1,
+    operationPattern: [1],
+    originStation: '北京西',
+    destinationStation: '广州南',
+    trainModel: 'CR400AF',
+    formationCount: 16,
+    capacity: 1283,
+    routeInfo: 'G8801-G8802',
+    passingLines: ['京广高铁'],
+    passingBureaus: ['北京局', '郑州局', '广州局'],
+    // 问题：经过重庆东，但缺少股道信息
+    stations: [
+      { stationName: '北京西',  stationOrder: 1, departureTime: '08:00', track: '12', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '郑州东',  stationOrder: 2, arrivalTime: '10:20', departureTime: '10:25', track: '3',  updateTime: '2026-05-01 09:00:00' },
+      { stationName: '重庆东',  stationOrder: 3, arrivalTime: '14:30', departureTime: '14:35', track: '',   updateTime: '2026-05-01 09:00:00' }, // ← 股道为空
+      { stationName: '广州南',  stationOrder: 4, arrivalTime: '18:00', track: '8',  updateTime: '2026-05-01 09:00:00' },
+    ],
+  },
+  {
+    id: 'problem-2',
+    trainNo: 'D5502',
+    trainType: 'high-speed',
+    diagramNo: '2025-Q4',
+    operationRule: 'daily',
+    operationCycle: 1,
+    operationPattern: [1],
+    originStation: '成都东',
+    destinationStation: '上海虹桥',
+    trainModel: 'CRH380A',
+    formationCount: 8,
+    capacity: 601,
+    routeInfo: 'D5502-D5503',
+    passingLines: ['沪汉蓉通道'],
+    passingBureaus: ['成都局', '上海局'],
+    // 问题：经过重庆东，缺少到达时间（途中站）
+    stations: [
+      { stationName: '成都东',  stationOrder: 1, departureTime: '07:30', track: '5',  updateTime: '2026-05-01 09:00:00' },
+      { stationName: '重庆东',  stationOrder: 2, arrivalTime: '',        departureTime: '09:15', track: '2', updateTime: '2026-05-01 09:00:00' }, // ← 到达时间缺失
+      { stationName: '武汉',    stationOrder: 3, arrivalTime: '11:40',   departureTime: '11:50', track: '7', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '上海虹桥', stationOrder: 4, arrivalTime: '15:30', track: '11', updateTime: '2026-05-01 09:00:00' },
+    ],
+  },
+  {
+    id: 'problem-3',
+    trainNo: 'G9003',
+    trainType: 'high-speed',
+    diagramNo: '2025-Q4',
+    operationRule: 'alternate',
+    operationCycle: 2,
+    operationPattern: [1, 0],
+    originStation: '重庆东',
+    destinationStation: '北京西',
+    trainModel: 'CR400BF',
+    formationCount: 16,
+    capacity: 1283,
+    routeInfo: 'G9003-G9004',
+    passingLines: ['渝万高铁', '郑渝高铁'],
+    passingBureaus: ['成都局', '郑州局', '北京局'],
+    // 问题：重庆东是始发站，缺少发车时间
+    stations: [
+      { stationName: '重庆东',  stationOrder: 1, departureTime: '',    track: '6',  updateTime: '2026-05-01 09:00:00' }, // ← 发车时间缺失
+      { stationName: '万州北',  stationOrder: 2, arrivalTime: '10:10', departureTime: '10:15', track: '4', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '郑州东',  stationOrder: 3, arrivalTime: '13:20', departureTime: '13:30', track: '9', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '北京西',  stationOrder: 4, arrivalTime: '16:00', track: '14', updateTime: '2026-05-01 09:00:00' },
+    ],
+  },
+  {
+    id: 'problem-4',
+    trainNo: 'K8804',
+    trainType: 'normal',
+    diagramNo: '2025-Q4',
+    operationRule: 'custom',
+    operationCycle: 3,
+    operationPattern: [1, 0, 1],
+    originStation: '西安北',
+    destinationStation: '深圳北',
+    trainModel: 'CR200J',
+    formationCount: 8,
+    capacity: 601,
+    routeInfo: 'K8804-K8805',
+    passingLines: ['西成客专', '成贵高铁'],
+    passingBureaus: ['西安局', '成都局', '广州局'],
+    // 问题：不经过重庆东，完全不具备同步条件
+    stations: [
+      { stationName: '西安北',  stationOrder: 1, departureTime: '09:00', track: '3', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '成都东',  stationOrder: 2, arrivalTime: '11:30', departureTime: '11:40', track: '8', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '贵阳北',  stationOrder: 3, arrivalTime: '14:10', departureTime: '14:20', track: '6', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '深圳北',  stationOrder: 4, arrivalTime: '18:30', track: '5', updateTime: '2026-05-01 09:00:00' },
+    ],
+  },
+  {
+    id: 'problem-5',
+    trainNo: 'G7705',
+    trainType: 'high-speed',
+    diagramNo: '2025-Q4',
+    operationRule: 'daily',
+    operationCycle: 1,
+    operationPattern: [1],
+    originStation: '南京南',
+    destinationStation: '重庆东',
+    trainModel: 'CRH380B',
+    formationCount: 16,
+    capacity: 1283,
+    routeInfo: 'G7705-G7706',
+    passingLines: ['沪渝蓉高铁'],
+    passingBureaus: ['上海局', '武汉局', '成都局'],
+    // 问题：重庆东是终到站，缺少到达时间且股道为空
+    stations: [
+      { stationName: '南京南',  stationOrder: 1, departureTime: '08:15', track: '7',  updateTime: '2026-05-01 09:00:00' },
+      { stationName: '武汉',    stationOrder: 2, arrivalTime: '10:00',   departureTime: '10:10', track: '3', updateTime: '2026-05-01 09:00:00' },
+      { stationName: '重庆东',  stationOrder: 3, arrivalTime: '',        track: '',   updateTime: '2026-05-01 09:00:00' }, // ← 到达时间 + 股道均缺失
+    ],
+  },
+];
+
 export const mockBasicPlanTrains: Train[] = [
   ...generateDiagramTrains('2025-Q1', 1, 20),
   ...generateDiagramTrains('2025-Q2', 100, 18),
   ...generateDiagramTrains('2025-Q3', 200, 22),
   ...generateDiagramTrains('2025-Q4', 300, 19),
+  ...problematicTrains,
 ];
 
 export const diagramNos = ['2025-Q1', '2025-Q2', '2025-Q3', '2025-Q4'];

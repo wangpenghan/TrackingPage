@@ -1,1108 +1,507 @@
 /**
  * @name 基本计划
- *
- * 铁路基本运行图管理页面
- * 展示全路所有开行列车信息，通过图号区分
- * 
- * 设计规范：大胆创新、界面色彩参考 macOS 统一风格样式
+ * 铁路基本运行图管理页面，展示全路开行列车信息，通过图号区分。
+ * 风格对齐客运模板（Indigo 主题）。
  */
 
 import React, { useState, useMemo } from 'react';
-import { Search, MapPin, Calendar, RotateCcw, Repeat, Train as TrainIcon, ChevronDown, X, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
-import { mockBasicPlanTrains, diagramNos, stationNames, Train, validateTrainData, calculateDiagramChanges, DiagramChanges } from './mock-data';
+import {
+  Search, MapPin, Calendar, RotateCcw, Repeat,
+  Train as TrainIcon, ChevronDown, X, Clock,
+  CheckCircle2, AlertCircle, Edit, Trash2, Plus, ArrowRight,
+  RefreshCw,
+} from 'lucide-react';
+import {
+  mockBasicPlanTrains, diagramNos, stationNames,
+  validateTrainData, calculateDiagramChanges,
+} from './mock-data';
+import type { Train, DiagramChanges } from './mock-data';
 import './style.css';
 
-const macOSColors = {
-  background: '#F5F5F7',
-  cardBackground: '#FFFFFF',
-  textPrimary: '#1D1D1F',
-  textSecondary: '#86868B',
-  accent: '#007AFF',
-  accentHover: '#0051D5',
-  border: '#D2D2D7',
-  success: '#34C759',
-  warning: '#FF9500',
-  error: '#FF3B30'
-};
+/* ── 工具 ── */
+function btnStyle(variant: 'primary' | 'outline' | 'ghost' | 'success' | 'warning'): React.CSSProperties {
+  const base: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
+    padding: '7px 14px', borderRadius: '6px', fontSize: '13px',
+    fontWeight: 600, cursor: 'pointer', border: '1px solid transparent',
+    whiteSpace: 'nowrap',
+  };
+  const map: Record<string, React.CSSProperties> = {
+    primary: { ...base, background: '#5e6ad2', color: '#fff', borderColor: '#5e6ad2' },
+    outline: { ...base, background: '#fff', color: '#5e6ad2', borderColor: '#5e6ad2' },
+    ghost: { ...base, background: 'transparent', color: '#6B7280', borderColor: '#D1D5DB' },
+    success: { ...base, background: '#10B981', color: '#fff', borderColor: '#10B981' },
+    warning: { ...base, background: '#F59E0B', color: '#fff', borderColor: '#F59E0B' },
+  };
+  return map[variant] ?? base;
+}
 
+/* ── 单行验证：检查某趟车是否满足同步到重庆东客运模板的条件 ── */
+function checkSyncEligibility(train: Train): string[] {
+  const issues: string[] = [];
+  const cqStation = train.stations.find(s => s.stationName === '重庆东');
+  if (!cqStation) { issues.push('未经过"重庆东"'); return issues; }
+  const idx = train.stations.indexOf(cqStation);
+  const isFirst = idx === 0;
+  const isLast = idx === train.stations.length - 1;
+  if (!cqStation.track) issues.push('缺少"重庆东"股道信息');
+  if (!isFirst && !cqStation.arrivalTime) issues.push('缺少"重庆东"到达时间');
+  if (!isLast && !cqStation.departureTime) issues.push('缺少"重庆东"发车时间');
+  if (issues.length === 0) {
+    const v = validateTrainData(train);
+    if (!v.valid) issues.push(...v.issues.slice(0, 2));
+  }
+  return issues;
+}
+
+/* ═══════════════════════════════════════
+   主组件
+═══════════════════════════════════════ */
 const Component: React.FC = () => {
   const [selectedDiagram, setSelectedDiagram] = useState<string>(diagramNos[diagramNos.length - 1]);
+  const [localTrains, setLocalTrains] = useState<Train[]>(mockBasicPlanTrains);
   const [prevDiagram, setPrevDiagram] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStation, setSelectedStation] = useState<string>('');
   const [showStationDropdown, setShowStationDropdown] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'high-speed' | 'normal'>('all');
+  const [syncFilter, setSyncFilter] = useState<'all' | 'unsynced' | 'synced'>('all');
   const [selectedTrain, setSelectedTrain] = useState<Train | null>(null);
   const [showDiagramDropdown, setShowDiagramDropdown] = useState(false);
   const [showChangesDrawer, setShowChangesDrawer] = useState<'added' | 'removed' | 'modified' | null>(null);
+  const [editingStations, setEditingStations] = useState(false);
+  const [editedTrain, setEditedTrain] = useState<Train | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string; details?: string[] } | null>(null);
+
+  /* 同步状态：key=trainId, value=true已同步 */
+  const [syncedIds, setSyncedIds] = useState<Set<string>>(new Set());
+
+  const notify = (type: 'success' | 'error' | 'warning', message: string, details?: string[]) => {
+    setNotification({ type, message, details });
+    setTimeout(() => setNotification(null), 6000);
+  };
+
+  const currentTrains = useMemo(
+    () => localTrains.filter(t => t.diagramNo === selectedDiagram),
+    [selectedDiagram, localTrains]
+  );
 
   const filteredTrains = useMemo(() => {
-    return mockBasicPlanTrains.filter(train => {
-      const matchesDiagram = train.diagramNo === selectedDiagram;
-      
-      const matchesSearch = !searchTerm.trim() || 
-        train.trainNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        train.diagramNo.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesStation = !selectedStation || 
+    return currentTrains.filter(train => {
+      const isSynced = syncedIds.has(train.id);
+      if (syncFilter === 'synced' && !isSynced) return false;
+      if (syncFilter === 'unsynced' && isSynced) return false;
+      const matchesSearch = !searchTerm.trim() ||
+        train.trainNo.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStation = !selectedStation ||
         train.originStation.includes(selectedStation) ||
         train.destinationStation.includes(selectedStation) ||
         train.stations.some(s => s.stationName.includes(selectedStation));
-
       const matchesType = filterType === 'all' || train.trainType === filterType;
-
-      return matchesDiagram && matchesSearch && matchesStation && matchesType;
+      return matchesSearch && matchesStation && matchesType;
     });
-  }, [selectedDiagram, searchTerm, selectedStation, filterType]);
+  }, [currentTrains, searchTerm, selectedStation, filterType, syncFilter, syncedIds]);
 
-  const currentTrains = useMemo(() => {
-    return mockBasicPlanTrains.filter(t => t.diagramNo === selectedDiagram);
-  }, [selectedDiagram]);
-
-  const prevTrains = useMemo(() => {
-    if (!prevDiagram) return [];
-    return mockBasicPlanTrains.filter(t => t.diagramNo === prevDiagram);
-  }, [prevDiagram]);
+  const prevTrains = useMemo(
+    () => (prevDiagram ? localTrains.filter(t => t.diagramNo === prevDiagram) : []),
+    [prevDiagram, localTrains]
+  );
 
   const diagramChanges = useMemo((): DiagramChanges | null => {
     if (!prevDiagram || prevTrains.length === 0) return null;
     return calculateDiagramChanges(currentTrains, prevTrains);
   }, [currentTrains, prevTrains, prevDiagram]);
 
-  const stats = useMemo(() => {
-    const trainModelCounts = new Map<string, number>();
-    const bureauCounts = new Map<string, number>();
-    const formationCounts = new Map<number, number>();
+  /* 统计 */
+  const syncedCount = currentTrains.filter(t => syncedIds.has(t.id)).length;
+  const unsyncedCount = currentTrains.length - syncedCount;
 
+  /* 数据维护：找出当前图号中无法同步的车次及原因 */
+  const maintenanceItems = useMemo(() => {
+    return currentTrains
+      .filter(t => !syncedIds.has(t.id))
+      .map(t => ({ train: t, issues: checkSyncEligibility(t) }))
+      .filter(item => item.issues.length > 0);
+  }, [currentTrains, syncedIds]);
+
+  /* 单条同步 */
+  const handleSyncOne = (train: Train) => {
+    if (syncedIds.has(train.id)) {
+      notify('warning', `车次 ${train.trainNo} 已同步，如需重新同步请先将其标记为"未同步"。`);
+      return;
+    }
+    const issues = checkSyncEligibility(train);
+    if (issues.length > 0) {
+      notify('error', `车次 ${train.trainNo} 不满足同步条件`, issues);
+      setSelectedTrain(train);
+      return;
+    }
+    setSyncedIds(prev => new Set([...prev, train.id]));
+    notify('success', `车次 ${train.trainNo} 已成功同步至客运模板系统。`);
+  };
+
+  /* 批量同步：找出所有满足条件的未同步车次 */
+  const handleBatchSync = () => {
+    const eligible: Train[] = [];
+    const failed: string[] = [];
     currentTrains.forEach(train => {
-      if (train.trainModel) {
-        trainModelCounts.set(train.trainModel, (trainModelCounts.get(train.trainModel) || 0) + 1);
-      }
-      if (train.formationCount) {
-        formationCounts.set(train.formationCount, (formationCounts.get(train.formationCount) || 0) + 1);
-      }
-      if (train.passingBureaus) {
-        train.passingBureaus.forEach(bureau => {
-          bureauCounts.set(bureau, (bureauCounts.get(bureau) || 0) + 1);
-        });
+      if (syncedIds.has(train.id)) return; // 已同步跳过
+      const issues = checkSyncEligibility(train);
+      if (issues.length === 0) {
+        eligible.push(train);
+      } else {
+        failed.push(`${train.trainNo}（${issues[0]}）`);
       }
     });
-
-    return {
-      total: currentTrains.length,
-      highSpeed: currentTrains.filter(t => t.trainType === 'high-speed').length,
-      normal: currentTrains.filter(t => t.trainType === 'normal').length,
-      daily: currentTrains.filter(t => t.operationRule === 'daily').length,
-      alternate: currentTrains.filter(t => t.operationRule === 'alternate').length,
-      custom: currentTrains.filter(t => t.operationRule === 'custom').length,
-      trainModelCounts,
-      bureauCounts,
-      formationCounts
-    };
-  }, [currentTrains]);
-
-  const getOperationRuleLabel = (rule: string) => {
-    switch (rule) {
-      case 'daily': return '每日开行';
-      case 'alternate': return '隔日开行';
-      case 'custom': return '周期开行';
-      default: return rule;
+    if (eligible.length === 0 && failed.length === 0) {
+      notify('warning', '当前图号下所有车次均已同步，无需重复操作。');
+      return;
+    }
+    if (eligible.length > 0) {
+      setSyncedIds(prev => new Set([...prev, ...eligible.map(t => t.id)]));
+    }
+    if (failed.length === 0) {
+      notify('success', `批量同步完成，共同步 ${eligible.length} 个车次。`);
+    } else {
+      notify('warning', `同步完成：${eligible.length} 个成功，${failed.length} 个因条件不满足跳过。`,
+        failed.slice(0, 5).concat(failed.length > 5 ? [`...等 ${failed.length - 5} 条`] : [])
+      );
     }
   };
 
-  const getOperationRuleIcon = (rule: string) => {
-    switch (rule) {
-      case 'daily': return <Calendar size={14} />;
-      case 'alternate': return <RotateCcw size={14} />;
-      case 'custom': return <Repeat size={14} />;
-      default: return <Calendar size={14} />;
-    }
+  /* 标记为未同步（重置状态） */
+  const handleMarkUnsynced = (trainId: string) => {
+    setSyncedIds(prev => { const s = new Set(prev); s.delete(trainId); return s; });
   };
 
-  const getOperationRuleColor = (rule: string) => {
-    switch (rule) {
-      case 'daily': return macOSColors.success;
-      case 'alternate': return macOSColors.warning;
-      case 'custom': return macOSColors.accent;
-      default: return macOSColors.textSecondary;
-    }
+  const handleSaveStations = () => {
+    if (!editedTrain) return;
+    // 更新 localTrains 中的数据
+    setLocalTrains(prev => prev.map(t => t.id === editedTrain.id ? editedTrain : t));
+    setSelectedTrain(editedTrain);
+    setEditingStations(false);
+    setEditedTrain(null);
+    notify('success', '站点信息已保存');
   };
 
-  const renderOperationPattern = (train: Train) => {
-    if (train.operationRule === 'daily') return null;
-    
-    return (
-      <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
-        {train.operationPattern.map((run, idx) => (
-          <div
-            key={idx}
-            style={{
-              width: '24px',
-              height: '24px',
-              borderRadius: '4px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '11px',
-              fontWeight: 600,
-              background: run ? `${getOperationRuleColor(train.operationRule)}20` : `${macOSColors.border}40`,
-              color: run ? getOperationRuleColor(train.operationRule) : macOSColors.textSecondary,
-              border: `1px solid ${run ? getOperationRuleColor(train.operationRule) : macOSColors.border}`
-            }}
-          >
-            {idx + 1}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const validation = selectedTrain ? validateTrainData(selectedTrain) : { valid: true, issues: [] };
+  const displayTrain = editedTrain || selectedTrain;
 
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      background: macOSColors.background,
-      padding: '24px'
-    }}>
-      <div style={{ maxWidth: '1600px', margin: '0 auto' }}>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          marginBottom: '24px'
-        }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#F9FAFB', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
+
+      {/* ── 顶部工具栏 ── */}
+      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '60px' }}>
+
+          {/* 左：标题 + 图号 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <h1 style={{ 
-              fontSize: '28px', 
-              fontWeight: 700, 
-              color: macOSColors.textPrimary,
-              margin: 0
-            }}>
-              基本计划
-            </h1>
-            
+            <h1 style={{ fontSize: '20px', fontWeight: 700, color: '#111827', margin: 0 }}>基本计划</h1>
+            <div style={{ width: '1px', height: '20px', backgroundColor: '#E5E7EB' }} />
             <div style={{ position: 'relative' }}>
               <button
-                onClick={() => setShowDiagramDropdown(!showDiagramDropdown)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 16px',
-                  background: macOSColors.cardBackground,
-                  border: `1px solid ${macOSColors.border}`,
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  color: macOSColors.textPrimary,
-                  cursor: 'pointer'
-                }}
+                onClick={() => setShowDiagramDropdown(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', background: '#fff', fontSize: '13px', cursor: 'pointer', color: '#374151' }}
               >
-                <MapPin size={18} color={macOSColors.accent} />
-                {selectedDiagram}
-                <ChevronDown size={16} color={macOSColors.textSecondary} />
+                <Calendar style={{ width: '14px', height: '14px', color: '#5e6ad2' }} />
+                图号：{selectedDiagram}
+                <ChevronDown style={{ width: '14px', height: '14px', color: '#9CA3AF' }} />
               </button>
-              
               {showDiagramDropdown && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  marginTop: '4px',
-                  background: macOSColors.cardBackground,
-                  border: `1px solid ${macOSColors.border}`,
-                  borderRadius: '8px',
-                  boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                  zIndex: 100,
-                  minWidth: '140px'
-                }}>
-                  {[...diagramNos].reverse().map(diagram => (
-                    <button
-                      key={diagram}
-                      onClick={() => {
-                        if (diagram !== selectedDiagram) {
-                          setPrevDiagram(selectedDiagram);
-                          setSelectedDiagram(diagram);
-                        }
-                        setShowDiagramDropdown(false);
-                      }}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        padding: '10px 16px',
-                        textAlign: 'left',
-                        background: diagram === selectedDiagram ? `${macOSColors.accent}10` : 'transparent',
-                        border: 'none',
-                        fontSize: '14px',
-                        color: diagram === selectedDiagram ? macOSColors.accent : macOSColors.textPrimary,
-                        cursor: 'pointer',
-                        fontWeight: diagram === selectedDiagram ? 600 : 400
-                      }}
-                    >
-                      {diagram}
-                    </button>
+                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: '160px', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 200 }}>
+                  {[...diagramNos].reverse().map(d => (
+                    <button key={d}
+                      onClick={() => { if (d !== selectedDiagram) { setPrevDiagram(selectedDiagram); setSyncedIds(new Set()); } setSelectedDiagram(d); setShowDiagramDropdown(false); }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: d === selectedDiagram ? '#EEF0FB' : 'transparent', fontSize: '13px', cursor: 'pointer', color: d === selectedDiagram ? '#5e6ad2' : '#374151', fontWeight: d === selectedDiagram ? 600 : 400 }}
+                    >{d}</button>
                   ))}
                 </div>
               )}
             </div>
           </div>
 
-          <div style={{ position: 'relative', width: '220px' }}>
-            <MapPin size={18} color={macOSColors.textSecondary} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <div
-              onClick={() => setShowStationDropdown(!showStationDropdown)}
-              style={{
-                width: '100%',
-                padding: '10px 16px 10px 40px',
-                borderRadius: '8px',
-                border: `1px solid ${macOSColors.border}`,
-                fontSize: '14px',
-                background: macOSColors.cardBackground,
-                color: selectedStation ? macOSColors.textPrimary : macOSColors.textSecondary,
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <span>{selectedStation || '选择站名...'}</span>
-              <ChevronDown size={16} color={macOSColors.textSecondary} />
+          {/* 右：筛选 + 批量同步 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ position: 'relative' }}>
+              <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: '#9CA3AF' }} />
+              <input type="text" placeholder="搜索车次..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                style={{ paddingLeft: '32px', paddingRight: '12px', height: '36px', width: '180px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '13px', outline: 'none', color: '#374151' }} />
             </div>
-            {showStationDropdown && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                marginTop: '4px',
-                background: macOSColors.cardBackground,
-                border: `1px solid ${macOSColors.border}`,
-                borderRadius: '8px',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
-                zIndex: 100,
-                maxHeight: '300px',
-                overflowY: 'auto'
-              }}>
-                <div
-                  onClick={() => {
-                    setSelectedStation('');
-                    setShowStationDropdown(false);
-                  }}
-                  style={{
-                    display: 'block',
-                    width: '100%',
-                    padding: '10px 16px',
-                    textAlign: 'left',
-                    background: 'transparent',
-                    border: 'none',
-                    fontSize: '14px',
-                    color: macOSColors.textSecondary,
-                    cursor: 'pointer',
-                    borderBottom: `1px solid ${macOSColors.border}`
-                  }}
-                >
-                  全部站名
-                </div>
-                {stationNames
-                  .filter(station => 
-                    !searchTerm || station.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-                  .map(station => (
-                    <div
-                      key={station}
-                      onClick={() => {
-                        setSelectedStation(station);
-                        setShowStationDropdown(false);
-                      }}
-                      style={{
-                        display: 'block',
-                        width: '100%',
-                        padding: '10px 16px',
-                        textAlign: 'left',
-                        background: station === selectedStation ? `${macOSColors.accent}10` : 'transparent',
-                        border: 'none',
-                        fontSize: '14px',
-                        color: station === selectedStation ? macOSColors.accent : macOSColors.textPrimary,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      {station}
-                    </div>
+
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowStationDropdown(v => !v)}
+                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 12px', height: '36px', border: '1px solid #D1D5DB', borderRadius: '6px', background: '#fff', fontSize: '13px', cursor: 'pointer', color: selectedStation ? '#374151' : '#9CA3AF', minWidth: '130px' }}>
+                <MapPin style={{ width: '13px', height: '13px', color: '#9CA3AF' }} />
+                <span style={{ flex: 1, textAlign: 'left' }}>{selectedStation || '按经停站筛选'}</span>
+                <ChevronDown style={{ width: '13px', height: '13px', color: '#9CA3AF' }} />
+              </button>
+              {showStationDropdown && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '160px', maxHeight: '260px', overflowY: 'auto', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', boxShadow: '0 8px 24px rgba(0,0,0,0.1)', zIndex: 200 }}>
+                  <button onClick={() => { setSelectedStation(''); setShowStationDropdown(false); }} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', borderBottom: '1px solid #F3F4F6', background: 'transparent', fontSize: '13px', cursor: 'pointer', color: '#6B7280' }}>全部站名</button>
+                  {stationNames.map(s => (
+                    <button key={s} onClick={() => { setSelectedStation(s); setShowStationDropdown(false); }}
+                      style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', border: 'none', background: 'transparent', fontSize: '13px', cursor: 'pointer', color: s === selectedStation ? '#5e6ad2' : '#374151', fontWeight: s === selectedStation ? 600 : 400 }}>
+                      {s}
+                    </button>
                   ))}
-              </div>
-            )}
-          </div>
-          <div style={{ position: 'relative', width: '220px' }}>
-            <Search size={18} color={macOSColors.textSecondary} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-            <input
-              type="text"
-              placeholder="搜索图号、车次..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 16px 10px 40px',
-                borderRadius: '8px',
-                border: `1px solid ${macOSColors.border}`,
-                fontSize: '14px',
-                background: macOSColors.cardBackground,
-                color: macOSColors.textPrimary,
-                outline: 'none'
-              }}
-            />
+                </div>
+              )}
+            </div>
+
+            <select value={filterType} onChange={e => setFilterType(e.target.value as any)}
+              style={{ height: '36px', padding: '0 10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '13px', color: '#374151', background: '#fff', cursor: 'pointer' }}>
+              <option value="all">全部类型</option>
+              <option value="high-speed">高铁</option>
+              <option value="normal">普速</option>
+            </select>
+
+            <div style={{ width: '1px', height: '24px', backgroundColor: '#E5E7EB' }} />
+
+            {/* 批量同步按钮 */}
+            <button onClick={handleBatchSync} style={btnStyle('primary')}>
+              <Repeat style={{ width: '14px', height: '14px' }} />
+              批量同步至客运模板
+            </button>
           </div>
         </div>
+      </div>
 
-        {diagramChanges && prevDiagram && (
-          <div style={{
-            background: `${macOSColors.cardBackground}`,
-            borderRadius: '12px',
-            padding: '20px',
-            border: `1px solid ${macOSColors.border}`,
-            marginBottom: '20px'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '16px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <RotateCcw size={18} color={macOSColors.textSecondary} />
-                <span style={{ fontSize: '14px', fontWeight: 600, color: macOSColors.textPrimary }}>
-                  与 {prevDiagram} 对比
-                </span>
-              </div>
-              <span style={{ fontSize: '12px', color: macOSColors.textSecondary }}>
-                当前图: {selectedDiagram}
-              </span>
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '12px'
-            }}>
-              {[
-                { 
-                  type: 'added' as const,
-                  label: '新增车次', 
-                  value: diagramChanges.added, 
-                  color: macOSColors.success,
-                  icon: '+',
-                  trains: diagramChanges.addedTrains
-                },
-                { 
-                  type: 'removed' as const,
-                  label: '减少车次', 
-                  value: diagramChanges.removed, 
-                  color: macOSColors.error,
-                  icon: '−',
-                  trains: diagramChanges.removedTrains
-                },
-                { 
-                  type: 'modified' as const,
-                  label: '变更车次', 
-                  value: diagramChanges.modified, 
-                  color: macOSColors.warning,
-                  icon: '~',
-                  trains: diagramChanges.modifiedTrains
-                },
-                { 
-                  type: 'unchanged' as const,
-                  label: '保持不变', 
-                  value: diagramChanges.unchanged, 
-                  color: macOSColors.textSecondary,
-                  icon: '=',
-                  trains: []
-                }
-              ].map((item, idx) => (
-                <div 
-                  key={idx} 
-                  onClick={() => item.type !== 'unchanged' && item.value > 0 && setShowChangesDrawer(item.type)}
-                  style={{
-                    background: `${item.color}10`,
-                    borderRadius: '10px',
-                    padding: '14px',
-                    textAlign: 'center',
-                    cursor: item.type !== 'unchanged' && item.value > 0 ? 'pointer' : 'default',
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (item.type !== 'unchanged' && item.value > 0) {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '6px',
-                    marginBottom: '4px'
-                  }}>
-                    <span style={{
-                      fontSize: '20px',
-                      fontWeight: 700,
-                      color: item.color,
-                      fontFamily: 'SF Mono, monospace'
-                    }}>
-                      {item.icon}
-                    </span>
-                    <span style={{
-                      fontSize: '22px',
-                      fontWeight: 700,
-                      color: item.color
-                    }}>
-                      {item.value}
-                    </span>
-                  </div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: macOSColors.textSecondary,
-                    fontWeight: 500
-                  }}>
-                    {item.label}
-                  </div>
-                  {item.type !== 'unchanged' && item.value > 0 && (
-                    <div style={{
-                      fontSize: '11px',
-                      color: item.color,
-                      marginTop: '4px',
-                      opacity: 0.7
-                    }}>
-                      点击查看
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(4, 1fr)', 
-          gap: '16px', 
-          marginBottom: '24px'
-        }}>
-          {[
-            { label: '总列数', value: stats.total, icon: <TrainIcon size={20} />, color: macOSColors.accent },
-            { label: '高铁', value: stats.highSpeed, icon: <TrainIcon size={20} />, color: macOSColors.success },
-            { label: '普速', value: stats.normal, icon: <TrainIcon size={20} />, color: macOSColors.warning },
-            { label: '开行类型', value: `${stats.daily}/${stats.alternate}/${stats.custom}`, icon: <Calendar size={20} />, color: macOSColors.textSecondary }
-          ].map((stat, idx) => (
-            <div key={idx} style={{
-              background: macOSColors.cardBackground,
-              borderRadius: '12px',
-              padding: '20px',
-              border: `1px solid ${macOSColors.border}`
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                <div style={{
-                  width: '40px',
-                  height: '40px',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: `${stat.color}15`
-                }}>
-                  <span style={{ color: stat.color }}>{stat.icon}</span>
-                </div>
-                <div>
-                  <div style={{ fontSize: '24px', fontWeight: 700, color: macOSColors.textPrimary }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: '13px', color: macOSColors.textSecondary }}>
-                    {stat.label}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-
-
-        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-          {[
-            { key: 'all', label: '全部' },
-            { key: 'high-speed', label: '高铁' },
-            { key: 'normal', label: '普速' }
-          ].map(filter => (
+      {/* ── 副工具栏：同步状态 Tab ── */}
+      <div style={{ backgroundColor: '#fff', borderBottom: '1px solid #E5E7EB', padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
+          {([
+            { key: 'all', label: '全部', count: currentTrains.length },
+            { key: 'unsynced', label: '未同步', count: unsyncedCount },
+            { key: 'synced', label: '已同步', count: syncedCount },
+          ] as const).map(tab => (
             <button
-              key={filter.key}
-              onClick={() => setFilterType(filter.key as any)}
+              key={tab.key}
+              onClick={() => setSyncFilter(tab.key)}
               style={{
-                padding: '8px 16px',
-                borderRadius: '20px',
-                border: filterType === filter.key ? 'none' : `1px solid ${macOSColors.border}`,
-                background: filterType === filter.key ? macOSColors.accent : macOSColors.cardBackground,
-                color: filterType === filter.key ? '#FFFFFF' : macOSColors.textPrimary,
-                fontSize: '13px',
-                fontWeight: 500,
-                cursor: 'pointer'
+                padding: '10px 16px', border: 'none', background: 'transparent', cursor: 'pointer',
+                fontSize: '13px', fontWeight: syncFilter === tab.key ? 600 : 400,
+                color: syncFilter === tab.key ? '#5e6ad2' : '#6B7280',
+                borderBottom: syncFilter === tab.key ? '2px solid #5e6ad2' : '2px solid transparent',
+                display: 'flex', alignItems: 'center', gap: '6px',
               }}
             >
-              {filter.label}
+              {tab.label}
+              <span style={{
+                minWidth: '20px', height: '18px', padding: '0 5px', borderRadius: '999px',
+                fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                background: syncFilter === tab.key ? '#5e6ad2' : '#F3F4F6',
+                color: syncFilter === tab.key ? '#fff' : '#6B7280',
+              }}>{tab.count}</span>
             </button>
           ))}
         </div>
 
-          <div style={{
-            background: macOSColors.cardBackground,
-            borderRadius: '16px',
-            border: `1px solid ${macOSColors.border}`,
-            overflow: 'hidden',
-            boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(50px, 60px) minmax(80px, 90px) minmax(80px, 90px) minmax(90px, 110px) minmax(90px, 110px) minmax(80px, 90px) minmax(60px, 70px) minmax(60px, 70px) minmax(80px, 100px) minmax(80px, 90px) minmax(200px, 1fr) minmax(80px, 100px)',
-              gap: '12px',
-              padding: '16px 20px',
-              borderBottom: `2px solid ${macOSColors.border}`,
-              background: `${macOSColors.background}80`
-            }}>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>序号</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>车次</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>车型</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>始发站</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>终到站</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>编组/定员</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>周期</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>规则</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>调向站</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>开行类型</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>交路信息/经过线路</div>
-              <div style={{ fontSize: '12px', fontWeight: 700, color: macOSColors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px', textAlign: 'center' }}>操作</div>
-            </div>
-
-            <div style={{ maxHeight: 'calc(100vh - 480px)', overflowY: 'auto' }}>
-              {filteredTrains.map((train, index) => (
-                <div
-                  key={train.id}
-                  onClick={() => setSelectedTrain(train)}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'minmax(50px, 60px) minmax(80px, 90px) minmax(80px, 90px) minmax(90px, 110px) minmax(90px, 110px) minmax(80px, 90px) minmax(60px, 70px) minmax(60px, 70px) minmax(80px, 100px) minmax(80px, 90px) minmax(200px, 1fr) minmax(80px, 100px)',
-                    gap: '12px',
-                    padding: '14px 20px',
-                    borderBottom: `1px solid ${macOSColors.border}30`,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    background: index % 2 === 0 ? macOSColors.cardBackground : `${macOSColors.background}30`
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = `${macOSColors.accent}10`;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = index % 2 === 0 ? macOSColors.cardBackground : `${macOSColors.background}30`;
-                  }}
-                >
-                  <div style={{ fontSize: '14px', fontWeight: 500, color: macOSColors.textSecondary, display: 'flex', alignItems: 'center' }}>
-                    {index + 1}
-                  </div>
-                  
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{
-                      fontSize: '15px',
-                      fontWeight: 700,
-                      color: macOSColors.textPrimary,
-                      fontFamily: 'SF Mono, monospace'
-                    }}>
-                      {train.trainNo}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {train.trainModel && (
-                      <span style={{
-                        fontSize: '12px',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        background: `${macOSColors.textSecondary}10`,
-                        color: macOSColors.textSecondary,
-                        fontWeight: 500
-                      }}>
-                        {train.trainModel}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: macOSColors.textPrimary }}>
-                      {train.originStation}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: macOSColors.textPrimary }}>
-                      {train.destinationStation}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{
-                      fontSize: '12px',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      background: `${macOSColors.success}10`,
-                      color: macOSColors.success,
-                      fontWeight: 600
-                    }}>
-                      {train.formationCount}
-                    </span>
-                    <span style={{ fontSize: '12px', color: macOSColors.textSecondary }}>
-                      {train.capacity}人
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', fontWeight: 600, color: macOSColors.textPrimary }}>
-                      {train.operationCycle}
-                    </span>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {train.operationRule === 'daily' && (
-                      <span style={{
-                        fontSize: '11px',
-                        padding: '3px 6px',
-                        borderRadius: '4px',
-                        background: `${macOSColors.success}15`,
-                        color: macOSColors.success,
-                        fontWeight: 600
-                      }}>
-                        每日
-                      </span>
-                    )}
-                    {train.operationRule === 'alternate' && (
-                      <span style={{
-                        fontSize: '11px',
-                        padding: '3px 6px',
-                        borderRadius: '4px',
-                        background: `${macOSColors.warning}15`,
-                        color: macOSColors.warning,
-                        fontWeight: 600
-                      }}>
-                        隔日
-                      </span>
-                    )}
-                    {train.operationRule === 'custom' && (
-                      <span style={{
-                        fontSize: '11px',
-                        padding: '3px 6px',
-                        borderRadius: '4px',
-                        background: `${macOSColors.accent}15`,
-                        color: macOSColors.accent,
-                        fontWeight: 600
-                      }}>
-                        周期
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {train.turningStation && (
-                      <span style={{
-                        fontSize: '12px',
-                        color: macOSColors.warning,
-                        fontWeight: 500
-                      }}>
-                        {train.turningStation}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    {train.remarks && (
-                      <span style={{
-                        fontSize: '12px',
-                        padding: '3px 6px',
-                        borderRadius: '4px',
-                        background: `${macOSColors.accent}10`,
-                        color: macOSColors.accent,
-                        fontWeight: 500
-                      }}>
-                        {train.remarks}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                    {train.routeInfo && (
-                      <span style={{
-                        fontSize: '11px',
-                        color: macOSColors.textSecondary,
-                        marginBottom: '2px',
-                        display: 'block',
-                        width: '100%'
-                      }}>
-                        {train.routeInfo}
-                      </span>
-                    )}
-                    {train.passingLines && train.passingLines.slice(0, 4).map(line => (
-                      <span key={line} style={{
-                        fontSize: '10px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        background: `${macOSColors.accent}10`,
-                        color: macOSColors.accent,
-                        fontWeight: 500
-                      }}>
-                        {line}
-                      </span>
-                    ))}
-                    {train.passingLines && train.passingLines.length > 4 && (
-                      <span style={{
-                        fontSize: '10px',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        background: `${macOSColors.textSecondary}10`,
-                        color: macOSColors.textSecondary,
-                        fontWeight: 500
-                      }}>
-                        +{train.passingLines.length - 4}
-                      </span>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedTrain(train);
-                      }}
-                      style={{
-                        padding: '6px 16px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        background: macOSColors.accent,
-                        color: '#FFFFFF',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        cursor: 'pointer',
-                        transition: 'background 0.2s ease'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.stopPropagation();
-                        e.currentTarget.style.background = macOSColors.accentHover;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = macOSColors.accent;
-                      }}
-                    >
-                      站详情
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-        {filteredTrains.length === 0 && (
-          <div style={{
-            textAlign: 'center',
-            padding: '60px 20px',
-            color: macOSColors.textSecondary
-          }}>
-            <Search size={48} style={{ marginBottom: '16px', opacity: 0.3 }} />
-            <div style={{ fontSize: '16px' }}>未找到匹配的列车</div>
+        {/* 变更对比条（如果有） */}
+        {diagramChanges && prevDiagram && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>与 {prevDiagram} 对比：</span>
+            {[
+              { type: 'added' as const, label: '新增', count: diagramChanges.added, bg: '#ECFDF5', color: '#065F46', border: '#A7F3D0' },
+              { type: 'removed' as const, label: '减少', count: diagramChanges.removed, bg: '#FEF2F2', color: '#991B1B', border: '#FECACA' },
+              { type: 'modified' as const, label: '变更', count: diagramChanges.modified, bg: '#FFFBEB', color: '#92400E', border: '#FCD34D' },
+            ].map(item => (
+              <button key={item.type}
+                onClick={() => item.count > 0 && setShowChangesDrawer(item.type)}
+                style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 8px', borderRadius: '999px', backgroundColor: item.bg, border: `1px solid ${item.border}`, color: item.color, fontSize: '11px', fontWeight: 600, cursor: item.count > 0 ? 'pointer' : 'default', opacity: item.count === 0 ? 0.4 : 1 }}>
+                {item.label} {item.count}
+              </button>
+            ))}
           </div>
         )}
       </div>
 
-      {selectedTrain && (
-        <>
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.4)',
-              zIndex: 999
-            }}
-            onClick={() => setSelectedTrain(null)}
-          />
-          <div style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '750px',
-            maxHeight: '85vh',
-            background: macOSColors.cardBackground,
-            borderRadius: '16px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            zIndex: 1000,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <div style={{
-              padding: '20px 24px',
-              borderBottom: `1px solid ${macOSColors.border}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-start',
-              flexShrink: 0
-            }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '26px', fontWeight: 700, color: macOSColors.textPrimary }}>
-                    {selectedTrain.trainNo}
-                  </span>
-                  {selectedTrain.trainModel && (
-                    <span style={{ 
-                      fontSize: '13px', 
-                      color: macOSColors.textSecondary,
-                      background: `${macOSColors.border}40`,
-                      padding: '3px 10px',
-                      borderRadius: '6px'
-                    }}>
-                      {selectedTrain.trainModel}
+      {/* ── 数据维护提醒横幅 ── */}
+      {maintenanceItems.length > 0 && (
+        <div style={{ margin: '0 24px 0 24px', marginTop: '16px', background: '#FFFBEB', border: '1px solid #FCD34D', borderLeft: '4px solid #F59E0B', borderRadius: '8px', padding: '14px 18px' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            <AlertCircle style={{ width: '18px', height: '18px', color: '#D97706', flexShrink: 0, marginTop: '1px' }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: 700, color: '#92400E', marginBottom: '8px' }}>
+                数据维护提醒 — {maintenanceItems.length} 个车次无法同步至客运模板，需补全信息
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {maintenanceItems.map(({ train, issues }) => (
+                  <div key={train.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <button
+                      onClick={() => setSelectedTrain(train)}
+                      style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'monospace', color: '#5e6ad2', background: 'none', border: 'none', cursor: 'pointer', padding: 0, textDecoration: 'underline', textUnderlineOffset: '2px' }}
+                    >
+                      {train.trainNo}
+                    </button>
+                    <span style={{ fontSize: '12px', color: '#78350F' }}>
+                      {train.originStation} → {train.destinationStation}
                     </span>
-                  )}
+                    <span style={{ fontSize: '12px', color: '#6B7280' }}>·</span>
+                    {issues.map((issue, i) => (
+                      <span key={i} style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D', fontWeight: 600 }}>
+                        {issue}
+                      </span>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── 主列表 ── */}
+      <div style={{ padding: '16px 24px' }}>
+        <div style={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '10px', overflow: 'hidden' }}>
+          {/* 表头 */}
+          <div style={{ display: 'grid', gridTemplateColumns: '48px 120px 180px 130px 110px 150px 1fr 120px', padding: '0 16px', borderBottom: '2px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
+            {['#', '车次', '始发 → 终到', '车型 / 编组', '开行规则', '经过线路', '交路', '同步状态'].map((h, i) => (
+              <div key={i} style={{ padding: '11px 8px', fontSize: '11px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.4px', textAlign: i === 7 ? 'center' : 'left' }}>{h}</div>
+            ))}
+          </div>
+
+          {/* 行 */}
+          <div style={{ overflowY: 'auto', maxHeight: 'calc(100vh - 220px)' }}>
+            {filteredTrains.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 0', color: '#9CA3AF' }}>
+                <Search style={{ width: '36px', height: '36px', margin: '0 auto 10px', opacity: 0.3, display: 'block' }} />
+                <div style={{ fontSize: '14px' }}>未找到匹配的列车数据</div>
+              </div>
+            ) : (
+              filteredTrains.map((train, idx) => (
+                <TrainRow
+                  key={train.id}
+                  train={train}
+                  index={idx}
+                  isSynced={syncedIds.has(train.id)}
+                  hasIssues={!syncedIds.has(train.id) && checkSyncEligibility(train).length > 0}
+                  onOpen={() => setSelectedTrain(train)}
+                  onSync={() => handleSyncOne(train)}
+                  onMarkUnsynced={() => handleMarkUnsynced(train.id)}
+                />
+              ))
+            )}
+          </div>
+
+          <div style={{ padding: '8px 24px', borderTop: '1px solid #E5E7EB', backgroundColor: '#F9FAFB', fontSize: '12px', color: '#9CA3AF' }}>
+            显示 {filteredTrains.length} / {currentTrains.length} 条 · 已同步 {syncedCount} 条
+          </div>
+        </div>
+      </div>
+
+      {/* ── 站点详情侧边抽屉 ── */}
+      {selectedTrain && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} onClick={() => { setSelectedTrain(null); setEditingStations(false); setEditedTrain(null); }} />
+          <div style={{ position: 'relative', width: '560px', height: '100%', background: '#fff', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 32px rgba(0,0,0,0.12)' }}>
+
+            {/* 头部 */}
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: '#EEF0FB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <TrainIcon style={{ width: '22px', height: '22px', color: '#5e6ad2' }} />
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', color: macOSColors.textSecondary }}>
-                  <span>图号: {selectedTrain.diagramNo}</span>
-                  {selectedTrain.formationCount && <span>{selectedTrain.formationCount}辆编组</span>}
-                  {selectedTrain.capacity && <span>定员 {selectedTrain.capacity}</span>}
-                  {selectedTrain.routeInfo && <span>交路: {selectedTrain.routeInfo}</span>}
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: '#111827' }}>{selectedTrain.trainNo}</span>
+                    {syncedIds.has(selectedTrain.id) ? (
+                      <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: '#ECFDF5', color: '#065F46', fontWeight: 600, border: '1px solid #A7F3D0' }}>已同步</span>
+                    ) : (
+                      <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontWeight: 600, border: '1px solid #FCD34D' }}>未同步</span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>图号：{selectedTrain.diagramNo} · {selectedTrain.trainType === 'high-speed' ? '高铁' : '普速'} · 共 {displayTrain?.stations.length} 站</div>
                 </div>
               </div>
-              <button
-                onClick={() => setSelectedTrain(null)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: `${macOSColors.border}30`,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '16px'
-                }}
-              >
-                <X size={20} color={macOSColors.textSecondary} />
+              <button onClick={() => { setSelectedTrain(null); setEditingStations(false); setEditedTrain(null); }}
+                style={{ width: '32px', height: '32px', borderRadius: '8px', border: '1px solid #E5E7EB', background: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <X style={{ width: '16px', height: '16px', color: '#6B7280' }} />
               </button>
             </div>
 
-            {!validation.valid && (
-              <div style={{
-                padding: '16px 24px',
-                background: `${macOSColors.error}10`,
-                borderBottom: `1px solid ${macOSColors.error}20`,
-                flexShrink: 0
-              }}>
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                  <AlertCircle size={20} color={macOSColors.error} />
-                  <div>
-                    <div style={{ fontSize: '14px', fontWeight: 600, color: macOSColors.error, marginBottom: '6px' }}>
-                      数据验证发现问题
-                    </div>
-                    <ul style={{ margin: 0, paddingLeft: '16px', fontSize: '12px', color: macOSColors.error }}>
-                      {validation.issues.map((issue, idx) => (
-                        <li key={idx}>{issue}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
+            {/* 工具栏 */}
+            <div style={{ padding: '10px 24px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: '#374151' }}>
+                <MapPin style={{ width: '14px', height: '14px', color: '#5e6ad2' }} /> 经停站点
               </div>
-            )}
-
-            <div style={{
-              padding: '16px 24px',
-              background: `${macOSColors.background}50`,
-              borderBottom: `1px solid ${macOSColors.border}`,
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '20px',
-              flexShrink: 0
-            }}>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                {selectedTrain.passingLines && selectedTrain.passingLines.map((line, idx) => (
-                  <span key={idx} style={{
-                    fontSize: '12px',
-                    padding: '5px 12px',
-                    borderRadius: '14px',
-                    background: `${macOSColors.accent}12`,
-                    color: macOSColors.accent,
-                    fontWeight: 500
-                  }}>
-                    {line}
-                  </span>
-                ))}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {editingStations ? (
+                  <>
+                    <button onClick={() => { if (editedTrain) { const ns = { stationName: '新站点', stationOrder: editedTrain.stations.length + 1, updateTime: new Date().toISOString().replace('T', ' ').slice(0, 19) }; setEditedTrain({ ...editedTrain, stations: [...editedTrain.stations, ns] }); } }} style={btnStyle('outline')}>
+                      <Plus style={{ width: '13px', height: '13px' }} /> 添加站点
+                    </button>
+                    <button onClick={() => { setEditingStations(false); setEditedTrain(null); }} style={btnStyle('ghost')}>取消</button>
+                    <button onClick={handleSaveStations} style={btnStyle('success')}>确认保存</button>
+                  </>
+                ) : (
+                  <button onClick={() => { setEditedTrain(JSON.parse(JSON.stringify(selectedTrain))); setEditingStations(true); }} style={btnStyle('outline')}>
+                    <Edit style={{ width: '13px', height: '13px' }} /> 编辑站点
+                  </button>
+                )}
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {selectedTrain.passingBureaus && selectedTrain.passingBureaus.map((bureau, idx) => (
-                  <span key={idx} style={{
-                    fontSize: '12px',
-                    padding: '5px 12px',
-                    borderRadius: '14px',
-                    background: `${macOSColors.textSecondary}10`,
-                    color: macOSColors.textSecondary,
-                    fontWeight: 500
-                  }}>
-                    {bureau}
-                  </span>
-                ))}
-              </div>
-              {selectedTrain.turningStation && (
-                <span style={{
-                  fontSize: '12px',
-                  padding: '5px 12px',
-                  borderRadius: '14px',
-                  background: `${macOSColors.warning}12`,
-                  color: macOSColors.warning,
-                  fontWeight: 500
-                }}>
-                  调向站: {selectedTrain.turningStation}
-                </span>
-              )}
-              {selectedTrain.remarks && (
-                <span style={{
-                  fontSize: '12px',
-                  padding: '5px 12px',
-                  borderRadius: '14px',
-                  background: `${macOSColors.success}12`,
-                  color: macOSColors.success,
-                  fontWeight: 500
-                }}>
-                  {selectedTrain.remarks}
-                </span>
-              )}
             </div>
 
-            <div style={{
-              padding: '20px 24px',
-              overflowY: 'auto',
-              flex: 1,
-              minHeight: 0
-            }}>
-              <div style={{ 
-                fontSize: '13px', 
-                fontWeight: 600, 
-                color: macOSColors.textSecondary,
-                marginBottom: '16px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
-                停靠站详情 ({selectedTrain.stations.length}站)
-              </div>
-              <div style={{ position: 'relative' }}>
-                {selectedTrain.stations.map((station, idx) => {
-                  const isFirst = idx === 0;
-                  const isLast = idx === selectedTrain.stations.length - 1;
-                  
+            {/* 站点列表 */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px 24px', backgroundColor: '#F9FAFB' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {displayTrain?.stations.map((station, i) => {
+                  const total = displayTrain.stations.length;
+                  const isFirst = i === 0;
+                  const isLast = i === total - 1;
+                  const isCQ = station.stationName === '重庆东';
                   return (
-                    <div key={station.stationOrder} style={{ 
-                      display: 'flex', 
-                      marginBottom: isLast ? 0 : '20px',
-                      background: idx % 2 === 0 ? `${macOSColors.background}30` : 'transparent',
-                      padding: '12px 16px',
-                      borderRadius: '8px',
-                      marginLeft: '-16px',
-                      marginRight: '-16px'
-                    }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        flexDirection: 'column', 
-                        alignItems: 'center',
-                        marginRight: '16px',
-                        flexShrink: 0
-                      }}>
-                        <div style={{
-                          width: '26px',
-                          height: '26px',
-                          borderRadius: '50%',
-                          background: isFirst || isLast ? macOSColors.accent : macOSColors.cardBackground,
-                          border: `3px solid ${isFirst || isLast ? macOSColors.accent : macOSColors.border}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          zIndex: 1,
-                          boxShadow: isFirst || isLast ? `0 2px 8px ${macOSColors.accent}30` : 'none'
-                        }}>
-                          {isFirst || isLast ? (
-                            <CheckCircle2 size={14} color="#FFFFFF" />
-                          ) : (
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: macOSColors.textSecondary }}>
-                              {station.stationOrder}
-                            </span>
+                    <div key={`${station.stationOrder}-${i}`} style={{ background: '#fff', border: `1px solid ${isCQ ? '#5e6ad2' : '#E5E7EB'}`, borderRadius: '8px', padding: '12px 14px', position: 'relative', boxShadow: isCQ ? '0 0 0 2px #EEF0FB' : 'none' }}>
+                      {isCQ && <div style={{ position: 'absolute', top: '-9px', right: '12px', background: '#5e6ad2', color: '#fff', fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px' }}>当前监控站</div>}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, background: isFirst ? '#ECFDF5' : isLast ? '#FEF2F2' : '#F3F4F6', color: isFirst ? '#065F46' : isLast ? '#991B1B' : '#6B7280' }}>
+                            {station.stationOrder}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            {editingStations ? (
+                              <input value={station.stationName}
+                                onChange={e => { if (editedTrain) { const s = [...editedTrain.stations]; s[i] = { ...s[i], stationName: e.target.value }; setEditedTrain({ ...editedTrain, stations: s }); } }}
+                                style={{ fontSize: '14px', fontWeight: 600, border: 'none', borderBottom: '1px dashed #5e6ad2', outline: 'none', background: 'transparent', width: '110px' }} />
+                            ) : (
+                              <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{station.stationName}</div>
+                            )}
+                            <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '3px' }}>
+                              股道：{editingStations ? (
+                                <input value={station.track || ''} onChange={e => { if (editedTrain) { const s = [...editedTrain.stations]; s[i] = { ...s[i], track: e.target.value }; setEditedTrain({ ...editedTrain, stations: s }); } }}
+                                  style={{ width: '40px', border: 'none', borderBottom: '1px dashed #D1D5DB', outline: 'none', fontSize: '12px', background: 'transparent' }} />
+                              ) : station.track ? station.track : <span style={{ color: '#FBBF24' }}>未填</span>}
+                            </div>
+                          </div>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
+                          {!isFirst && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                              <Clock style={{ width: '12px', height: '12px', color: '#9CA3AF' }} />
+                              <span style={{ color: '#9CA3AF' }}>到</span>
+                              {editingStations ? (
+                                <input type="text" placeholder="--:--" value={station.arrivalTime || ''} onChange={e => { if (editedTrain) { const s = [...editedTrain.stations]; s[i] = { ...s[i], arrivalTime: e.target.value }; setEditedTrain({ ...editedTrain, stations: s }); } }}
+                                  style={{ width: '48px', fontFamily: 'monospace', fontWeight: 600, fontSize: '12px', border: 'none', borderBottom: '1px dashed #D1D5DB', outline: 'none', background: 'transparent', textAlign: 'right' }} />
+                              ) : <span style={{ fontFamily: 'monospace', fontWeight: 600, color: station.arrivalTime ? '#374151' : '#FBBF24' }}>{station.arrivalTime || '--:--'}</span>}
+                            </div>
+                          )}
+                          {!isLast && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}>
+                              <Clock style={{ width: '12px', height: '12px', color: '#5e6ad2' }} />
+                              <span style={{ color: '#9CA3AF' }}>发</span>
+                              {editingStations ? (
+                                <input type="text" placeholder="--:--" value={station.departureTime || ''} onChange={e => { if (editedTrain) { const s = [...editedTrain.stations]; s[i] = { ...s[i], departureTime: e.target.value }; setEditedTrain({ ...editedTrain, stations: s }); } }}
+                                  style={{ width: '48px', fontFamily: 'monospace', fontWeight: 700, fontSize: '12px', border: 'none', borderBottom: '1px dashed #5e6ad2', outline: 'none', background: 'transparent', textAlign: 'right', color: '#5e6ad2' }} />
+                              ) : <span style={{ fontFamily: 'monospace', fontWeight: 700, color: station.departureTime ? '#5e6ad2' : '#FBBF24' }}>{station.departureTime || '--:--'}</span>}
+                            </div>
                           )}
                         </div>
-                        {!isLast && (
-                          <div style={{
-                            width: '2px',
-                            flex: 1,
-                            background: macOSColors.border,
-                            marginTop: '4px'
-                          }} />
+                        {editingStations && (
+                          <button onClick={() => { if (editedTrain) { const s = editedTrain.stations.filter((_, si) => si !== i).map((st, si) => ({ ...st, stationOrder: si + 1 })); setEditedTrain({ ...editedTrain, stations: s }); } }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: '#D1D5DB', flexShrink: 0 }}
+                            onMouseEnter={e => { e.currentTarget.style.color = '#EF4444'; }}
+                            onMouseLeave={e => { e.currentTarget.style.color = '#D1D5DB'; }}>
+                            <Trash2 style={{ width: '14px', height: '14px' }} />
+                          </button>
                         )}
-                      </div>
-
-                      <div style={{ flex: 1 }}>
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'flex-start',
-                          gap: '16px'
-                        }}>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: '15px', fontWeight: 600, color: macOSColors.textPrimary, marginBottom: '4px' }}>
-                              {station.stationName}
-                              {isFirst && <span style={{ marginLeft: '8px', fontSize: '11px', color: macOSColors.success, fontWeight: 500 }}>始发站</span>}
-                              {isLast && <span style={{ marginLeft: '8px', fontSize: '11px', color: macOSColors.error, fontWeight: 500 }}>终到站</span>}
-                            </div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '11px', color: macOSColors.textSecondary }}>
-                              {station.arrivalTrainNo && !isFirst && <span>到达车次: {station.arrivalTrainNo}</span>}
-                              {station.departureTrainNo && !isLast && <span>出发车次: {station.departureTrainNo}</span>}
-                              {station.track && <span>股道: {station.track}</span>}
-                              {station.updateTime && <span>更新: {station.updateTime.split(' ')[0]}</span>}
-                            </div>
-                          </div>
-                          <div style={{ textAlign: 'right', minWidth: '140px' }}>
-                            {!isFirst && station.arrivalTime && (
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', marginBottom: '4px' }}>
-                                <Clock size={14} color={macOSColors.textSecondary} />
-                                <span style={{ 
-                                  fontSize: '15px', 
-                                  fontWeight: 500, 
-                                  color: macOSColors.textSecondary,
-                                  fontFamily: 'SF Mono, monospace'
-                                }}>
-                                  {station.arrivalTime}
-                                </span>
-                                <span style={{ fontSize: '11px', color: macOSColors.textSecondary }}>到</span>
-                              </div>
-                            )}
-                            {!isLast && station.departureTime && (
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                                <Clock size={14} color={macOSColors.accent} />
-                                <span style={{ 
-                                  fontSize: '15px', 
-                                  fontWeight: 600, 
-                                  color: macOSColors.accent,
-                                  fontFamily: 'SF Mono, monospace'
-                                }}>
-                                  {station.departureTime}
-                                </span>
-                                <span style={{ fontSize: '11px', color: macOSColors.accent }}>发</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
                       </div>
                     </div>
                   );
@@ -1110,216 +509,175 @@ const Component: React.FC = () => {
               </div>
             </div>
 
-            <div style={{
-              padding: '16px 24px',
-              borderTop: `1px solid ${macOSColors.border}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexShrink: 0
-            }}>
-              <div style={{ fontSize: '12px', color: macOSColors.textSecondary }}>
-                共 {selectedTrain.stations.length} 个停靠站
-              </div>
-              <button
-                onClick={() => setSelectedTrain(null)}
-                style={{
-                  padding: '10px 28px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: macOSColors.accent,
-                  color: '#FFFFFF',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = macOSColors.accentHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = macOSColors.accent;
-                }}
-              >
-                关闭
-              </button>
+            {/* 底部操作 */}
+            <div style={{ padding: '14px 24px', borderTop: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+              {syncedIds.has(selectedTrain.id) ? (
+                <button onClick={() => handleMarkUnsynced(selectedTrain.id)} style={btnStyle('warning')}>
+                  <RefreshCw style={{ width: '14px', height: '14px' }} /> 标记为未同步
+                </button>
+              ) : (
+                <button disabled={editingStations} onClick={() => handleSyncOne(selectedTrain)}
+                  style={{ ...btnStyle('primary'), opacity: editingStations ? 0.4 : 1, cursor: editingStations ? 'not-allowed' : 'pointer' }}>
+                  <Repeat style={{ width: '14px', height: '14px' }} /> 同步至客运模板
+                </button>
+              )}
+              {!editingStations && (
+                <button onClick={() => setSelectedTrain(null)} style={btnStyle('ghost')}>关闭</button>
+              )}
             </div>
           </div>
-        </>
+        </div>
       )}
 
+      {/* ── 变更详情抽屉 ── */}
       {showChangesDrawer && diagramChanges && (
-        <>
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: 'rgba(0,0,0,0.4)',
-              zIndex: 999
-            }}
-            onClick={() => setShowChangesDrawer(null)}
-          />
-          <div style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '500px',
-            maxHeight: '70vh',
-            background: macOSColors.cardBackground,
-            borderRadius: '16px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            zIndex: 1000,
-            overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column'
-          }}>
-            <div style={{
-              padding: '20px 24px',
-              borderBottom: `1px solid ${macOSColors.border}`,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexShrink: 0
-            }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', justifyContent: 'flex-end' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)' }} onClick={() => setShowChangesDrawer(null)} />
+          <div style={{ position: 'relative', width: '400px', height: '100%', background: '#fff', display: 'flex', flexDirection: 'column', boxShadow: '-4px 0 32px rgba(0,0,0,0.12)' }}>
+            <div style={{ padding: '20px 24px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: macOSColors.textPrimary }}>
-                  {showChangesDrawer === 'added' && '新增车次列表'}
-                  {showChangesDrawer === 'removed' && '减少车次列表'}
-                  {showChangesDrawer === 'modified' && '变更车次列表'}
-                </div>
-                <div style={{ fontSize: '13px', color: macOSColors.textSecondary, marginTop: '4px' }}>
-                  共 {
-                    showChangesDrawer === 'added' ? diagramChanges.added :
-                    showChangesDrawer === 'removed' ? diagramChanges.removed :
-                    diagramChanges.modified
-                  } 个车次
-                </div>
+                <div style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>{showChangesDrawer === 'added' ? '新增车次' : showChangesDrawer === 'removed' ? '减少车次' : '变更车次'}</div>
+                <div style={{ fontSize: '12px', color: '#9CA3AF', marginTop: '2px' }}>共 {showChangesDrawer === 'added' ? diagramChanges.added : showChangesDrawer === 'removed' ? diagramChanges.removed : diagramChanges.modified} 条</div>
               </div>
-              <button
-                onClick={() => setShowChangesDrawer(null)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: `${macOSColors.border}30`,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginLeft: '16px'
-                }}
-              >
-                <X size={20} color={macOSColors.textSecondary} />
+              <button onClick={() => setShowChangesDrawer(null)} style={{ background: 'none', border: '1px solid #E5E7EB', borderRadius: '6px', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <X style={{ width: '16px', height: '16px', color: '#6B7280' }} />
               </button>
             </div>
-
-            <div style={{
-              padding: '16px 24px',
-              overflowY: 'auto',
-              flex: 1,
-              minHeight: 0
-            }}>
-              {(() => {
-                let trains: Train[] = [];
-                if (showChangesDrawer === 'added') trains = diagramChanges.addedTrains;
-                if (showChangesDrawer === 'removed') trains = diagramChanges.removedTrains;
-                if (showChangesDrawer === 'modified') trains = diagramChanges.modifiedTrains;
-
-                return trains.map((train, idx) => (
-                  <div
-                    key={train.id}
-                    onClick={() => {
-                      setSelectedTrain(train);
-                      setShowChangesDrawer(null);
-                    }}
-                    style={{
-                      background: macOSColors.background,
-                      borderRadius: '10px',
-                      padding: '14px 16px',
-                      marginBottom: idx === trains.length - 1 ? 0 : '10px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      border: `1px solid ${macOSColors.border}`
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = `${macOSColors.accent}10`;
-                      e.currentTarget.style.borderColor = macOSColors.accent;
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = macOSColors.background;
-                      e.currentTarget.style.borderColor = macOSColors.border;
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: macOSColors.textPrimary }}>
-                          {train.trainNo}
-                        </div>
-                        <div style={{ fontSize: '12px', color: macOSColors.textSecondary, marginTop: '2px' }}>
-                          {train.originStation} → {train.destinationStation}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        {train.trainModel && (
-                          <span style={{
-                            fontSize: '11px',
-                            padding: '3px 8px',
-                            borderRadius: '10px',
-                            background: `${macOSColors.textSecondary}10`,
-                            color: macOSColors.textSecondary,
-                            fontWeight: 500
-                          }}>
-                            {train.trainModel}
-                          </span>
-                        )}
-                        <span style={{ fontSize: '13px', color: macOSColors.accent, fontWeight: 500 }}>
-                          查看 →
-                        </span>
-                      </div>
-                    </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '14px' }}>
+              {(showChangesDrawer === 'added' ? diagramChanges.addedTrains : showChangesDrawer === 'removed' ? diagramChanges.removedTrains : diagramChanges.modifiedTrains).map(train => (
+                <div key={train.id} onClick={() => { setSelectedTrain(train); setShowChangesDrawer(null); }}
+                  style={{ padding: '12px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', marginBottom: '8px', cursor: 'pointer' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#5e6ad2'; e.currentTarget.style.background = '#F9FAFB'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = '#fff'; }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '15px', fontWeight: 700, fontFamily: 'monospace', color: '#111827' }}>{train.trainNo}</span>
+                    <span style={{ fontSize: '12px', color: '#5e6ad2', fontWeight: 600 }}>查看 →</span>
                   </div>
-                ));
-              })()}
-            </div>
-
-            <div style={{
-              padding: '16px 24px',
-              borderTop: `1px solid ${macOSColors.border}`,
-              display: 'flex',
-              justifyContent: 'flex-end',
-              flexShrink: 0
-            }}>
-              <button
-                onClick={() => setShowChangesDrawer(null)}
-                style={{
-                  padding: '10px 28px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: macOSColors.accent,
-                  color: '#FFFFFF',
-                  fontSize: '14px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'background 0.2s ease'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = macOSColors.accentHover;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = macOSColors.accent;
-                }}
-              >
-                关闭
-              </button>
+                  <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>{train.originStation} → {train.destinationStation}</div>
+                </div>
+              ))}
             </div>
           </div>
-        </>
+        </div>
       )}
+
+      {/* ── 通知 ── */}
+      {notification && (
+        <div style={{ position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, minWidth: '320px', maxWidth: '480px', background: '#fff', border: `1px solid ${notification.type === 'success' ? '#A7F3D0' : notification.type === 'error' ? '#FECACA' : '#FCD34D'}`, borderLeft: `4px solid ${notification.type === 'success' ? '#10B981' : notification.type === 'error' ? '#EF4444' : '#F59E0B'}`, borderRadius: '8px', padding: '14px 18px', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+            {notification.type === 'success' ? <CheckCircle2 style={{ width: '18px', height: '18px', color: '#10B981', flexShrink: 0, marginTop: '1px' }} /> : <AlertCircle style={{ width: '18px', height: '18px', color: notification.type === 'error' ? '#EF4444' : '#F59E0B', flexShrink: 0, marginTop: '1px' }} />}
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>{notification.message}</div>
+              {notification.details && notification.details.length > 0 && (
+                <ul style={{ marginTop: '6px', paddingLeft: '16px' }}>
+                  {notification.details.map((d, i) => <li key={i} style={{ fontSize: '12px', color: '#6B7280', marginBottom: '2px' }}>{d}</li>)}
+                </ul>
+              )}
+            </div>
+            <button onClick={() => setNotification(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', flexShrink: 0 }}>
+              <X style={{ width: '14px', height: '14px' }} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── 列表行 ── */
+const TrainRow: React.FC<{
+  train: Train;
+  index: number;
+  isSynced: boolean;
+  hasIssues: boolean;
+  onOpen: () => void;
+  onSync: () => void;
+  onMarkUnsynced: () => void;
+}> = ({ train, index, isSynced, hasIssues, onOpen, onSync, onMarkUnsynced }) => {
+  const [hovered, setHovered] = useState(false);
+  const ruleMap: Record<string, { label: string; bg: string; color: string }> = {
+    daily: { label: '每日', bg: '#ECFDF5', color: '#065F46' },
+    alternate: { label: '隔日', bg: '#FFFBEB', color: '#92400E' },
+    custom: { label: '定制', bg: '#EEF2FF', color: '#3730A3' },
+  };
+  const rc = ruleMap[train.operationRule] ?? ruleMap.daily;
+
+  return (
+    <div
+      style={{ display: 'grid', gridTemplateColumns: '48px 120px 180px 130px 110px 150px 1fr 120px', padding: '0 16px', borderBottom: `1px solid ${hasIssues ? '#FDE68A' : '#F3F4F6'}`, backgroundColor: hovered ? (hasIssues ? '#FFFBEB' : '#F5F6FE') : hasIssues ? '#FFFDF0' : index % 2 === 0 ? '#fff' : '#FAFAFA', cursor: 'pointer', transition: 'background 0.1s' }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onOpen}
+    >
+      <div style={{ padding: '13px 8px', fontSize: '12px', color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: '4px' }}>
+        {index + 1}
+        {hasIssues && <span title="数据不完整，无法同步" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#F59E0B', flexShrink: 0, display: 'inline-block' }} />}
+      </div>
+
+      <div style={{ padding: '13px 8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <TrainIcon style={{ width: '14px', height: '14px', color: '#5e6ad2', flexShrink: 0 }} />
+        <span style={{ fontSize: '14px', fontWeight: 700, fontFamily: 'monospace', color: '#111827' }}>{train.trainNo}</span>
+        <span style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '4px', fontWeight: 600, background: train.trainType === 'high-speed' ? '#DBEAFE' : '#F3F4F6', color: train.trainType === 'high-speed' ? '#1E40AF' : '#6B7280' }}>
+          {train.trainType === 'high-speed' ? '高铁' : '普速'}
+        </span>
+      </div>
+
+      <div style={{ padding: '13px 8px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <span style={{ fontSize: '13px', fontWeight: 600, color: '#059669' }}>{train.originStation}</span>
+        <ArrowRight style={{ width: '11px', height: '11px', color: '#D1D5DB', flexShrink: 0 }} />
+        <span style={{ fontSize: '13px', fontWeight: 600, color: '#DC2626' }}>{train.destinationStation}</span>
+      </div>
+
+      <div style={{ padding: '13px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px' }}>
+        <span style={{ fontSize: '12px', color: '#374151' }}>{train.trainModel || '—'}</span>
+        <span style={{ fontSize: '11px', color: '#9CA3AF' }}>{train.formationCount} / {train.capacity} 人</span>
+      </div>
+
+      <div style={{ padding: '13px 8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <span style={{ padding: '2px 8px', borderRadius: '999px', fontSize: '11px', fontWeight: 600, background: rc.bg, color: rc.color }}>{rc.label}</span>
+        <span style={{ fontSize: '11px', color: '#9CA3AF' }}>周期 {train.operationCycle}天</span>
+      </div>
+
+      <div style={{ padding: '13px 8px', display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'wrap' }}>
+        {train.passingLines?.slice(0, 2).map(l => (
+          <span key={l} style={{ fontSize: '11px', padding: '2px 6px', borderRadius: '4px', background: '#F3F4F6', color: '#6B7280' }}>{l}</span>
+        ))}
+        {(train.passingLines?.length ?? 0) > 2 && <span style={{ fontSize: '11px', color: '#9CA3AF' }}>+{(train.passingLines?.length ?? 0) - 2}</span>}
+      </div>
+
+      {/* 交路列 */}
+      <div style={{ padding: '13px 8px', display: 'flex', alignItems: 'center', minWidth: 0 }}>
+        <span style={{ fontSize: '11px', color: '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={train.routeInfo || '—'}>{train.routeInfo || '—'}</span>
+      </div>
+
+      {/* 同步状态列 */}
+      <div style={{ padding: '13px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {isSynced ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: '#ECFDF5', color: '#065F46', fontWeight: 600, border: '1px solid #A7F3D0' }}>已同步</span>
+            {hovered && (
+              <button title="标记为未同步" onClick={e => { e.stopPropagation(); onMarkUnsynced(); }}
+                style={{ background: 'none', border: '1px solid #D1D5DB', borderRadius: '4px', padding: '3px', cursor: 'pointer', display: 'flex', color: '#9CA3AF' }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#F59E0B'; e.currentTarget.style.borderColor = '#F59E0B'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.borderColor = '#D1D5DB'; }}>
+                <RefreshCw style={{ width: '12px', height: '12px' }} />
+              </button>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '999px', background: '#FEF3C7', color: '#92400E', fontWeight: 600, border: '1px solid #FCD34D' }}>未同步</span>
+            {hovered && (
+              <button title="同步此车次" onClick={e => { e.stopPropagation(); onSync(); }}
+                style={{ background: 'none', border: '1px solid #5e6ad2', borderRadius: '4px', padding: '3px', cursor: 'pointer', display: 'flex', color: '#5e6ad2' }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#EEF0FB'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'none'; }}>
+                <Repeat style={{ width: '12px', height: '12px' }} />
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
