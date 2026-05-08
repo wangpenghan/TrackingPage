@@ -791,7 +791,6 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       </div>
                     </div>
                   </div>
-                </div>
 
                   <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
                     <div className="text-[12px] font-bold text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded mb-1">其他信息</div>
@@ -843,7 +842,9 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       </div>
                     </div>
                   </div>
-              </div>
+                </div>
+                </div>
+              </>
             )}
 
 
