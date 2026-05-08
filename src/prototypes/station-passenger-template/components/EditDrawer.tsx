@@ -333,12 +333,6 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       <input type="text" value={formData.toStation ?? ''} onChange={e => uf('toStation', e.target.value)}
                         className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#D97706] focus:ring-1 focus:ring-[#D97706]/20 w-full" />
                     </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg border border-[#E5E7EB] p-2">
-                  <div className="text-[12px] font-bold text-[#D97706] bg-[#FEF3C7] px-1.5 py-0.5 rounded mb-2">时间 & 空间</div>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
                     <div className="flex flex-col gap-0">
                       <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>到达时间</label>
                       <input type="time" value={formData.arrivalTime} onChange={e => uf('arrivalTime', e.target.value)}
@@ -348,29 +342,6 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>发车时间</label>
                       <input type="time" value={formData.departureTime} onChange={e => uf('departureTime', e.target.value)}
                         className="h-7 px-2 rounded-md border border-[#D97706] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-[#D97706]/20" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>股道</label>
-                      <select value={formData.track} onChange={e => handleTrackChange(e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] font-bold text-[#5e6ad2] bg-white focus:outline-none focus:border-[#D97706]">
-                        {['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map((v: any) => <option key={v} value={v}>{v || '请选择'}</option>)}
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>站台</label>
-                      <select value={formData.platform} onChange={e => uf('platform', e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] font-bold text-[#374151] bg-white focus:outline-none focus:border-[#D97706]">
-                        {['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map((v: any) => <option key={v} value={v}>{v || '请选择'}</option>)}
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>停车位</label>
-                      <select value={formData.parkingSpot ?? ''} onChange={e => handleParkingSpotChange(e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#D97706]">
-                        {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
                     </div>
                   </div>
                 </div>
@@ -538,107 +509,281 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                 </div>
               </>
             ) : (
-              <div className="flex gap-2">
-                <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
-                  <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">车次信息</div>
-                  <div className="mb-1">
-                    <label className="text-[11px] font-medium text-[#6B7280] block mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>出发车次</label>
-                    <div className="flex items-center gap-2">
-                      <input value={formData.trainNo} onChange={e => handleTrainNoChange(e.target.value)} placeholder="请输入车次号"
-                        className="flex-1 h-8 px-2 rounded-md border-2 border-[#5e6ad2] text-[16px] font-bold text-[#111827] bg-[#FAFBFF] focus:outline-none focus:ring-2 focus:ring-[#5e6ad2]/20" />
+              <>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
+                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">车次信息</div>
+                    <div className="mb-1">
+                      <label className="text-[11px] font-medium text-[#6B7280] block mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>车次号</label>
+                      <div className="flex items-center gap-2">
+                        <input value={formData.trainNo} onChange={e => handleTrainNoChange(e.target.value)} placeholder="请输入车次号"
+                          className="flex-1 h-8 px-2 rounded-md border-2 border-[#5e6ad2] text-[16px] font-bold text-[#111827] bg-[#FAFBFF] focus:outline-none focus:ring-2 focus:ring-[#5e6ad2]/20" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>列车类型</label>
+                        <select value={formData.trainType ?? ''} onChange={e => uf('trainType', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['始发', '途径', '终到'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>到达时间</label>
+                        <input type="time" value={formData.arrivalTime} onChange={e => uf('arrivalTime', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#5e6ad2] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-[#5e6ad2]/20" />
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>始发站</label>
+                        <input type="text" value={formData.fromStation ?? ''} onChange={e => uf('fromStation', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>出发时间</label>
+                        <input type="time" value={formData.departureTime} onChange={e => uf('departureTime', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#5e6ad2] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-[#5e6ad2]/20" />
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>终到站</label>
+                        <input type="text" value={formData.toStation ?? ''} onChange={e => uf('toStation', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5">到达车次</label>
+                        <input type="text" value={formData.arrivalTrainNo ?? ''} onChange={e => uf('arrivalTrainNo', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5">始发车次</label>
+                        <input type="text" value={formData.departureTrainNo ?? ''} onChange={e => uf('departureTrainNo', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="font-medium text-[#6B7280] mb-0.5">接续车次</label>
+                        <input type="text" value={formData.connectingTrain ?? ''} onChange={e => uf('connectingTrain', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                      </div>
                     </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-x-2 gap-y-1">
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>列车类型</label>
-                      <select value={formData.trainType ?? ''} onChange={e => uf('trainType', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
-                        {['始发', '途径', '终到', '货运', '调车', '检修', '救援', '路用'].map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>始发站</label>
-                      <input type="text" value={formData.fromStation ?? ''} onChange={e => uf('fromStation', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>终到站</label>
-                      <input type="text" value={formData.toStation ?? ''} onChange={e => uf('toStation', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">到达车次</label>
-                      <input type="text" value={formData.arrivalTrainNo ?? ''} onChange={e => uf('arrivalTrainNo', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">始发车次</label>
-                      <input type="text" value={formData.departureTrainNo ?? ''} onChange={e => uf('departureTrainNo', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">接续车次</label>
-                      <input type="text" value={formData.connectingTrain ?? ''} onChange={e => uf('connectingTrain', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+
+                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
+                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">列车信息</div>
+                    <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>车型</label>
+                        <select value={formData.model ?? ''} onChange={e => handleModelChange(e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['CR400AF', 'CR400AF重联', 'CRH380A'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>编组</label>
+                        <select value={String(formData.formation)} onChange={e => uf('formation', Number(e.target.value))}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['8', '16'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>方向</label>
+                        <select value={formData.formationDir ?? ''} onChange={e => uf('formationDir', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['正序', '倒序'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>担当局</label>
+                        <select value={formData.bureau ?? ''} onChange={e => uf('bureau', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['', '成局重段', '京局京段', '上局沪段'].map(o => <option key={o} value={o}>{o || '请选择'}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>等级</label>
+                        <select value={formData.trainClass ?? ''} onChange={e => uf('trainClass', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['高铁', '动车', '普速'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>停车位</label>
+                        <select value={formData.parkingSpot ?? ''} onChange={e => handleParkingSpotChange(e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2]">
+                          {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">进站方向</label>
+                        <select value={formData.entryDirection ?? ''} onChange={e => uf('entryDirection', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">出站方向</label>
+                        <select value={formData.exitDirection ?? ''} onChange={e => uf('exitDirection', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                          {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                      <div className="flex flex-col gap-0">
+                        <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">地标颜色</label>
+                        <div className="flex items-center gap-1.5">
+                          <div className="flex-1 h-6 px-2 rounded-md border border-[#D1D5DB] bg-[#F9FAFB] text-[12px] flex items-center text-[#6B7280] cursor-not-allowed">
+                            {formData.landmarkColor}
+                          </div>
+                          <div className={cn('w-4 h-4 rounded flex-shrink-0', getLandmarkColorClass(formData.landmarkColor))} />
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-0 col-span-3">
+                        <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">列车车底</label>
+                        <input type="text" value={formData.carriages ?? ''} onChange={e => uf('carriages', e.target.value)}
+                          className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
-                  <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-2">时间 & 空间</div>
-                  <div className="grid grid-cols-2 gap-2 mb-2">
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>到达时间</label>
-                      <input type="time" value={formData.arrivalTime} onChange={e => uf('arrivalTime', e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#5e6ad2] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-[#5e6ad2]/20" />
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>发车时间</label>
-                      <input type="time" value={formData.departureTime} onChange={e => uf('departureTime', e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#5e6ad2] text-[12px] bg-white focus:outline-none focus:ring-1 focus:ring-[#5e6ad2]/20" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>股道</label>
-                      <select value={formData.track} onChange={e => handleTrackChange(e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] font-bold text-[#5e6ad2] bg-white focus:outline-none focus:border-[#5e6ad2]">
-                        {['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map((v: any) => <option key={v} value={v}>{v || '请选择'}</option>)}
+                <div className="bg-white rounded-lg border border-[#E5E7EB] p-2">
+                  <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">检票时间</div>
+                  <div className="flex flex-col gap-1">
+                    <div className="bg-[#EFF6FF] rounded p-1.5 flex items-center gap-1.5 flex-1 min-h-0">
+                      <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]"><span className="text-[#EF4444] mr-0.5">*</span>进站开检</label>
+                      <select value={formData.entryCheckBasis} onChange={e => uf('entryCheckBasis', e.target.value)}
+                        className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 flex-shrink-0 w-[120px]">
+                        <option value="发点">发点 ({formData.departureTime || '--:--'})</option>
+                        <option value="到点">到点 ({formData.arrivalTime || '--:--'})</option>
                       </select>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button onClick={() => uf('entryCheckOffset', formData.entryCheckOffset - 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Minus className="w-2 h-2" /></button>
+                        <span className={cn('w-6 text-center text-[11px] font-medium', formData.entryCheckOffset > 0 ? 'text-[#16A34A]' : formData.entryCheckOffset < 0 ? 'text-[#DC2626]' : 'text-[#374151]')}>
+                          {formData.entryCheckOffset > 0 ? `+${formData.entryCheckOffset}` : formData.entryCheckOffset}
+                        </span>
+                        <button onClick={() => uf('entryCheckOffset', formData.entryCheckOffset + 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Plus className="w-2 h-2" /></button>
+                      </div>
+                      <div className="ml-auto flex-shrink-0">
+                        {editingTimeField === 'entryCheck' ? (
+                          <input
+                            type="time"
+                            value={calcTime(getBase(formData.entryCheckBasis), formData.entryCheckOffset)}
+                            onChange={(e) => uf('entryCheckOffset', parseOffset(getBase(formData.entryCheckBasis), e.target.value))}
+                            onBlur={() => setEditingTimeField(null)}
+                            autoFocus
+                            className="h-6 px-2 rounded-md border border-[#5e6ad2] bg-[#EFF6FF] text-[#5e6ad2] text-[13px] font-semibold focus:outline-none w-[100px] text-center"
+                          />
+                        ) : (
+                          <span
+                            className="inline-flex items-center justify-center h-6 px-2 bg-[#EFF6FF] text-[#5e6ad2] text-[13px] font-semibold rounded border border-[#5e6ad2]/30 cursor-pointer hover:bg-[#DCEBFF]"
+                            onClick={() => setEditingTimeField('entryCheck')}
+                          >
+                            {calcTime(getBase(formData.entryCheckBasis), formData.entryCheckOffset)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>站台</label>
-                      <select value={formData.platform} onChange={e => uf('platform', e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] font-bold text-[#374151] bg-white focus:outline-none focus:border-[#5e6ad2]">
-                        {['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map((v: any) => <option key={v} value={v}>{v || '请选择'}</option>)}
+
+                    <div className="bg-[#FEF3C7] rounded p-1.5 flex items-center gap-1.5 flex-1 min-h-0">
+                      <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]"><span className="text-[#EF4444] mr-0.5">*</span>进站停检</label>
+                      <select value={formData.entryStopBasis} onChange={e => uf('entryStopBasis', e.target.value)}
+                        className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 flex-shrink-0 w-[120px]">
+                        <option value="发点">发点 ({formData.departureTime || '--:--'})</option>
+                        <option value="到点">到点 ({formData.arrivalTime || '--:--'})</option>
                       </select>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button onClick={() => uf('entryStopOffset', formData.entryStopOffset - 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Minus className="w-2 h-2" /></button>
+                        <span className={cn('w-6 text-center text-[11px] font-medium', formData.entryStopOffset > 0 ? 'text-[#16A34A]' : formData.entryStopOffset < 0 ? 'text-[#DC2626]' : 'text-[#374151]')}>
+                          {formData.entryStopOffset > 0 ? `+${formData.entryStopOffset}` : formData.entryStopOffset}
+                        </span>
+                        <button onClick={() => uf('entryStopOffset', formData.entryStopOffset + 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Minus className="w-2 h-2" /></button>
+                      </div>
+                      <div className="ml-auto flex-shrink-0">
+                        {editingTimeField === 'entryStop' ? (
+                          <input
+                            type="time"
+                            value={calcTime(getBase(formData.entryStopBasis), formData.entryStopOffset)}
+                            onChange={(e) => uf('entryStopOffset', parseOffset(getBase(formData.entryStopBasis), e.target.value))}
+                            onBlur={() => setEditingTimeField(null)}
+                            autoFocus
+                            className="h-6 px-2 rounded-md border border-[#D97706] bg-[#FEF3C7] text-[#D97706] text-[13px] font-semibold focus:outline-none w-[100px] text-center"
+                          />
+                        ) : (
+                          <span
+                            className="inline-flex items-center justify-center h-6 px-2 bg-[#FEF3C7] text-[#D97706] text-[13px] font-semibold rounded border border-[#D97706]/30 cursor-pointer hover:bg-[#FDEAC9]"
+                            onClick={() => setEditingTimeField('entryStop')}
+                          >
+                            {calcTime(getBase(formData.entryStopBasis), formData.entryStopOffset)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>停车位</label>
-                      <select value={formData.parkingSpot ?? ''} onChange={e => handleParkingSpotChange(e.target.value)}
-                        className="h-7 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2]">
-                        {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
+
+                    <div className="bg-[#F3F4F6] rounded p-1.5 flex items-center gap-1 flex-1 min-h-0">
+                      <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]">出站开检</label>
+                      <div className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[11px] bg-white flex items-center text-[#6B7280] flex-shrink-0 whitespace-nowrap">
+                        发点 ({formData.departureTime || '--:--'})
+                      </div>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button onClick={() => uf('exitCheckOffset', (formData.exitCheckOffset || 0) - 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Minus className="w-2 h-2" /></button>
+                        <span className={cn('w-6 text-center text-[11px] font-medium', (formData.exitCheckOffset || 0) > 0 ? 'text-[#16A34A]' : (formData.exitCheckOffset || 0) < 0 ? 'text-[#DC2626]' : 'text-[#374151]')}>
+                          {(formData.exitCheckOffset || 0) > 0 ? `+${(formData.exitCheckOffset || 0)}` : (formData.exitCheckOffset || 0)}
+                        </span>
+                        <button onClick={() => uf('exitCheckOffset', (formData.exitCheckOffset || 0) + 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Plus className="w-2 h-2" /></button>
+                      </div>
+                      <div className="ml-auto flex-shrink-0">
+                        {editingTimeField === 'exitCheck' ? (
+                          <input
+                            type="time"
+                            value={calcTime(formData.departureTime, formData.exitCheckOffset || 0)}
+                            onChange={(e) => uf('exitCheckOffset', parseOffset(formData.departureTime, e.target.value))}
+                            onBlur={() => setEditingTimeField(null)}
+                            autoFocus
+                            className="h-6 px-2 rounded-md border border-[#D1D5DB] bg-[#F3F4F6] text-[#6B7280] text-[13px] font-semibold focus:outline-none w-[100px] text-center"
+                          />
+                        ) : (
+                          <span
+                            className="inline-flex items-center justify-center h-6 px-2 bg-[#F3F4F6] text-[#6B7280] text-[13px] font-semibold rounded border border-[#D1D5DB] cursor-pointer hover:bg-[#E5E7EB]"
+                            onClick={() => setEditingTimeField('exitCheck')}
+                          >
+                            {calcTime(formData.departureTime, formData.exitCheckOffset || 0)}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 mt-1">
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">进站方向</label>
-                      <select value={formData.entryDirection ?? ''} onChange={e => uf('entryDirection', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
-                        {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">出站方向</label>
-                      <select value={formData.exitDirection ?? ''} onChange={e => uf('exitDirection', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
-                        {['北', '南'].map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
+
+                    <div className="bg-[#F3F4F6] rounded p-1.5 flex items-center gap-1 flex-1 min-h-0">
+                      <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]">出站停检</label>
+                      <div className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[11px] bg-white flex items-center text-[#6B7280] flex-shrink-0 whitespace-nowrap">
+                        发点 ({formData.departureTime || '--:--'})
+                      </div>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button onClick={() => uf('exitStopOffset', (formData.exitStopOffset || 0) - 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Minus className="w-2 h-2" /></button>
+                        <span className={cn('w-6 text-center text-[11px] font-medium', (formData.exitStopOffset || 0) > 0 ? 'text-[#16A34A]' : (formData.exitStopOffset || 0) < 0 ? 'text-[#DC2626]' : 'text-[#374151]')}>
+                          {(formData.exitStopOffset || 0) > 0 ? `+${(formData.exitStopOffset || 0)}` : (formData.exitStopOffset || 0)}
+                        </span>
+                        <button onClick={() => uf('exitStopOffset', (formData.exitStopOffset || 0) + 1)} className="w-4 h-4 flex items-center justify-center rounded border border-[#D1D5DB] bg-white hover:bg-[#F3F4F6] text-[#6B7280]"><Plus className="w-2 h-2" /></button>
+                      </div>
+                      <div className="ml-auto flex-shrink-0">
+                        {editingTimeField === 'exitStop' ? (
+                          <input
+                            type="time"
+                            value={calcTime(formData.departureTime, formData.exitStopOffset || 0)}
+                            onChange={(e) => uf('exitStopOffset', parseOffset(formData.departureTime, e.target.value))}
+                            onBlur={() => setEditingTimeField(null)}
+                            autoFocus
+                            className="h-6 px-2 rounded-md border border-[#D1D5DB] bg-[#F3F4F6] text-[#6B7280] text-[13px] font-semibold focus:outline-none w-[100px] text-center"
+                          />
+                        ) : (
+                          <span
+                            className="inline-flex items-center justify-center h-6 px-2 bg-[#F3F4F6] text-[#6B7280] text-[13px] font-semibold rounded border border-[#D1D5DB] cursor-pointer hover:bg-[#E5E7EB]"
+                            onClick={() => setEditingTimeField('exitStop')}
+                          >
+                            {calcTime(formData.departureTime, formData.exitStopOffset || 0)}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </>
             )}
 
             {!isFreightMode && (
@@ -1044,16 +1189,18 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                 <div className="bg-[#F9FAFB] rounded-lg p-2">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-medium text-[#9CA3AF]">股道</label>
-                      <div className="h-8 px-2 rounded-md border border-[#D1D5DB] bg-white text-[20px] font-bold text-[#5e6ad2] text-center flex items-center justify-center">
-                        {formData.track || '-'}
-                      </div>
+                      <label className="text-[10px] font-medium text-[#6B7280]">股道</label>
+                      <select value={formData.track} onChange={e => handleTrackChange(e.target.value)}
+                        className="h-8 px-2 rounded-md border border-[#D1D5DB] text-[12px] font-bold text-[#5e6ad2] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                        {['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map((v: any) => <option key={v} value={v}>{v || '请选择'}</option>)}
+                      </select>
                     </div>
                     <div className="flex flex-col gap-0.5">
-                      <label className="text-[10px] font-medium text-[#9CA3AF]">站台</label>
-                      <div className="h-8 px-2 rounded-md border border-[#D1D5DB] bg-white text-[16px] font-bold text-[#374151] text-center flex items-center justify-center">
-                        {formData.platform || '-'}
-                      </div>
+                      <label className="text-[10px] font-medium text-[#6B7280]">站台</label>
+                      <select value={formData.platform} onChange={e => uf('platform', e.target.value)}
+                        className="h-8 px-2 rounded-md border border-[#D1D5DB] text-[12px] font-bold text-[#374151] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
+                        {['', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map((v: any) => <option key={v} value={v}>{v || '请选择'}</option>)}
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -1115,42 +1262,6 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                         {formData.hasSuction ? '需要' : '不需要'}
                       </span>
                     </label>
-                  </div>
-                </div>
-
-                <div className="bg-[#F9FAFB] rounded-lg p-2 border border-[#E5E7EB]">
-                  <h3 className="text-[11px] font-bold text-[#374151] mb-1">编组摘要</h3>
-                  <div className="text-[11px] text-[#6B7280] space-y-0.5">
-                    <div className="flex justify-between">
-                      <span>车型</span>
-                      <span className="font-medium text-[#111827]">{formData.model || '--'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>编组</span>
-                      <span className="font-medium text-[#111827]">{formData.formation || '--'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>方向</span>
-                      <span className="font-medium text-[#111827]">{formData.formationDir || '--'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-[#F9FAFB] rounded-lg p-2 border border-[#E5E7EB]">
-                  <h3 className="text-[11px] font-bold text-[#374151] mb-1">📋 基本状态</h3>
-                  <div className="text-[11px] text-[#6B7280] space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span>有效状态</span>
-                      <div className="flex items-center gap-1.5">
-                        <Toggle checked={formData.isValid !== false} onChange={(v) => uf('isValid', v)} />
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span>同步状态</span>
-                      <div className="flex items-center gap-1.5">
-                        <Toggle checked={formData.synced} onChange={(v) => uf('synced', v)} />
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
