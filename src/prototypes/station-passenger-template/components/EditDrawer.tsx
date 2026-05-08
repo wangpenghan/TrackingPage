@@ -303,7 +303,7 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
         </div>
 
         <div className="flex flex-1 overflow-hidden">
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-1.5">
+          <div className="flex-1 overflow-hidden p-1.5 space-y-1">
             {isFreightMode ? (
               <>
                 <div className="bg-white rounded-lg border border-[#E5E7EB] p-2">
@@ -519,13 +519,13 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
             ) : (
               <>
                 <div className="flex gap-2">
-                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
-                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">车次信息</div>
-                    <div className="mb-1">
+                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-1.5">
+                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-0.5">车次信息</div>
+                    <div className="mb-0.5">
                       <label className="text-[11px] font-medium text-[#6B7280] block mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>车次号</label>
                       <div className="flex items-center gap-2">
                         <input value={formData.trainNo} onChange={e => handleTrainNoChange(e.target.value)} placeholder="请输入车次号"
-                          className="flex-1 h-8 px-2 rounded-md border-2 border-[#5e6ad2] text-[16px] font-bold text-[#111827] bg-[#FAFBFF] focus:outline-none focus:ring-2 focus:ring-[#5e6ad2]/20" />
+                          className="flex-1 h-6 px-2 rounded-md border-2 border-[#5e6ad2] text-[14px] font-bold text-[#111827] bg-[#FAFBFF] focus:outline-none focus:ring-2 focus:ring-[#5e6ad2]/20" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 text-[11px]">
@@ -574,8 +574,8 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                     </div>
                   </div>
 
-                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
-                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">列车信息</div>
+                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-1.5">
+                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-0.5">列车信息</div>
                     <div className="grid grid-cols-3 gap-x-2 gap-y-0.5">
                       <div className="flex flex-col gap-0">
                         <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>车型</label>
@@ -652,10 +652,10 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                 </div>
 
                 <div className="flex gap-2">
-                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
-                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-1">检票时间</div>
-                    <div className="flex flex-col gap-1">
-                    <div className="bg-[#EFF6FF] rounded p-1.5 flex items-center gap-1.5 flex-1 min-h-0">
+                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-1.5">
+                    <div className="text-[12px] font-bold text-[#5e6ad2] bg-[#EFF6FF] px-1.5 py-0.5 rounded mb-0.5">检票时间</div>
+                    <div className="flex flex-col gap-0.5">
+                    <div className="bg-[#EFF6FF] rounded p-1 flex items-center gap-1.5 flex-1 min-h-0">
                       <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]"><span className="text-[#EF4444] mr-0.5">*</span>进站开检</label>
                       <select value={formData.entryCheckBasis} onChange={e => uf('entryCheckBasis', e.target.value)}
                         className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 flex-shrink-0 w-[120px]">
@@ -690,7 +690,7 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       </div>
                     </div>
 
-                    <div className="bg-[#FEF3C7] rounded p-1.5 flex items-center gap-1.5 flex-1 min-h-0">
+                    <div className="bg-[#FEF3C7] rounded p-1 flex items-center gap-1.5 flex-1 min-h-0">
                       <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]"><span className="text-[#EF4444] mr-0.5">*</span>进站停检</label>
                       <select value={formData.entryStopBasis} onChange={e => uf('entryStopBasis', e.target.value)}
                         className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 flex-shrink-0 w-[120px]">
@@ -725,7 +725,7 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       </div>
                     </div>
 
-                    <div className="bg-[#F3F4F6] rounded p-1.5 flex items-center gap-1 flex-1 min-h-0">
+                    <div className="bg-[#F3F4F6] rounded p-1 flex items-center gap-1 flex-1 min-h-0">
                       <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]">出站开检</label>
                       <div className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[11px] bg-white flex items-center text-[#6B7280] flex-shrink-0 whitespace-nowrap">
                         发点 ({formData.departureTime || '--:--'})
@@ -758,7 +758,7 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                       </div>
                     </div>
 
-                    <div className="bg-[#F3F4F6] rounded p-1.5 flex items-center gap-1 flex-1 min-h-0">
+                    <div className="bg-[#F3F4F6] rounded p-1 flex items-center gap-1 flex-1 min-h-0">
                       <label className="text-[11px] font-medium text-[#6B7280] flex-shrink-0 w-[56px]">出站停检</label>
                       <div className="h-6 px-1.5 rounded-md border border-[#D1D5DB] text-[11px] bg-white flex items-center text-[#6B7280] flex-shrink-0 whitespace-nowrap">
                         发点 ({formData.departureTime || '--:--'})
@@ -792,8 +792,8 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
                     </div>
                   </div>
 
-                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-2">
-                    <div className="text-[12px] font-bold text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded mb-1">其他信息</div>
+                  <div className="flex-1 bg-white rounded-lg border border-[#E5E7EB] p-1.5">
+                    <div className="text-[12px] font-bold text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded mb-0.5">其他信息</div>
                     <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                       <div className="flex flex-col gap-0">
                         <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">闸机始发</label>
@@ -850,141 +850,66 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
 
             {!isFreightMode && (
               <>
-            <div className="bg-white rounded-lg border border-[#E5E7EB] p-2">
+            <div className="bg-white rounded-lg border border-[#E5E7EB] p-1.5">
               <div className={cn('text-[12px] font-bold px-1.5 py-0.5 rounded mb-1', isFreightMode ? 'text-[#D97706] bg-[#FEF3C7]' : 'text-[#5e6ad2] bg-[#EFF6FF]')}>运行规律</div>
-              <div className="flex gap-2">
-                <div className="w-[220px] flex-shrink-0">
-                  <div className="grid grid-cols-1 gap-y-1">
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>运行类型</label>
-                      <select value={formData.cycle === 1 ? '每日开行' : formData.cycle === 2 ? '隔日开行' : '规律开行'}
-                        onChange={e => {
-                          const value = e.target.value
-                          if (value === '每日开行') { uf('cycle', 1); uf('rule', 0b1111111) }
-                          else if (value === '隔日开行') { uf('cycle', 2); uf('rule', 0b0101010) }
-                          else { uf('cycle', 0); uf('rule', 0b1111100) }
-                        }}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
-                        {['每日开行', '隔日开行', '规律开行'].map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    </div>
+              <div className="flex items-start gap-3 flex-wrap">
+                <div className="flex flex-col gap-0 min-w-[100px]">
+                  <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>运行类型</label>
+                  <select value={formData.cycle === 1 ? '每日开行' : formData.cycle === 2 ? '隔日开行' : '规律开行'}
+                    onChange={e => {
+                      const value = e.target.value
+                      if (value === '每日开行') { uf('cycle', 1); uf('rule', 0b1111111) }
+                      else if (value === '隔日开行') { uf('cycle', 2); uf('rule', 0b0101010) }
+                      else { uf('cycle', 0); uf('rule', 0b1111100) }
+                    }}
+                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20">
+                    {['每日开行', '隔日开行', '规律开行'].map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
 
-                    {formData.cycle === 2 && (
-                      <div className="flex flex-col gap-0">
-                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">起算基准</label>
-                        <div className="flex gap-2">
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="alternateStartOffset"
-                              checked={(formData.alternateStartOffset ?? 0) === 0}
-                              onChange={() => uf('alternateStartOffset', 0)}
-                              className="w-3 h-3 text-[#5e6ad2] accent-[#5e6ad2]"
-                            />
-                            <span className="text-[11px] text-[#374151]">从起始日</span>
-                          </label>
-                          <label className="flex items-center gap-1 cursor-pointer">
-                            <input
-                              type="radio"
-                              name="alternateStartOffset"
-                              checked={(formData.alternateStartOffset ?? 0) === 1}
-                              onChange={() => uf('alternateStartOffset', 1)}
-                              className="w-3 h-3 text-[#5e6ad2] accent-[#5e6ad2]"
-                            />
-                            <span className="text-[11px] text-[#374151]">从次日</span>
-                          </label>
-                        </div>
-                      </div>
-                    )}
-
-                    {formData.cycle === 0 && (
-                      <div className="flex flex-col gap-0">
-                        <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">按周规律</label>
-                        <div className="grid grid-cols-7 gap-0.5">
-                          {['一', '二', '三', '四', '五', '六', '日'].map((day, idx) => {
-                            const bit = idx
-                            const dayBit = 1 << bit
-                            const isChecked = ((formData.rule ?? 0) & dayBit) !== 0
-                            return (
-                              <button
-                                key={day}
-                                onClick={() => {
-                                  const newRule = isChecked
-                                    ? (formData.rule ?? 0) & ~dayBit
-                                    : (formData.rule ?? 0) | dayBit
-                                  uf('rule', newRule)
-                                }}
-                                className={cn(
-                                  'h-6 text-[10px] rounded border transition-colors',
-                                  isChecked ? 'bg-[#5e6ad2] text-white border-[#5e6ad2]' : 'bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F3F4F6]'
-                                )}
-                              >
-                                {day}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">起始有效期</label>
-                      <input type="date" value={formData.validStart ?? ''} onChange={e => uf('validStart', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                    </div>
-                    <div className="flex flex-col gap-0">
-                      <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">终止有效期</label>
-                      <input type="date" value={formData.validEnd ?? ''} onChange={e => uf('validEnd', e.target.value)}
-                        className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
+                {formData.cycle === 2 && (
+                  <div className="flex flex-col gap-0">
+                    <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">起算基准</label>
+                    <div className="flex gap-2 h-6 items-center">
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="alternateStartOffset" checked={(formData.alternateStartOffset ?? 0) === 0} onChange={() => uf('alternateStartOffset', 0)} className="w-3 h-3 accent-[#5e6ad2]" />
+                        <span className="text-[11px] text-[#374151]">从起始日</span>
+                      </label>
+                      <label className="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="alternateStartOffset" checked={(formData.alternateStartOffset ?? 0) === 1} onChange={() => uf('alternateStartOffset', 1)} className="w-3 h-3 accent-[#5e6ad2]" />
+                        <span className="text-[11px] text-[#374151]">从次日</span>
+                      </label>
                     </div>
                   </div>
-                </div>
-                <div className="flex-1">
-                  <div className="bg-[#F9FAFB] rounded border border-[#E5E7EB] p-1.5">
-                    <div className="flex items-center justify-between mb-1">
-                      <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="p-0.5 hover:bg-[#E5E7EB] rounded">
-                        <ChevronLeft className="w-3.5 h-3.5 text-[#6B7280]" />
-                      </button>
-                      <span className="text-[11px] font-medium text-[#111827]">
-                        {currentDate.getFullYear()}年{currentDate.getMonth() + 1}月
-                      </span>
-                      <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-0.5 hover:bg-[#E5E7EB] rounded">
-                        <ChevronRight className="w-3.5 h-3.5 text-[#6B7280]" />
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-7 gap-0.5 mb-0.5">
-                      {['日', '一', '二', '三', '四', '五', '六'].map(day => (
-                        <div key={day} className="text-[10px] text-[#9CA3AF] text-center py-0.5">
-                          {day}
-                        </div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-0.5">
-                      {renderCalendar().map((day, index) => {
-                        const highlightStatus = isDayHighlighted(day)
-                        const today = new Date()
-                        const isToday = day !== null &&
-                          today.getFullYear() === currentDate.getFullYear() &&
-                          today.getMonth() === currentDate.getMonth() &&
-                          today.getDate() === day
+                )}
+
+                {formData.cycle === 0 && (
+                  <div className="flex flex-col gap-0">
+                    <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">按周规律</label>
+                    <div className="flex gap-0.5">
+                      {['一', '二', '三', '四', '五', '六', '日'].map((day, idx) => {
+                        const dayBit = 1 << idx
+                        const isChecked = ((formData.rule ?? 0) & dayBit) !== 0
                         return (
-                          <div
-                            key={index}
-                            className={cn(
-                              'h-7 flex items-center justify-center text-[11px] rounded cursor-pointer relative',
-                              day === null ? 'bg-transparent' : '',
-                              highlightStatus === 'active' && 'bg-[#5e6ad2] text-white',
-                              highlightStatus === 'inactive' && 'bg-[#E5E7EB] text-[#9CA3AF] line-through',
-                              highlightStatus === 'none' && 'bg-white text-[#111827] hover:bg-[#F3F4F6]',
-                              isToday && 'ring-2 ring-[#F59E0B] ring-offset-1'
-                            )}
-                          >
+                          <button key={day} onClick={() => uf('rule', isChecked ? (formData.rule ?? 0) & ~dayBit : (formData.rule ?? 0) | dayBit)}
+                            className={cn('w-6 h-6 text-[10px] rounded border transition-colors', isChecked ? 'bg-[#5e6ad2] text-white border-[#5e6ad2]' : 'bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F3F4F6]')}>
                             {day}
-                          </div>
+                          </button>
                         )
                       })}
                     </div>
                   </div>
+                )}
+
+                <div className="flex flex-col gap-0">
+                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">起始有效期</label>
+                  <input type="date" value={formData.validStart ?? ''} onChange={e => uf('validStart', e.target.value)}
+                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-[130px]" />
+                </div>
+                <div className="flex flex-col gap-0">
+                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">终止有效期</label>
+                  <input type="date" value={formData.validEnd ?? ''} onChange={e => uf('validEnd', e.target.value)}
+                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-[130px]" />
                 </div>
               </div>
             </div>
