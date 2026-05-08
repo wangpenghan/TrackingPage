@@ -989,57 +989,6 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
               </div>
             </div>
 
-            <div className="bg-white rounded-lg border border-[#E5E7EB] p-2">
-              <div className="text-[12px] font-bold text-[#6B7280] bg-[#F3F4F6] px-1.5 py-0.5 rounded mb-1">其他信息</div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">闸机始发</label>
-                  <input type="text" value={formData.gateFromStation ?? ''} onChange={e => uf('gateFromStation', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" placeholder="请输入" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">闸机终到</label>
-                  <input type="text" value={formData.gateToStation ?? ''} onChange={e => uf('gateToStation', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" placeholder="请输入" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">始发时间</label>
-                  <input type="time" value={formData.startTime ?? ''} onChange={e => uf('startTime', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">终到时间</label>
-                  <input type="time" value={formData.endTime ?? ''} onChange={e => uf('endTime', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">广播模板</label>
-                  <select value={formData.broadcastGroup ?? ''} onChange={e => uf('broadcastGroup', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full">
-                    <option value="">请选择</option>
-                    <option value="normal">正常广播</option>
-                    <option value="express">快速广播</option>
-                    <option value="delay">晚点广播</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">基本图号</label>
-                  <input type="text" value={formData.diagramNo ?? ''} onChange={e => uf('diagramNo', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" placeholder="请输入" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">到站天数</label>
-                  <input type="number" value={formData.fromStationDays ?? ''} onChange={e => uf('fromStationDays', Number(e.target.value))}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" placeholder="0" min="0" max="3" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">终到天数</label>
-                  <input type="number" value={formData.toStationDays ?? ''} onChange={e => uf('toStationDays', Number(e.target.value))}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-full" placeholder="0" min="0" max="3" />
-                </div>
-              </div>
-            </div>
-
             </>
             )}
 
