@@ -852,64 +852,102 @@ export function EditDrawer({ isOpen, onClose, template, onSave, isConfirmed = fa
               <>
             <div className="bg-white rounded-lg border border-[#E5E7EB] p-1.5">
               <div className={cn('text-[12px] font-bold px-1.5 py-0.5 rounded mb-1', isFreightMode ? 'text-[#D97706] bg-[#FEF3C7]' : 'text-[#5e6ad2] bg-[#EFF6FF]')}>运行规律</div>
-              <div className="flex items-start gap-3 flex-wrap">
-                <div className="flex flex-col gap-0 min-w-[100px]">
-                  <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>运行类型</label>
-                  <select value={formData.cycle === 1 ? '每日开行' : formData.cycle === 2 ? '隔日开行' : '规律开行'}
-                    onChange={e => {
-                      const value = e.target.value
-                      if (value === '每日开行') { uf('cycle', 1); uf('rule', 0b1111111) }
-                      else if (value === '隔日开行') { uf('cycle', 2); uf('rule', 0b0101010) }
-                      else { uf('cycle', 0); uf('rule', 0b1111100) }
-                    }}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20">
-                    {['每日开行', '隔日开行', '规律开行'].map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
+              <div className="flex gap-3">
+                <div className="flex items-start gap-3 flex-wrap flex-1">
+                  <div className="flex flex-col gap-0 min-w-[100px]">
+                    <label className="text-[11px] font-medium text-[#6B7280] mb-0.5"><span className="text-[#EF4444] mr-0.5">*</span>运行类型</label>
+                    <select value={formData.cycle === 1 ? '每日开行' : formData.cycle === 2 ? '隔日开行' : '规律开行'}
+                      onChange={e => {
+                        const value = e.target.value
+                        if (value === '每日开行') { uf('cycle', 1); uf('rule', 0b1111111) }
+                        else if (value === '隔日开行') { uf('cycle', 2); uf('rule', 0b0101010) }
+                        else { uf('cycle', 0); uf('rule', 0b1111100) }
+                      }}
+                      className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20">
+                      {['每日开行', '隔日开行', '规律开行'].map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                  </div>
+
+                  {formData.cycle === 2 && (
+                    <div className="flex flex-col gap-0">
+                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">起算基准</label>
+                      <div className="flex gap-2 h-6 items-center">
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="alternateStartOffset" checked={(formData.alternateStartOffset ?? 0) === 0} onChange={() => uf('alternateStartOffset', 0)} className="w-3 h-3 accent-[#5e6ad2]" />
+                          <span className="text-[11px] text-[#374151]">从起始日</span>
+                        </label>
+                        <label className="flex items-center gap-1 cursor-pointer">
+                          <input type="radio" name="alternateStartOffset" checked={(formData.alternateStartOffset ?? 0) === 1} onChange={() => uf('alternateStartOffset', 1)} className="w-3 h-3 accent-[#5e6ad2]" />
+                          <span className="text-[11px] text-[#374151]">从次日</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
+                  {formData.cycle === 0 && (
+                    <div className="flex flex-col gap-0">
+                      <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">按周规律</label>
+                      <div className="flex gap-0.5">
+                        {['一', '二', '三', '四', '五', '六', '日'].map((day, idx) => {
+                          const dayBit = 1 << idx
+                          const isChecked = ((formData.rule ?? 0) & dayBit) !== 0
+                          return (
+                            <button key={day} onClick={() => uf('rule', isChecked ? (formData.rule ?? 0) & ~dayBit : (formData.rule ?? 0) | dayBit)}
+                              className={cn('w-6 h-6 text-[10px] rounded border transition-colors', isChecked ? 'bg-[#5e6ad2] text-white border-[#5e6ad2]' : 'bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F3F4F6]')}>
+                              {day}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-0">
+                    <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">起始有效期</label>
+                    <input type="date" value={formData.validStart ?? ''} onChange={e => uf('validStart', e.target.value)}
+                      className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-[130px]" />
+                  </div>
+                  <div className="flex flex-col gap-0">
+                    <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">终止有效期</label>
+                    <input type="date" value={formData.validEnd ?? ''} onChange={e => uf('validEnd', e.target.value)}
+                      className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-[130px]" />
+                  </div>
                 </div>
 
-                {formData.cycle === 2 && (
-                  <div className="flex flex-col gap-0">
-                    <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">起算基准</label>
-                    <div className="flex gap-2 h-6 items-center">
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="alternateStartOffset" checked={(formData.alternateStartOffset ?? 0) === 0} onChange={() => uf('alternateStartOffset', 0)} className="w-3 h-3 accent-[#5e6ad2]" />
-                        <span className="text-[11px] text-[#374151]">从起始日</span>
-                      </label>
-                      <label className="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="alternateStartOffset" checked={(formData.alternateStartOffset ?? 0) === 1} onChange={() => uf('alternateStartOffset', 1)} className="w-3 h-3 accent-[#5e6ad2]" />
-                        <span className="text-[11px] text-[#374151]">从次日</span>
-                      </label>
+                <div className="flex-shrink-0">
+                  <div className="bg-[#F9FAFB] rounded border border-[#E5E7EB] p-1.5 w-[180px]">
+                    <div className="flex items-center justify-between mb-1">
+                      <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))} className="p-0.5 hover:bg-[#E5E7EB] rounded">
+                        <ChevronLeft className="w-3 h-3 text-[#6B7280]" />
+                      </button>
+                      <span className="text-[10px] font-medium text-[#111827]">{currentDate.getFullYear()}年{currentDate.getMonth() + 1}月</span>
+                      <button onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))} className="p-0.5 hover:bg-[#E5E7EB] rounded">
+                        <ChevronRight className="w-3 h-3 text-[#6B7280]" />
+                      </button>
                     </div>
-                  </div>
-                )}
-
-                {formData.cycle === 0 && (
-                  <div className="flex flex-col gap-0">
-                    <label className="text-[11px] font-medium text-[#6B7280] mb-0.5">按周规律</label>
-                    <div className="flex gap-0.5">
-                      {['一', '二', '三', '四', '五', '六', '日'].map((day, idx) => {
-                        const dayBit = 1 << idx
-                        const isChecked = ((formData.rule ?? 0) & dayBit) !== 0
+                    <div className="grid grid-cols-7 gap-0 mb-0.5">
+                      {['日', '一', '二', '三', '四', '五', '六'].map(day => (
+                        <div key={day} className="text-[9px] text-[#9CA3AF] text-center py-0.5">{day}</div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-7 gap-0">
+                      {renderCalendar().map((day, index) => {
+                        const highlightStatus = isDayHighlighted(day)
+                        const today = new Date()
+                        const isToday = day !== null && today.getFullYear() === currentDate.getFullYear() && today.getMonth() === currentDate.getMonth() && today.getDate() === day
                         return (
-                          <button key={day} onClick={() => uf('rule', isChecked ? (formData.rule ?? 0) & ~dayBit : (formData.rule ?? 0) | dayBit)}
-                            className={cn('w-6 h-6 text-[10px] rounded border transition-colors', isChecked ? 'bg-[#5e6ad2] text-white border-[#5e6ad2]' : 'bg-white text-[#6B7280] border-[#D1D5DB] hover:bg-[#F3F4F6]')}>
-                            {day}
-                          </button>
+                          <div key={index} className={cn(
+                            'h-5 flex items-center justify-center text-[9px] rounded cursor-pointer',
+                            day === null ? 'bg-transparent' : '',
+                            highlightStatus === 'active' && 'bg-[#5e6ad2] text-white',
+                            highlightStatus === 'inactive' && 'bg-[#E5E7EB] text-[#9CA3AF] line-through',
+                            highlightStatus === 'none' && 'bg-white text-[#111827] hover:bg-[#F3F4F6]',
+                            isToday && 'ring-1 ring-[#F59E0B]'
+                          )}>{day}</div>
                         )
                       })}
                     </div>
                   </div>
-                )}
-
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">起始有效期</label>
-                  <input type="date" value={formData.validStart ?? ''} onChange={e => uf('validStart', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-[130px]" />
-                </div>
-                <div className="flex flex-col gap-0">
-                  <label className="text-[11px] font-medium text-[#9CA3AF] mb-0.5">终止有效期</label>
-                  <input type="date" value={formData.validEnd ?? ''} onChange={e => uf('validEnd', e.target.value)}
-                    className="h-6 px-2 rounded-md border border-[#D1D5DB] text-[12px] bg-white focus:outline-none focus:border-[#5e6ad2] focus:ring-1 focus:ring-[#5e6ad2]/20 w-[130px]" />
                 </div>
               </div>
             </div>
