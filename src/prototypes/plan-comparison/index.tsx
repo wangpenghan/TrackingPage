@@ -1,9 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+/**
+ * @name 计划比对
+ */
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Plus, Minus, Edit, Search, Lock, Unlock, RefreshCw,
-  ChevronDown, X, CheckCircle2, AlertCircle, HelpCircle,
-  Circle, MessageSquare, Keyboard, ChevronUp, Eye, Printer,
-  ArrowRight, PanelRightClose, PanelRightOpen,
+  CheckCircle2, AlertCircle, HelpCircle, Check,
+  Circle, MessageSquare, Keyboard, Eye, Printer, X, Clock,
 } from 'lucide-react';
 import {
   mockOldPlan,
@@ -16,80 +18,82 @@ import {
   detectPlanDifferences,
   detectLockedPlanRegeneration,
   getFieldLabel,
-  formatChangedField,
 } from './types';
-import type { planDifference, planLockState, checkProgress, templateData } from './types';
 import './style.css';
+import type { planDifference, planLockState, checkProgress, templateData, DiffFilter } from './types';
 
-const DIFF_COLORS = {
-  added: { bg: 'bg-emerald-50', border: 'border-l-emerald-500', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  removed: { bg: 'bg-red-50', border: 'border-l-red-500', text: 'text-red-700', badge: 'bg-red-100 text-red-700 border-red-200' },
-  modified: { bg: 'bg-blue-50', border: 'border-l-blue-500', text: 'text-blue-700', badge: 'bg-blue-100 text-blue-700 border-blue-200' },
-  unchanged: { bg: 'bg-white', border: 'border-l-gray-300', text: 'text-gray-700', badge: 'bg-gray-100 text-gray-600 border-gray-200' },
+const typeConfig: Record<string, { label: string; color: string; bg: string; border: string; icon: React.FC<{ style?: React.CSSProperties }> }> = {
+  added: { label: '新增', color: '#047857', bg: '#ECFDF5', border: '#A7F3D0', icon: Plus },
+  removed: { label: '减少', color: '#B91C1C', bg: '#FEF2F2', border: '#FECACA', icon: Minus },
+  modified: { label: '变更', color: '#1D4ED8', bg: '#EFF6FF', border: '#BFDBFE', icon: Edit },
+  unchanged: { label: '无变化', color: '#6B7280', bg: '#F9FAFB', border: '#E5E7EB', icon: Circle },
 };
 
-const DIFF_ICONS = {
-  added: Plus,
-  removed: Minus,
-  modified: Edit,
-  unchanged: Circle,
+const checkStatusConfig: Record<string, { label: string; color: string; icon: React.FC<{ style?: React.CSSProperties }> }> = {
+  unchecked: { label: '未核对', color: '#9CA3AF', icon: Circle },
+  checked: { label: '已核对', color: '#059669', icon: CheckCircle2 },
+  questioned: { label: '有疑问', color: '#F59E0B', icon: HelpCircle },
+  confirmed: { label: '已确认', color: '#2563EB', icon: CheckCircle2 },
 };
 
-const DIFF_LABELS = {
-  added: '新增',
-  removed: '减少',
-  modified: '变更',
-  unchanged: '无变',
+const btnStyles: Record<string, React.CSSProperties> = {
+  primary: {
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
+    padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600,
+    cursor: 'pointer', border: '1px solid #5e6ad2',
+    backgroundColor: '#5e6ad2', color: '#fff', whiteSpace: 'nowrap',
+    transition: 'all 0.15s',
+  },
+  ghost: {
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
+    padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600,
+    cursor: 'pointer', border: '1px solid #D1D5DB',
+    backgroundColor: 'transparent', color: '#6B7280', whiteSpace: 'nowrap',
+    transition: 'all 0.15s',
+  },
+  warning: {
+    display: 'inline-flex', alignItems: 'center', gap: '6px',
+    padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600,
+    cursor: 'pointer', border: '1px solid #F59E0B',
+    backgroundColor: '#F59E0B', color: '#fff', whiteSpace: 'nowrap',
+    transition: 'all 0.15s',
+  },
 };
-
-const CHECK_STATUS_CONFIG = {
-  unchecked: { icon: Circle, color: 'text-gray-400', label: '未核对' },
-  checked: { icon: CheckCircle2, color: 'text-emerald-600', label: '已核对' },
-  questioned: { icon: HelpCircle, color: 'text-amber-500', label: '有疑问' },
-  confirmed: { icon: CheckCircle2, color: 'text-blue-600', label: '已确认' },
-};
-
-interface DiffFilter {
-  type: 'all' | 'added' | 'removed' | 'modified' | 'unchanged';
-  checkStatus: 'all' | 'unchecked' | 'checked' | 'questioned' | 'confirmed';
-  showDiffOnly: boolean;
-}
-
-type WorkflowStep = 'understand' | 'verify' | 'confirm';
 
 const Component: React.FC = () => {
-  const [differences] = useState<planDifference[]>(() => detectPlanDifferences(mockOldPlan, mockNewPlan));
-  const [lockStates, setLockStates] = useState<planLockState[]>(mockLockStates);
-  const [checkProgressMap, setCheckProgressMap] = useState<Map<string, checkProgress>>(() => {
-    const map = new Map();
-    mockCheckProgress.forEach(cp => map.set(cp.trainNo, cp));
-    return map;
-  });
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState<DiffFilter>({ type: 'all', checkStatus: 'all', showDiffOnly: false });
-  const [selectedDiff, setSelectedDiff] = useState<planDifference | null>(null);
-  const [showConflictModal, setShowConflictModal] = useState(false);
-  const [conflictTrains, setConflictTrains] = useState<planLockState[]>([]);
-  const [selectedTrains, setSelectedTrains] = useState<Set<string>>(new Set());
-  const [showQuestionModal, setShowQuestionModal] = useState<templateData | null>(null);
-  const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-  const [sortField, setSortField] = useState<'departureTime' | 'trainNo'>('departureTime');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [notification, setNotification] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
-  const [currentFocusedIndex, setCurrentFocusedIndex] = useState(-1);
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
-  const [showDetailPanel, setShowDetailPanel] = useState(true);
+    const [oldPlan, setOldPlan] = useState<templateData[]>(mockOldPlan);
+    const [newPlan, setNewPlan] = useState<templateData[]>(mockNewPlan);
+    const [differences, setDifferences] = useState<planDifference[]>(() => detectPlanDifferences(mockOldPlan, mockNewPlan));
+    const [lockStates, setLockStates] = useState<planLockState[]>(mockLockStates);
+    const [checkProgressMap, setCheckProgressMap] = useState<Map<string, checkProgress>>(() => {
+      const map = new Map<string, checkProgress>();
+      mockCheckProgress.forEach(cp => map.set(cp.trainNo, cp));
+      return map;
+    });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filter, setFilter] = useState<DiffFilter>({ type: 'all', checkStatus: 'all', showDiffOnly: false });
+    const [selectedDiff, setSelectedDiff] = useState<planDifference | null>(null);
+    const [selectedTrains, setSelectedTrains] = useState<Set<string>>(new Set());
+    const [showQuestionModal, setShowQuestionModal] = useState<templateData | null>(null);
+    const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
+    const [sortField, setSortField] = useState<'departureTime' | 'trainNo' | 'priority' | 'locked'>('departureTime');
+    const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+    const [notification, setNotification] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
+    const [showDetailPanel, setShowDetailPanel] = useState(true);
+    const [showConflictDrawer, setShowConflictDrawer] = useState(false);
+    const [legendVisible, setLegendVisible] = useState(true);
+    const [compareDate, setCompareDate] = useState<{ from: string; to: string }>(() => {
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const formatDate = (d: Date) => d.toISOString().split('T')[0];
+      return { from: formatDate(today), to: formatDate(tomorrow) };
+    });
+    const [showEditModal, setShowEditModal] = useState<{ trainNo: string; data: templateData } | null>(null);
+    const questionTypeRef = useRef<string>('data_anomaly');
+    const questionNotesRef = useRef<HTMLTextAreaElement>(null);
 
-  const lockedConflicts = useMemo(() => {
-    return detectLockedPlanRegeneration(lockStates, mockNewPlan).conflicts;
-  }, [lockStates]);
-
-  useEffect(() => {
-    if (lockedConflicts.length > 0 && !showConflictModal) {
-      setConflictTrains(lockedConflicts);
-      setShowConflictModal(true);
-    }
-  }, [lockedConflicts]);
+  const lockedConflicts = useMemo(() => detectLockedPlanRegeneration(lockStates, newPlan).conflicts, [lockStates, newPlan]);
 
   const filteredDifferences = useMemo(() => {
     let filtered = [...differences];
@@ -113,6 +117,17 @@ const Component: React.FC = () => {
     });
 
     filtered.sort((a, b) => {
+      const lockA = lockStates.find(l => l.trainNo === a.trainNo)?.isLocked ? 1 : 0;
+      const lockB = lockStates.find(l => l.trainNo === b.trainNo)?.isLocked ? 1 : 0;
+      const priorityA = a.changedFields?.some(f => f.priority === 'P0') ? 0 : a.changedFields?.some(f => f.priority === 'P1') ? 1 : a.changedFields?.some(f => f.priority === 'P2') ? 2 : 3;
+      const priorityB = b.changedFields?.some(f => f.priority === 'P0') ? 0 : b.changedFields?.some(f => f.priority === 'P1') ? 1 : b.changedFields?.some(f => f.priority === 'P2') ? 2 : 3;
+
+      if (sortField === 'priority') {
+        return sortOrder === 'asc' ? priorityA - priorityB : priorityB - priorityA;
+      }
+      if (sortField === 'locked') {
+        return sortOrder === 'asc' ? lockA - lockB : lockB - lockA;
+      }
       if (sortField === 'trainNo') {
         return sortOrder === 'asc' ? a.trainNo.localeCompare(b.trainNo) : b.trainNo.localeCompare(a.trainNo);
       }
@@ -122,7 +137,7 @@ const Component: React.FC = () => {
     });
 
     return filtered;
-  }, [differences, searchTerm, filter, sortField, sortOrder, checkProgressMap]);
+  }, [differences, searchTerm, filter, sortField, sortOrder, checkProgressMap, lockStates]);
 
   const summary = useMemo(() => ({
     total: differences.length,
@@ -142,17 +157,42 @@ const Component: React.FC = () => {
     };
   }, [checkProgressMap, differences]);
 
-  const currentStep = useMemo((): WorkflowStep => {
+  const currentStep = useMemo((): 'understand' | 'verify' | 'confirm' => {
     if (checkSummary.checked < summary.total) return 'verify';
     return 'confirm';
   }, [checkSummary, summary]);
+
+  const pendingChanges = differences.filter(d => d.type !== 'unchanged' && !checkProgressMap.get(d.trainNo)?.checkStatus).length;
+  const questionChanges = checkSummary.questioned;
+  const p0Count = differences.filter(d => d.changedFields?.some(f => f.priority === 'P0')).length;
+  const waitingCount = differences.filter(d => {
+    const check = checkProgressMap.get(d.trainNo);
+    return !check || check.checkStatus === 'unchecked';
+  }).length;
+  const selectedConflicts = lockedConflicts.filter(item => selectedTrains.has(item.trainNo));
 
   const notify = (type: 'success' | 'warning' | 'error', message: string) => {
     setNotification({ type, message });
     setTimeout(() => setNotification(null), 3000);
   };
 
-  const handleSort = (field: 'departureTime' | 'trainNo') => {
+  const handleSaveEdit = (trainNo: string, updatedData: templateData) => {
+    // 优先更新新计划，旧计划也同步（模拟实际业务中的维护场景）
+    setNewPlan(prev => prev.map(p => p.trainNo === trainNo ? updatedData : p));
+    setOldPlan(prev => prev.map(p => p.trainNo === trainNo ? updatedData : p));
+    // 重新计算差异
+    const newDiffs = detectPlanDifferences(
+      oldPlan.map(p => p.trainNo === trainNo ? updatedData : p),
+      newPlan.map(p => p.trainNo === trainNo ? updatedData : p)
+    );
+    setDifferences(newDiffs);
+    // 更新当前选中的差异
+    setSelectedDiff(prev => prev?.trainNo === trainNo ? newDiffs.find(d => d.trainNo === trainNo) || null : prev);
+    setShowEditModal(null);
+    notify('success', `${trainNo} 数据已保存`);
+  };
+
+  const handleSort = (field: 'departureTime' | 'trainNo' | 'priority' | 'locked') => {
     if (sortField === field) {
       setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
     } else {
@@ -162,73 +202,30 @@ const Component: React.FC = () => {
   };
 
   const handleLockToggle = (trainNo: string) => {
+    const currentlyLocked = lockStates.find(l => l.trainNo === trainNo)?.isLocked ?? false;
     setLockStates(prev => prev.map(lock =>
       lock.trainNo === trainNo ? { ...lock, isLocked: !lock.isLocked } : lock
     ));
-    const isNowLocked = !lockStates.find(l => l.trainNo === trainNo)?.isLocked;
-    notify('success', `${isNowLocked ? '已锁定' : '已解锁'}车次 ${trainNo}`);
+    notify('success', `${!currentlyLocked ? '已锁定' : '已解锁'}车次 ${trainNo}`);
   };
 
-  const handleCheckStatus = (trainNo: string, status: checkProgress['checkStatus']) => {
+  const handleCheckStatus = (trainNo: string, status: checkProgress['checkStatus'], extra?: { questionType?: string; notes?: string }) => {
     setCheckProgressMap(prev => {
       const newMap = new Map(prev);
       const existing = newMap.get(trainNo);
       if (existing) {
-        newMap.set(trainNo, { ...existing, checkStatus: status, checkedAt: new Date().toISOString().slice(0, 16).replace('T', ' ') });
+        newMap.set(trainNo, { ...existing, checkStatus: status, ...(extra || {}) });
       } else {
         newMap.set(trainNo, {
-          id: `check-${Date.now()}`,
+          id: trainNo,
           trainNo,
-          diagramNo: '2025-Q4',
+          diagramNo: '',
           checkStatus: status,
-          checkedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
+          ...(extra || {}),
         });
       }
       return newMap;
     });
-  };
-
-  const handleBatchSelect = (trainNo: string) => {
-    setSelectedTrains(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(trainNo)) newSet.delete(trainNo);
-      else newSet.add(trainNo);
-      return newSet;
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedTrains.size === filteredDifferences.length) {
-      setSelectedTrains(new Set());
-    } else {
-      setSelectedTrains(new Set(filteredDifferences.map(d => d.trainNo)));
-    }
-  };
-
-  const handleBatchMarkChecked = () => {
-    selectedTrains.forEach(trainNo => handleCheckStatus(trainNo, 'checked'));
-    notify('success', `已标记 ${selectedTrains.size} 条为已核对`);
-    setSelectedTrains(new Set());
-  };
-
-  const handleBatchLock = (lock: boolean) => {
-    selectedTrains.forEach(trainNo => {
-      const existing = lockStates.find(l => l.trainNo === trainNo);
-      if (existing) {
-        setLockStates(prev => prev.map(l => l.trainNo === trainNo ? { ...l, isLocked: lock } : l));
-      } else if (lock) {
-        setLockStates(prev => [...prev, {
-          id: `lock-${Date.now()}-${trainNo}`,
-          trainNo,
-          diagramNo: '2025-Q4',
-          isLocked: true,
-          lockedAt: new Date().toISOString().slice(0, 16).replace('T', ' '),
-          lockedBy: '当前用户',
-        }]);
-      }
-    });
-    notify('success', `已${lock ? '锁定' : '解锁'} ${selectedTrains.size} 条`);
-    setSelectedTrains(new Set());
   };
 
   const handleUnlockAll = () => {
@@ -241,663 +238,805 @@ const Component: React.FC = () => {
     notify('success', `已同步更新 ${differences.filter(d => d.type !== 'removed').length} 条计划`);
   };
 
-  const handleConflictAction = (action: 'keep' | 'apply' | 'review') => {
+  const handleConflictAction = (action: 'keep' | 'apply' | 'review', trainNo?: string) => {
     if (action === 'apply') {
       setLockStates(prev => prev.map(l => ({ ...l, isLocked: false, conflictStatus: 'resolved' as const })));
       notify('success', '已应用新计划并解锁');
+      setShowConflictDrawer(false);
     } else if (action === 'keep') {
       setLockStates(prev => prev.map(l => ({ ...l, conflictStatus: 'resolved' as const })));
       notify('warning', '已保持锁定状态');
+    } else if (action === 'review' && trainNo) {
+      const diff = differences.find(d => d.trainNo === trainNo);
+      if (diff) setSelectedDiff(diff);
+      notify('success', `已定位到 ${trainNo} 的差异详情`);
     }
-    setShowConflictModal(false);
   };
 
-  const toggleCardExpand = (type: string) => {
-    setExpandedCards(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(type)) newSet.delete(type);
-      else newSet.add(type);
-      return newSet;
+  const toggleTrainSelection = (trainNo: string) => {
+    setSelectedTrains(prev => {
+      const next = new Set(prev);
+      if (next.has(trainNo)) next.delete(trainNo);
+      else next.add(trainNo);
+      return next;
     });
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement) return;
+  const clearSelection = () => setSelectedTrains(new Set());
 
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setCurrentFocusedIndex(i => Math.min(i + 1, filteredDifferences.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setCurrentFocusedIndex(i => Math.max(i - 1, 0));
-      } else if (e.key === ' ' && currentFocusedIndex >= 0) {
-        e.preventDefault();
-        const diff = filteredDifferences[currentFocusedIndex];
-        handleCheckStatus(diff.trainNo, checkProgressMap.get(diff.trainNo)?.checkStatus === 'checked' ? 'unchecked' : 'checked');
-      } else if (e.key === 'Enter' && currentFocusedIndex >= 0) {
-        e.preventDefault();
-        setSelectedDiff(filteredDifferences[currentFocusedIndex]);
-      } else if (e.key === 'Escape') {
-        setSelectedDiff(null);
-        setShowQuestionModal(null);
-        setShowConflictModal(false);
-      } else if (e.ctrlKey && e.key === 'f') {
-        e.preventDefault();
-        document.querySelector<HTMLInputElement>('[data-search]')?.focus();
-      }
+  const formatMergedField = (data?: templateData) => {
+    if (!data) return null;
+    // 编组数只保留数字
+    const formationCount = data.model ? data.model.replace(/[^0-9]/g, '') || '—' : '—';
+    const formationDir = data.orderDirection ? (data.orderDirection === '正序' ? '正' : '倒') : '—';
+    // 停靠方向移除数字
+    const stopDir = data.stopDirection ? data.stopDirection.replace(/[0-9]/g, '') || '—' : '—';
+    const color = data.landmarkColor || '—';
+    return { formationCount, formationDir, stopDir, color };
+  };
+
+  const getColorDisplay = (colorName: string) => {
+    const colorMap: Record<string, string> = {
+      '红': '#EF4444',
+      '绿': '#10B981',
+      '黄': '#F59E0B',
+      '蓝': '#3B82F6',
     };
+    return colorMap[colorName] || '#6B7280';
+  };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [currentFocusedIndex, filteredDifferences, checkProgressMap]);
+  const getTypeLabel = (status?: string) => {
+    if (!status) return '途径';
+    return status;
+  };
 
-  const pendingChanges = differences.filter(d => d.type !== 'unchanged' && !checkProgressMap.get(d.trainNo)?.checkStatus).length;
-  const questionChanges = checkSummary.questioned;
+  const getTypeClass = (status?: string) => {
+    if (status === '始发') return 'origin';
+    if (status === '终到') return 'terminal';
+    return 'pass';
+  };
+
+  const getTypeColor = (status?: string) => {
+    if (status === '始发') return '#fde047';
+    if (status === '终到') return '#6ee7b7';
+    return '#d8b4fe';
+  };
 
   return (
     <div className="plan-comparison">
+      {notification && (
+        <div style={{
+          position: 'fixed', left: '50%', transform: 'translateX(-50%)', top: '72px', zIndex: 999,
+          padding: '12px 24px', borderRadius: '10px',
+          backgroundColor: notification.type === 'success' ? '#10B981' : notification.type === 'error' ? '#EF4444' : '#F59E0B',
+          color: '#fff', fontSize: '14px', fontWeight: 600,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+        }}>
+          {notification.message}
+        </div>
+      )}
+
       <header className="pc-header">
         <div className="pc-header-left">
           <h1 className="pc-title">计划比对</h1>
-          <span className="pc-subtitle">今日计划 vs 次日新计划</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px' }}>
+            <input type="date" className="pc-date-input" value={compareDate.from} onChange={e => setCompareDate(prev => ({ ...prev, from: e.target.value }))} />
+            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>→</span>
+            <input type="date" className="pc-date-input" value={compareDate.to} onChange={e => setCompareDate(prev => ({ ...prev, to: e.target.value }))} />
+          </div>
         </div>
         <div className="pc-header-right">
-          <span className="pc-time-badge">计划生成：{planGenerateTime}</span>
+          <span style={{ fontSize: '13px', color: '#374151', marginRight: '16px', fontWeight: 600 }}>{checkSummary.checked}/{summary.total} 已核对</span>
+          <button style={{ ...btnStyles.ghost, padding: '6px 10px' }} onClick={() => setShowKeyboardHelp(v => !v)}>
+            <Keyboard style={{ width: '14px', height: '14px' }} />
+          </button>
+          <button style={{ ...btnStyles.ghost, padding: '6px 10px', marginLeft: '6px' }} onClick={() => setShowDetailPanel(v => !v)}>
+            <Eye style={{ width: '14px', height: '14px' }} />
+          </button>
         </div>
       </header>
 
-      <div className="pc-step-indicator">
-        <div className="pc-step-item">
-          <div className={`pc-step-circle ${currentStep !== 'understand' ? 'completed' : 'active'}`}>
-            {currentStep !== 'understand' ? '✓' : '1'}
-          </div>
+      {/* 步骤指示器 */}
+      <div className="pc-step-bar">
+        <div className="pc-step-item pc-step-1">
+          <span className={`pc-step-circle ${currentStep === 'understand' ? 'active' : 'done'}`}>1</span>
           <span className="pc-step-label">了解变更</span>
         </div>
         <div className="pc-step-line" />
-        <div className="pc-step-item">
-          <div className={`pc-step-circle ${currentStep === 'confirm' ? 'completed' : currentStep === 'verify' ? 'active' : 'pending'}`}>
-            {currentStep === 'confirm' ? '✓' : '2'}
-          </div>
+        <div className="pc-step-item pc-step-2">
+          <span className={`pc-step-circle ${currentStep === 'verify' ? 'active' : checkSummary.checked > 0 ? 'done' : ''}`}>2</span>
           <span className="pc-step-label">逐一核对</span>
         </div>
         <div className="pc-step-line" />
-        <div className="pc-step-item">
-          <div className={`pc-step-circle ${currentStep === 'confirm' ? 'active' : 'pending'}`}>3</div>
+        <div className="pc-step-item pc-step-3">
+          <span className={`pc-step-circle ${currentStep === 'confirm' ? 'active' : ''}`}>3</span>
           <span className="pc-step-label">确认锁定</span>
         </div>
-      </div>
-
-      <div className="pc-summary-section">
-        <h2 className="pc-section-title">差异汇总</h2>
-        <div className="pc-summary-cards">
-          {(['added', 'removed', 'modified', 'unchanged'] as const).map(type => (
-            <div
-              key={type}
-              className={`pc-summary-card pc-card-${type}`}
-            >
-              <div className="pc-card-header" onClick={() => type !== 'unchanged' && toggleCardExpand(type)}>
-                <div className="pc-card-icon">
-                  {React.createElement(DIFF_ICONS[type], { className: 'pc-icon-sm' })}
-                </div>
-                <div className="pc-card-content">
-                  <span className="pc-card-count">{summary[type]}</span>
-                  <span className="pc-card-label">{DIFF_LABELS[type]}</span>
-                </div>
-                {type !== 'unchanged' && (
-                  <ChevronDown className={`pc-expand-icon ${expandedCards.has(type) ? 'expanded' : ''}`} />
-                )}
-              </div>
-              {expandedCards.has(type) && (
-                <div className="pc-card-expanded">
-                  {differences.filter(d => d.type === type).map(diff => (
-                    <div
-                      key={diff.trainNo}
-                      className="pc-card-item"
-                      onClick={() => setSelectedDiff(diff)}
-                    >
-                      <span className="pc-item-trainno">{diff.trainNo}</span>
-                      {type === 'modified' && diff.changedFields && diff.changedFields[0] && (
-                        <span className="pc-item-change">{formatChangedField(diff)}</span>
-                      )}
-                      {(type === 'added' || type === 'removed') && (
-                        <span className="pc-item-time">
-                          {diff.newData?.departureTime || diff.oldData?.departureTime || '—'}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '12px', color: '#6B7280' }}>当前：</span>
+          <span style={{ fontSize: '13px', fontWeight: 600, color: currentStep === 'verify' ? '#F59E0B' : currentStep === 'confirm' ? '#10B981' : '#5e6ad2' }}>
+            {currentStep === 'understand' ? '了解变更' : currentStep === 'verify' ? '逐一核对变更' : '确认锁定'}
+          </span>
         </div>
       </div>
 
-      <div className="pc-toolbar">
-        <div className="pc-toolbar-left">
-          <div className="pc-search-box">
-            <Search className="pc-search-icon" />
-            <input
-              type="text"
-              data-search
-              placeholder="搜索车次..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pc-search-input"
-            />
+      <div className="pc-toolbar" style={{ flexWrap: 'wrap', gap: '8px' }}>
+        <div className="pc-toolbar-left" style={{ flexWrap: 'wrap', gap: '6px' }}>
+          <div className="pc-filter-group">
+            <span className="pc-filter-label">变更类型</span>
+            <div className="pc-filter-tabs">
+              <button className={`pc-filter-tab ${filter.type === 'all' && !filter.showDiffOnly ? 'active' : ''}`} onClick={() => setFilter(prev => ({ ...prev, type: 'all', showDiffOnly: false }))}>
+                全部 <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.7 }}>{summary.total}</span>
+              </button>
+              {(['added', 'removed', 'modified', 'unchanged'] as const).map(t => {
+                const cfg = typeConfig[t];
+                return (
+                  <button key={t} className={`pc-filter-tab pc-filter-tab-${t} ${filter.type === t ? `active ${t}` : ''}`} onClick={() => setFilter(prev => ({ ...prev, type: t, showDiffOnly: false }))}>
+                    {cfg.label} <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.7 }}>{summary[t]}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="pc-filter-tabs">
-            <button
-              className={`pc-filter-tab ${filter.type === 'all' ? 'active' : ''}`}
-              onClick={() => setFilter(f => ({ ...f, type: 'all' }))}
-            >
-              全部
-            </button>
-            <button
-              className={`pc-filter-tab ${filter.type === 'added' ? 'active added' : ''}`}
-              onClick={() => setFilter(f => ({ ...f, type: f.type === 'added' ? 'all' : 'added' }))}
-            >
-              新增
-            </button>
-            <button
-              className={`pc-filter-tab ${filter.type === 'removed' ? 'active removed' : ''}`}
-              onClick={() => setFilter(f => ({ ...f, type: f.type === 'removed' ? 'all' : 'removed' }))}
-            >
-              减少
-            </button>
-            <button
-              className={`pc-filter-tab ${filter.type === 'modified' ? 'active modified' : ''}`}
-              onClick={() => setFilter(f => ({ ...f, type: f.type === 'modified' ? 'all' : 'modified' }))}
-            >
-              变更
-            </button>
+          <div className="pc-filter-group">
+            <span className="pc-filter-label">核对状态</span>
+            <div className="pc-filter-tabs">
+              {(['all', 'unchecked', 'checked', 'questioned'] as const).map(s => {
+                const label = s === 'all' ? '全部' : checkStatusConfig[s].label;
+                const isUncheckedFilter = s === 'unchecked';
+                const uncheckedCount = summary.unchecked;
+                return (
+                  <button
+                    key={s}
+                    className={`pc-filter-tab pc-filter-tab-${s} ${filter.checkStatus === s ? 'active' : ''}`}
+                    onClick={() => setFilter(prev => ({ ...prev, checkStatus: s }))}
+                    style={isUncheckedFilter ? {
+                      borderColor: '#F59E0B',
+                      backgroundColor: 'rgba(245,158,11,0.15)',
+                      color: '#D97706',
+                      fontWeight: 700,
+                      boxShadow: '0 0 0 1px rgba(245,158,11,0.4)'
+                    } : undefined}
+                  >
+                    {label}
+                    {isUncheckedFilter && <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.8 }}>({uncheckedCount})</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <label className="pc-checkbox-label">
-            <input
-              type="checkbox"
-              checked={filter.showDiffOnly}
-              onChange={e => setFilter(f => ({ ...f, showDiffOnly: e.target.checked }))}
-            />
-            <span>仅显示有差异</span>
-          </label>
+          {lockedConflicts.length > 0 && (
+            <button style={{ ...btnStyles.ghost, padding: '6px 12px', fontSize: '12px', backgroundColor: '#FFFBEB', borderColor: '#FCD34D', color: '#92400E' }} onClick={() => setShowConflictDrawer(true)}>
+              <AlertCircle style={{ width: '14px', height: '14px' }} /> 冲突 {lockedConflicts.length}
+            </button>
+          )}
+          {p0Count > 0 && (
+            <button style={{ ...btnStyles.ghost, padding: '6px 12px', fontSize: '12px', backgroundColor: '#FEF2F2', borderColor: '#FECACA', color: '#DC2626' }} onClick={() => handleSort('priority')}>
+              P0 {p0Count}
+            </button>
+          )}
         </div>
         <div className="pc-toolbar-right">
-          <button className="pc-btn pc-btn-icon" onClick={() => setShowKeyboardHelp(true)} title="快捷键帮助">
-            <Keyboard className="pc-icon-sm" />
-          </button>
-          <button
-            className="pc-btn pc-btn-icon"
-            onClick={() => setShowDetailPanel(v => !v)}
-            title={showDetailPanel ? '隐藏详情面板' : '显示详情面板'}
-          >
-            {showDetailPanel ? <PanelRightClose className="pc-icon-sm" /> : <PanelRightOpen className="pc-icon-sm" />}
-          </button>
+          <div className="pc-search-box">
+            <Search className="pc-search-icon" />
+            <input className="pc-search-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="搜索车次..." />
+          </div>
         </div>
       </div>
 
-      <div className="pc-main">
+      <div className="pc-main" style={showDetailPanel ? undefined : { padding: '16px 24px' }}>
         <div className={`pc-table-container ${!showDetailPanel ? 'full-width' : ''}`}>
-          <div className="pc-table-header">
-            <div className="pc-table-row pc-table-header-row">
-              <div className="pc-cell pc-cell-checkbox">
-                <input
-                  type="checkbox"
-                  checked={selectedTrains.size === filteredDifferences.length && filteredDifferences.length > 0}
-                  onChange={handleSelectAll}
-                />
+          {/* 颜色图例 */}
+          <div className="pc-legend-bar">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <div className="pc-legend-section">
+                <span className="pc-legend-title">图例</span>
+                {legendVisible && (
+                  <>
+                    <span className="pc-legend-item"><span className="pc-legend-dot origin" />始发</span>
+                    <span className="pc-legend-item"><span className="pc-legend-dot pass" />途经</span>
+                    <span className="pc-legend-item"><span className="pc-legend-dot terminal" />终到</span>
+                    <span style={{ width: 1, height: 16, backgroundColor: '#E5E7EB', margin: '0 12px' }} />
+                    <span className="pc-legend-item"><span className="pc-legend-dot added" />新增</span>
+                    <span className="pc-legend-item"><span className="pc-legend-dot removed" />减少</span>
+                    <span className="pc-legend-item"><span className="pc-legend-dot modified" />变更</span>
+                  </>
+                )}
               </div>
-              <div className="pc-cell pc-cell-trainno" onClick={() => handleSort('trainNo')}>
-                车次 {sortField === 'trainNo' && (sortOrder === 'asc' ? <ChevronUp className="pc-icon-xs" /> : <ChevronDown className="pc-icon-xs" />)}
-              </div>
-              <div className="pc-cell pc-cell-type">类型</div>
-              <div className="pc-cell pc-cell-time" onClick={() => handleSort('departureTime')}>
-                到达 {sortField === 'departureTime' && (sortOrder === 'asc' ? <ChevronUp className="pc-icon-xs" /> : <ChevronDown className="pc-icon-xs" />)}
-              </div>
-              <div className="pc-cell pc-cell-time">发车</div>
-              <div className="pc-cell pc-cell-track">股道</div>
-              <div className="pc-cell pc-cell-platform">站台</div>
-              <div className="pc-cell pc-cell-gates">检票口</div>
-              <div className="pc-cell pc-cell-status">状态</div>
-              <div className="pc-cell pc-cell-check">核对</div>
+              <button
+                onClick={() => setLegendVisible(!legendVisible)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  padding: '4px 10px', border: '1px solid #E5E7EB',
+                  borderRadius: '4px', backgroundColor: '#fff',
+                  cursor: 'pointer', color: '#6B7280', fontSize: '12px',
+                  fontWeight: 500
+                }}
+              >
+                {legendVisible ? '收起' : '展开'}
+                <span style={{ fontSize: '10px' }}>{legendVisible ? '▲' : '▼'}</span>
+              </button>
             </div>
           </div>
 
-          <div className="pc-table-body">
-            {filteredDifferences.length === 0 ? (
-              <div className="pc-empty">
-                <Search className="pc-empty-icon" />
-                <span>未找到匹配的列车数据</span>
-              </div>
-            ) : (
-              filteredDifferences.map((diff, idx) => {
-                const data = diff.newData || diff.oldData;
-                if (!data) return null;
-                const lock = lockStates.find(l => l.trainNo === diff.trainNo);
-                const check = checkProgressMap.get(diff.trainNo);
-                const colors = DIFF_COLORS[diff.type];
-                const isSelected = selectedTrains.has(diff.trainNo);
-                const isFocused = currentFocusedIndex === idx;
-                const isDetailSelected = selectedDiff?.trainNo === diff.trainNo;
-
-                return (
-                  <div
-                    key={diff.trainNo}
-                    className={`pc-table-row ${colors.bg} ${colors.border} ${isSelected ? 'selected' : ''} ${isFocused ? 'focused' : ''} ${isDetailSelected ? 'detail-selected' : ''}`}
-                    onClick={() => setSelectedDiff(diff)}
-                  >
-                    <div className="pc-cell pc-cell-checkbox" onClick={e => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => handleBatchSelect(diff.trainNo)}
-                      />
+          <div className="pc-card-list">
+            {filteredDifferences.map(diff => {
+              const cfg = typeConfig[diff.type];
+              const check = checkProgressMap.get(diff.trainNo);
+              const checkCfg = check ? checkStatusConfig[check.checkStatus] : checkStatusConfig.unchecked;
+              const CheckIcon = checkCfg.icon;
+              const isSelected = selectedDiff?.trainNo === diff.trainNo;
+              const isLocked = lockStates.find(l => l.trainNo === diff.trainNo)?.isLocked;
+              const data = diff.newData || diff.oldData;
+              const priority = diff.changedFields?.some(f => f.priority === 'P0') ? 'P0' : diff.changedFields?.some(f => f.priority === 'P1') ? 'P1' : diff.changedFields?.some(f => f.priority === 'P2') ? 'P2' : '—';
+              const mergedText = formatMergedField(data);
+              const typeClass = getTypeClass(data?.status);
+              const typeColor = getTypeColor(data?.status);
+              const typeLabel = getTypeLabel(data?.status);
+              const isUnchecked = !check || check.checkStatus === 'unchecked';
+              return (
+                <div
+                  key={diff.trainNo}
+                  className={`pc-card pc-card-${diff.type} pc-card-check-${check?.checkStatus || 'unchecked'} ${isSelected ? 'detail-selected' : ''}`}
+                  onClick={() => setSelectedDiff(diff)}
+                  style={{
+                    boxShadow: isUnchecked ? '0 0 0 2px rgba(245, 158, 11, 0.3)' : undefined,
+                    transform: isUnchecked ? 'translateZ(0)' : undefined,
+                  }}
+                >
+                  {/* 顶部标题区域 - 车次信息放在首位 */}
+                  <div className="pc-card-header-row">
+                    <div className="pc-card-header-left">
+                      {/* 车次信息 - 最优先显示 */}
+                      <div className="pc-trainno-wrapper">
+                        <span className={`pc-trainno pc-trainno-strong pc-trainno-${typeClass}`}>{diff.trainNo}</span>
+                      </div>
+                      {/* 核对状态显示 - 固定信息在左边 */}
+                      <div className="pc-status-display">
+                        {check?.checkStatus === 'checked' && (
+                          <span className="pc-status-badge checked">
+                            <Check style={{ width: '14px', height: '14px' }} />
+                            已核对
+                          </span>
+                        )}
+                        {check?.checkStatus === 'questioned' && (
+                          <span className="pc-status-badge questioned">
+                            <HelpCircle style={{ width: '14px', height: '14px' }} />
+                            有疑问
+                          </span>
+                        )}
+                        {check?.checkStatus === 'confirmed' && (
+                          <span className="pc-status-badge confirmed">
+                            <CheckCircle2 style={{ width: '14px', height: '14px' }} />
+                            已确认
+                          </span>
+                        )}
+                        {isUnchecked && (
+                          <span className="pc-status-badge unchecked" style={{
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            color: '#D97706',
+                            fontWeight: 700,
+                            boxShadow: '0 0 0 1px rgba(245, 158, 11, 0.2)'
+                          }}>
+                            <Circle style={{ width: '14px', height: '14px' }} />
+                            未核对
+                          </span>
+                        )}
+                      </div>
+                      {/* 变更类型标签 - 动态信息在右边 */}
+                      <div className="pc-card-badges">
+                        {diff.type !== 'unchanged' && (
+                          <span className={`pc-type-badge pc-type-badge-${diff.type}`}>
+                            {diff.type === 'added' && <Plus style={{ width: '12px', height: '12px' }} />}
+                            {diff.type === 'removed' && <Minus style={{ width: '12px', height: '12px' }} />}
+                            {diff.type === 'modified' && <Edit style={{ width: '12px', height: '12px' }} />}
+                            {cfg.label}
+                          </span>
+                        )}
+                        {isLocked && <span className="pc-lock-badge"><Lock style={{ width: '10px', height: '10px' }} />锁定</span>}
+                        {data?.focusFlag && <span className="pc-focus-dot" title="重点关注" />}
+                        {priority !== '—' && <span className="pc-priority-badge" style={{ backgroundColor: priority === 'P0' ? '#EF4444' : priority === 'P1' ? '#F59E0B' : '#9CA3AF' }}>{priority}</span>}
+                      </div>
                     </div>
-                    <div className="pc-cell pc-cell-trainno">
-                      <span className={`pc-trainno ${colors.text}`}>
-                        {React.createElement(DIFF_ICONS[diff.type], { className: 'pc-icon-xs' })}
-                        {diff.trainNo}
-                      </span>
-                      {lock?.isLocked && (
-                        <Lock className="pc-icon-xs pc-lock-icon" />
-                      )}
-                    </div>
-                    <div className="pc-cell pc-cell-type">
-                      <span className={`pc-type-badge ${colors.badge}`}>{DIFF_LABELS[diff.type]}</span>
-                    </div>
-                    <div className="pc-cell pc-cell-time">{data.arrivalTime || '—'}</div>
-                    <div className="pc-cell pc-cell-time">{data.departureTime || '—'}</div>
-                    <div className="pc-cell pc-cell-track">
-                      {diff.type === 'modified' && diff.changedFields?.some(f => f.field === 'track') ? (
-                        <span className="pc-changed-value">
-                          {diff.oldData?.track} → <strong>{data.track}</strong>
-                        </span>
-                      ) : (
-                        data.track || '—'
-                      )}
-                    </div>
-                    <div className="pc-cell pc-cell-platform">
-                      {diff.type === 'modified' && diff.changedFields?.some(f => f.field === 'platform') ? (
-                        <span className="pc-changed-value">
-                          {diff.oldData?.platform} → <strong>{data.platform}</strong>
-                        </span>
-                      ) : (
-                        data.platform || '—'
-                      )}
-                    </div>
-                    <div className="pc-cell pc-cell-gates">
-                      {diff.type === 'modified' && diff.changedFields?.some(f => f.field === 'gates') ? (
-                        <span className="pc-changed-value">
-                          {diff.oldData?.gates} → <strong>{data.gates}</strong>
-                        </span>
-                      ) : (
-                        data.gates || '—'
-                      )}
-                    </div>
-                    <div className="pc-cell pc-cell-status">
-                      <span className="pc-status-tag">{data.status}</span>
-                    </div>
-                    <div className="pc-cell pc-cell-check" onClick={e => e.stopPropagation()}>
-                      <button
-                        className={`pc-check-btn ${CHECK_STATUS_CONFIG[check?.checkStatus || 'unchecked'].color}`}
-                        onClick={() => {
-                          const statusOrder: checkProgress['checkStatus'][] = ['unchecked', 'checked', 'questioned', 'confirmed'];
-                          const currentIdx = statusOrder.indexOf(check?.checkStatus || 'unchecked');
-                          const nextStatus = statusOrder[(currentIdx + 1) % statusOrder.length];
-                          handleCheckStatus(diff.trainNo, nextStatus);
-                        }}
-                        title={CHECK_STATUS_CONFIG[check?.checkStatus || 'unchecked'].label}
-                      >
-                        {React.createElement(CHECK_STATUS_CONFIG[check?.checkStatus || 'unchecked'].icon, { className: 'pc-icon-sm' })}
+                    <div className="pc-card-actions" onClick={e => e.stopPropagation()}>
+                      <button className="pc-check-btn" title={checkCfg.label} onClick={() => {
+                        const next = check?.checkStatus === 'unchecked' ? 'checked' : 'unchecked';
+                        handleCheckStatus(diff.trainNo, next);
+                        notify('success', `${diff.trainNo} 已标记为${next === 'checked' ? '已核对' : '未核对'}`);
+                      }}>
+                        <CheckIcon style={{ width: '14px', height: '14px', color: checkCfg.color }} />
+                      </button>
+                      <button className="pc-ghost-btn" onClick={() => setShowEditModal({ trainNo: diff.trainNo, data: data! })} title="编辑">
+                        <Edit style={{ width: '14px', height: '14px' }} />
+                      </button>
+                      <button className="pc-ghost-btn" onClick={() => handleLockToggle(diff.trainNo)} title={isLocked ? '解锁' : '锁定'}>
+                        {isLocked ? <Unlock style={{ width: '14px', height: '14px' }} /> : <Lock style={{ width: '14px', height: '14px' }} />}
+                      </button>
+                      <button className="pc-ghost-btn" onClick={() => setShowQuestionModal(data || null)} title="疑问">
+                        <HelpCircle style={{ width: '14px', height: '14px' }} />
                       </button>
                     </div>
                   </div>
-                );
-              })
-            )}
+
+                  {/* 底部信息区域 */}
+                  <div className="pc-card-content-row">
+                    <div className="pc-card-grid">
+                      <div className="pc-card-item pc-card-item-primary"><span className="item-label">始发</span><strong className="item-value">{data?.originStation?.substring(0, 3) || '—'}</strong></div>
+                      <div className="pc-card-item pc-card-item-primary"><span className="item-label">终到</span><strong className="item-value">{data?.terminalStation?.substring(0, 3) || '—'}</strong></div>
+                      <div className="pc-card-item pc-card-item-primary"><span className="item-label">到点</span><strong className="item-value">{data?.arrivalTime || '—'}</strong></div>
+                      <div className="pc-card-item pc-card-item-primary"><span className="item-label">开点</span><strong className="item-value">{data?.departureTime || '—'}</strong></div>
+                      <div className="pc-card-item pc-card-item-primary"><span className="item-label">股道</span><strong className="item-value">{data?.track || '—'}</strong></div>
+                     <div className="pc-card-item pc-card-item-primary"><span className="item-label">检票</span><strong className="item-value">{data?.gates?.split('、')[0] || '—'}</strong></div>
+                     <div className="pc-card-item"><span className="item-label">车型</span><strong className="item-value">{data?.formation || '—'}</strong></div>
+                     <div className="pc-card-item pc-card-item-merged">
+                       <span className="item-label">停靠</span>
+                       <strong className="item-value">
+                         {mergedText ? (
+                           <>
+                             <span className="pc-merged-part formation">{mergedText.formationCount}</span>
+                             <span className="pc-merged-part order">{mergedText.formationDir}</span>
+                             <span className="pc-merged-part direction">{mergedText.stopDir}</span>
+                             <span className="pc-merged-part color" style={{
+                               display: 'inline-flex', alignItems: 'center', gap: '4px',
+                             }}>
+                               <span style={{
+                                 width: '10px', height: '10px', borderRadius: '2px',
+                                 backgroundColor: getColorDisplay(mergedText.color),
+                                 border: '1px solid rgba(0,0,0,0.1)'
+                               }} />
+                               {mergedText.color}
+                             </span>
+                           </>
+                         ) : '—'}
+                       </strong>
+                     </div>
+                      <div className="pc-card-item pc-card-item-tags">
+                        <span className="item-label">作业</span>
+                        <div className="pc-service-tags" style={{ display: 'flex', flexDirection: 'row', gap: '4px' }}>
+                          {data?.waterSupply === '有' && (
+                            <span className="pc-service-tag water">上水</span>
+                          )}
+                          {data?.sewageSuction === '有' && (
+                            <span className="pc-service-tag sewage">吸污</span>
+                          )}
+                          {data?.baggage === '有' && (
+                            <span className="pc-service-tag baggage">行包</span>
+                          )}
+                          {data?.waterSupply !== '有' && data?.sewageSuction !== '有' && data?.baggage !== '有' && (
+                            <span className="pc-service-tag none">—</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
 
-          <div className="pc-table-footer">
-            <div className="pc-progress-section">
-              <span className="pc-progress-text">
-                核对进度：已核对 {checkSummary.checked}/{checkSummary.total} ({Math.round(checkSummary.checked / checkSummary.total * 100)}%)
-              </span>
-              {questionChanges > 0 && (
-                <span className="pc-progress-warning">有疑问 {questionChanges} 条</span>
-              )}
-              <div className="pc-progress-track">
-                <div
-                  className="pc-progress-fill"
-                  style={{ width: `${checkSummary.checked / checkSummary.total * 100}%` }}
-                />
-              </div>
+          <div className="pc-card-summary" style={{ padding: '12px 16px', fontSize: '13px', color: '#6B7280', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span className="pc-summary-tag total">共 {filteredDifferences.length} 条</span>
+              <span className="pc-summary-tag checked">已核对 {checkSummary.checked}</span>
+              <span className="pc-summary-tag questioned">有疑问 {questionChanges}</span>
+              <span className="pc-summary-tag unchecked">未核对 {pendingChanges}</span>
             </div>
-
             {selectedTrains.size > 0 && (
-              <div className="pc-batch-actions">
-                <span className="pc-batch-info">已选 {selectedTrains.size} 条</span>
-                <button className="pc-btn pc-btn-sm pc-btn-primary" onClick={handleBatchMarkChecked}>
-                  <CheckCircle2 className="pc-icon-xs" /> 批量标记已核对
-                </button>
-                <button className="pc-btn pc-btn-sm pc-btn-ghost" onClick={() => handleBatchLock(true)}>
-                  <Lock className="pc-icon-xs" /> 批量锁定
-                </button>
-                <button className="pc-btn pc-btn-sm pc-btn-ghost" onClick={() => handleBatchLock(false)}>
-                  <Unlock className="pc-icon-xs" /> 批量解锁
-                </button>
-              </div>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span className="pc-summary-tag selected">已选中 {selectedTrains.size} 条</span>
+                <button style={{ background: '#F3F4F6', border: '1px solid #D1D5DB', color: '#4B5563', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer', fontWeight: 600, fontSize: '12px' }} onClick={clearSelection}>清空</button>
+              </span>
             )}
           </div>
         </div>
 
         {showDetailPanel && (
-          <div className="pc-detail-panel">
-            {selectedDiff ? (
-              <>
-                <div className="pc-detail-header">
-                  <div className="pc-detail-title">
-                    <span className={`pc-type-badge ${DIFF_COLORS[selectedDiff.type].badge}`}>
-                      {DIFF_LABELS[selectedDiff.type]}
-                    </span>
-                    <span className="pc-detail-trainno">{selectedDiff.trainNo}</span>
-                  </div>
-                  <button className="pc-btn pc-btn-icon pc-btn-sm" onClick={() => setSelectedDiff(null)}>
-                    <X className="pc-icon-xs" />
-                  </button>
-                </div>
-
-                <div className="pc-detail-section">
-                  <h4 className="pc-detail-section-title">基本信息</h4>
-                  <div className="pc-detail-grid">
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">车次</span>
-                      <span className="pc-detail-value">{selectedDiff.newData?.trainNo || selectedDiff.oldData?.trainNo}</span>
-                    </div>
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">类型</span>
-                      <span className="pc-detail-value">{selectedDiff.newData?.status || selectedDiff.oldData?.status}</span>
-                    </div>
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">车型</span>
-                      <span className="pc-detail-value">{selectedDiff.newData?.model || selectedDiff.oldData?.model}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pc-detail-section">
-                  <h4 className="pc-detail-section-title">时间信息</h4>
-                  <div className="pc-detail-grid">
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">到达</span>
-                      <span className="pc-detail-value">{selectedDiff.newData?.arrivalTime || selectedDiff.oldData?.arrivalTime}</span>
-                    </div>
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">发车</span>
-                      <span className="pc-detail-value">
-                        {selectedDiff.type === 'modified' && selectedDiff.changedFields?.some(f => f.field === 'departureTime') ? (
-                          <span className="pc-value-changed">
-                            {selectedDiff.oldData?.departureTime} → <strong>{selectedDiff.newData?.departureTime}</strong>
-                          </span>
-                        ) : (
-                          selectedDiff.newData?.departureTime || selectedDiff.oldData?.departureTime || '—'
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pc-detail-section">
-                  <h4 className="pc-detail-section-title">站场信息</h4>
-                  <div className="pc-detail-grid">
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">股道</span>
-                      <span className="pc-detail-value">
-                        {selectedDiff.type === 'modified' && selectedDiff.changedFields?.some(f => f.field === 'track') ? (
-                          <span className="pc-value-changed">
-                            {selectedDiff.oldData?.track} → <strong>{selectedDiff.newData?.track}</strong>
-                          </span>
-                        ) : (
-                          selectedDiff.newData?.track || selectedDiff.oldData?.track || '—'
-                        )}
-                      </span>
-                    </div>
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">站台</span>
-                      <span className="pc-detail-value">{selectedDiff.newData?.platform || selectedDiff.oldData?.platform || '—'}</span>
-                    </div>
-                    <div className="pc-detail-item">
-                      <span className="pc-detail-label">检票口</span>
-                      <span className="pc-detail-value">{selectedDiff.newData?.gates || selectedDiff.oldData?.gates || '—'}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedDiff.type === 'modified' && selectedDiff.changedFields && selectedDiff.changedFields.length > 0 && (
-                  <div className="pc-detail-section">
-                    <h4 className="pc-detail-section-title">变更字段</h4>
-                    <div className="pc-changes-list">
-                      {selectedDiff.changedFields.map((change, idx) => (
-                        <div key={idx} className={`pc-change-item pc-change-priority-${change.priority}`}>
-                          <div className="pc-change-field">
-                            <span className="pc-priority-badge">{change.priority}</span>
-                            {getFieldLabel(change.field)}
+          <div style={{ width: '340px', flexShrink: 0, backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div style={{ padding: '16px', borderBottom: '2px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>差异详情</h3>
+              {selectedDiff && <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 0 0' }}>{selectedDiff.trainNo} · {typeConfig[selectedDiff.type].label}</p>}
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
+              {selectedDiff ? (
+                <>
+                  {selectedDiff.type === 'modified' && selectedDiff.changedFields && selectedDiff.changedFields.length > 0 && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280', margin: '0 0 12px 0' }}>变更字段 ({selectedDiff.changedFields.length})</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {selectedDiff.changedFields.map((field, i) => (
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', backgroundColor: '#F9FAFB', borderRadius: '6px', fontSize: '12px' }}>
+                            <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, backgroundColor: field.priority === 'P0' ? '#FEF2F2' : field.priority === 'P1' ? '#FFFBEB' : '#F3F4F6', color: field.priority === 'P0' ? '#DC2626' : field.priority === 'P1' ? '#D97706' : '#6B7280' }}>{field.priority}</span>
+                            <span style={{ fontWeight: 500, color: '#374151', flex: 1 }}>{getFieldLabel(field.field)}</span>
+                            <span style={{ color: '#9CA3AF' }}>{String(field.oldValue || '—')}</span>
+                            <span style={{ color: '#6B7280' }}>→</span>
+                            <span style={{ color: '#1D4ED8', fontWeight: 700 }}>{String(field.newValue || '—')}</span>
                           </div>
-                          <div className="pc-change-values">
-                            <span className="pc-old-value">{String(change.oldValue || '—')}</span>
-                            <span className="pc-change-arrow">→</span>
-                            <span className="pc-new-value">{String(change.newValue || '—')}</span>
-                          </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ padding: '16px 0', borderTop: '1px solid #F3F4F6' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280', margin: '0 0 12px 0' }}>核对状态</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                      {(['unchecked', 'checked', 'questioned', 'confirmed'] as const).map(status => {
+                        const isActive = checkProgressMap.get(selectedDiff.trainNo)?.checkStatus === status;
+                        const config = checkStatusConfig[status];
+                        const StatusIcon = config.icon;
+                        return (
+                          <button
+                            key={status}
+                            onClick={() => {
+                              handleCheckStatus(selectedDiff.trainNo, status);
+                              notify('success', `${selectedDiff.trainNo} 已标记为${checkStatusConfig[status].label}`);
+                            }}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
+                              backgroundColor: isActive ? (status === 'checked' ? '#ECFDF5' : status === 'questioned' ? '#FFFBEB' : status === 'confirmed' ? '#EFF6FF' : '#F3F4F6') : '#fff',
+                              border: isActive ? `1px solid ${status === 'checked' ? '#A7F3D0' : status === 'questioned' ? '#FCD34D' : status === 'confirmed' ? '#BFDBFE' : '#D1D5DB'}` : '1px solid #E5E7EB',
+                              borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: isActive ? 600 : 400,
+                              color: isActive ? config.color : '#6B7280', transition: 'all 0.15s',
+                            }}
+                          >
+                            <StatusIcon style={{ width: '14px', height: '14px' }} />
+                            <span>{config.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                )}
 
-                <div className="pc-detail-section">
-                  <h4 className="pc-detail-section-title">核对状态</h4>
-                  <div className="pc-check-status-grid">
-                    {(['unchecked', 'checked', 'questioned', 'confirmed'] as const).map(status => {
-                      const config = CHECK_STATUS_CONFIG[status];
-                      const isActive = checkProgressMap.get(selectedDiff.trainNo)?.checkStatus === status;
-                      return (
-                        <button
-                          key={status}
-                          className={`pc-status-btn ${isActive ? 'active' : ''} ${config.color}`}
-                          onClick={() => handleCheckStatus(selectedDiff.trainNo, status)}
-                        >
-                          {React.createElement(config.icon, { className: 'pc-icon-xs' })}
-                          <span>{config.label}</span>
-                        </button>
-                      );
-                    })}
+                  <div style={{ display: 'flex', gap: '8px', padding: '16px 0', borderTop: '1px solid #F3F4F6' }}>
+                    <button style={btnStyles.primary} onClick={() => setShowEditModal({ trainNo: selectedDiff.trainNo, data: (selectedDiff.newData || selectedDiff.oldData)! })}>
+                      <Edit style={{ width: '14px', height: '14px' }} /> 编辑数据
+                    </button>
+                    <button style={lockStates.find(l => l.trainNo === selectedDiff.trainNo)?.isLocked ? btnStyles.ghost : btnStyles.warning} onClick={() => handleLockToggle(selectedDiff.trainNo)}>
+                      <Lock style={{ width: '14px', height: '14px' }} />{lockStates.find(l => l.trainNo === selectedDiff.trainNo)?.isLocked ? '解锁' : '锁定'}
+                    </button>
+                    <button style={btnStyles.ghost} onClick={() => setShowQuestionModal(selectedDiff.newData || selectedDiff.oldData!)}>
+                      <HelpCircle style={{ width: '14px', height: '14px' }} /> 标记疑问
+                    </button>
                   </div>
+                </>
+              ) : (
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', color: '#9CA3AF', textAlign: 'center' }}>
+                  <Eye style={{ width: '64px', height: '64px', marginBottom: '16px', opacity: 0.25 }} />
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: '#6B7280', marginBottom: '6px' }}>点击左侧卡片查看变更详情</span>
+                  <span style={{ fontSize: '13px', color: '#9CA3AF' }}>选择一个车次，对比其计划变更</span>
                 </div>
-
-                <div className="pc-detail-actions">
-                  <button
-                    className="pc-btn pc-btn-primary"
-                    onClick={() => handleCheckStatus(selectedDiff.trainNo, 'checked')}
-                  >
-                    <CheckCircle2 className="pc-icon-sm" /> 快速标记已核对
-                  </button>
-                  <button
-                    className={`pc-btn ${lockStates.find(l => l.trainNo === selectedDiff.trainNo)?.isLocked ? 'pc-btn-ghost' : 'pc-btn-warning'}`}
-                    onClick={() => handleLockToggle(selectedDiff.trainNo)}
-                  >
-                    <Lock className="pc-icon-sm" />
-                    {lockStates.find(l => l.trainNo === selectedDiff.trainNo)?.isLocked ? '解锁该车次' : '锁定该车次'}
-                  </button>
-                  <button
-                    className="pc-btn pc-btn-ghost"
-                    onClick={() => setShowQuestionModal(selectedDiff.newData || selectedDiff.oldData!)}
-                  >
-                    <HelpCircle className="pc-icon-sm" /> 标记疑问
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="pc-detail-empty">
-                <Eye className="pc-empty-icon" />
-                <span>点击表格中的行查看详情</span>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
       </div>
 
-      <footer className="pc-decision-footer">
-        <div className="pc-decision-info">
-          <span className="pc-decision-step">您正在进行 [步骤 2: 逐一核对变更]</span>
+      {selectedTrains.size > 0 && (
+        <div style={{ position: 'sticky', bottom: 0, backgroundColor: '#fff', borderTop: '1px solid #E5E7EB', padding: '12px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxShadow: '0 -4px 20px rgba(0,0,0,0.04)' }}>
+          <div style={{ fontSize: '13px', color: '#374151' }}>已选中 {selectedTrains.size} 条车次，可批量处理</div>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button style={btnStyles.ghost} onClick={clearSelection}>清空选择</button>
+            <button style={btnStyles.warning} onClick={() => {
+              selectedTrains.forEach(trainNo => handleCheckStatus(trainNo, 'checked'));
+              notify('success', `已批量标记 ${selectedTrains.size} 条为已核对`);
+              clearSelection();
+            }}>批量核对</button>
+            <button style={btnStyles.primary} onClick={() => {
+              setShowConflictDrawer(true);
+              notify('warning', `已打开 ${selectedTrains.size} 条选中车次的冲突处理面板`);
+            }}>批量冲突处理</button>
+          </div>
+        </div>
+      )}
+
+      <div style={{
+        backgroundColor: '#fff', borderTop: '1px solid #E5E7EB',
+        padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', alignItems: 'center' }}>
           {pendingChanges > 0 && (
-            <span className="pc-decision-warning">
-              还有 {pendingChanges} 条变更需要核对
-              {questionChanges > 0 && `，${questionChanges} 条待确认`}
-            </span>
+            <div style={{ fontSize: '13px', color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <AlertCircle style={{ width: '16px', height: '16px' }} />
+              还有 {pendingChanges} 条变更需要核对{questionChanges > 0 && `，${questionChanges} 条待确认`}
+            </div>
           )}
           {pendingChanges === 0 && (
-            <span className="pc-decision-success">所有变更已核对完成，请选择处理方式</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ fontSize: '13px', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle2 style={{ width: '16px', height: '16px' }} />
+                所有变更已核对完成
+              </div>
+              <button style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '8px 16px', borderRadius: '8px', fontSize: '13px', fontWeight: 700,
+                backgroundColor: '#10B981', color: '#fff', border: 'none', cursor: 'pointer',
+              }} onClick={() => {
+                // 方案 B 动作：把所有车次标记为已确认，并且锁定
+                // 先标记 confirmed
+                differences.forEach(diff => {
+                  handleCheckStatus(diff.trainNo, 'confirmed');
+                });
+                // 再全部锁定
+                setLockStates(prev => prev.map(lock => ({ ...lock, isLocked: true })));
+                notify('success', '所有车次已确认并锁定');
+              }}>
+                <Lock style={{ width: '14px', height: '14px' }} />
+                确认锁定
+              </button>
+            </div>
           )}
         </div>
-        <div className="pc-decision-actions">
-          <button className="pc-btn pc-btn-ghost" onClick={handleUnlockAll}>
-            <Unlock className="pc-icon-sm" /> 全部解锁
-          </button>
-          <button className="pc-btn pc-btn-primary" onClick={handleSyncUpdate}>
-            <RefreshCw className="pc-icon-sm" /> 同步更新
-          </button>
-          <button className="pc-btn pc-btn-ghost">
-            <Printer className="pc-icon-sm" /> 打印清单
-          </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button style={btnStyles.ghost} onClick={handleUnlockAll}><Unlock style={{ width: '14px', height: '14px' }} /> 全部解锁</button>
+          <button style={btnStyles.primary} onClick={handleSyncUpdate}><RefreshCw style={{ width: '14px', height: '14px' }} /> 同步更新</button>
+          <button style={btnStyles.ghost}><Printer style={{ width: '14px', height: '14px' }} /> 打印清单</button>
         </div>
-      </footer>
+      </div>
 
-      {showConflictModal && (
-        <div className="pc-modal-overlay">
-          <div className="pc-modal pc-conflict-modal">
-            <div className="pc-modal-header">
-              <div className="pc-modal-title">
-                <AlertCircle className="pc-icon-sm pc-warning-icon" />
-                <span>检测到计划变更</span>
+      {showConflictDrawer && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.18)', zIndex: 998 }} onClick={() => setShowConflictDrawer(false)}>
+          <div style={{ position: 'absolute', right: 0, top: 0, width: '380px', height: '100%', backgroundColor: '#fff', borderLeft: '1px solid #E5E7EB', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>冲突处理面板</div>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>{selectedConflicts.length > 0 ? `已选中 ${selectedConflicts.length} 条冲突车次` : `共 ${lockedConflicts.length} 条冲突车次`}</div>
               </div>
-              <button className="pc-modal-close" onClick={() => setShowConflictModal(false)}>
-                <X className="pc-icon-sm" />
-              </button>
+              <button style={{ ...btnStyles.ghost, padding: '6px 10px' }} onClick={() => setShowConflictDrawer(false)}><X style={{ width: '14px', height: '14px' }} /></button>
             </div>
-            <div className="pc-modal-body">
-              <p className="pc-conflict-desc">以下已锁定的计划已被后台重新生成，请选择处理方式：</p>
-              <div className="pc-conflict-list">
-                {conflictTrains.map(train => (
-                  <div key={train.trainNo} className="pc-conflict-item">
-                    <Lock className="pc-icon-xs" />
-                    <span className="pc-conflict-trainno">{train.trainNo}</span>
-                    <span className="pc-conflict-info">
-                      已锁定（{train.lockedAt} {train.lockedBy}）
-                    </span>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
+              {(selectedConflicts.length > 0 ? selectedConflicts : lockedConflicts).map(item => (
+                <div key={item.id} style={{ border: '1px solid #E5E7EB', borderRadius: '8px', padding: '12px', marginBottom: '10px', backgroundColor: '#FAFAFA' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <strong style={{ color: '#111827' }}>{item.trainNo}</strong>
+                    <span style={{ fontSize: '12px', color: '#F59E0B' }}>{item.conflictStatus === 'resolved' ? '已处理' : '待处理'}</span>
                   </div>
-                ))}
-              </div>
+                  <div style={{ fontSize: '12px', color: '#6B7280', lineHeight: 1.6 }}>{item.lockedReason || '锁定计划已被后台重新生成，请确认处理方式。'}</div>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                    <button style={btnStyles.ghost} onClick={() => handleConflictAction('review', item.trainNo)}>查看新变化</button>
+                    <button style={btnStyles.ghost} onClick={() => handleConflictAction('keep', item.trainNo)}>保持锁定</button>
+                    <button style={btnStyles.primary} onClick={() => handleConflictAction('apply', item.trainNo)}>应用新计划</button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="pc-modal-footer pc-conflict-actions">
-              <button className="pc-btn pc-btn-ghost" onClick={() => handleConflictAction('review')}>
-                <Eye className="pc-icon-sm" /> 查看新变化
-              </button>
-              <button className="pc-btn pc-btn-ghost" onClick={() => handleConflictAction('keep')}>
-                <Lock className="pc-icon-sm" /> 保持锁定
-              </button>
-              <button className="pc-btn pc-btn-primary" onClick={() => handleConflictAction('apply')}>
-                <RefreshCw className="pc-icon-sm" /> 应用新计划
-              </button>
+            <div style={{ padding: '12px 16px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between' }}>
+              <button style={btnStyles.ghost} onClick={() => setShowConflictDrawer(false)}>关闭</button>
+              <button style={btnStyles.primary} onClick={() => notify('success', '冲突处理结果已保存')}>保存结果</button>
             </div>
           </div>
         </div>
       )}
 
       {showQuestionModal && (
-        <div className="pc-modal-overlay" onClick={() => setShowQuestionModal(null)}>
-          <div className="pc-modal pc-question-modal" onClick={e => e.stopPropagation()}>
-            <div className="pc-modal-header">
-              <div className="pc-modal-title">
-                <HelpCircle className="pc-icon-sm pc-warning-icon" />
-                <span>标记疑问 - {showQuestionModal.trainNo}</span>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ width: '400px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <HelpCircle style={{ width: '18px', height: '18px', color: '#F59E0B' }} />
+                <span style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>标记疑问</span>
               </div>
-              <button className="pc-modal-close" onClick={() => setShowQuestionModal(null)}>
-                <X className="pc-icon-sm" />
-              </button>
+              <button onClick={() => setShowQuestionModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '4px' }}><X style={{ width: '18px', height: '18px' }} /></button>
             </div>
-            <div className="pc-modal-body">
+            <div style={{ padding: '20px' }}>
+              <p style={{ fontSize: '14px', color: '#374151', margin: '0 0 16px 0' }}>车次 <strong>{showQuestionModal.trainNo}</strong> 标记为有疑问后，需要调度长确认。</p>
               <div className="pc-question-type">
                 <label>疑问类型</label>
                 <div className="pc-question-options">
-                  <label className="pc-radio-label">
-                    <input type="radio" name="questionType" value="data_anomaly" defaultChecked />
-                    <span>数据异常</span>
-                  </label>
-                  <label className="pc-radio-label">
-                    <input type="radio" name="questionType" value="mismatch_paper" />
-                    <span>与纸质文件不符</span>
-                  </label>
-                  <label className="pc-radio-label">
-                    <input type="radio" name="questionType" value="need_approval" />
-                    <span>需要调度长确认</span>
-                  </label>
+                  <label className="pc-radio-label"><input type="radio" name="questionType" defaultChecked onChange={() => { questionTypeRef.current = 'data_anomaly'; }} /> 数据异常</label>
+                  <label className="pc-radio-label"><input type="radio" name="questionType" onChange={() => { questionTypeRef.current = 'mismatch_paper'; }} /> 与纸质文件不一致</label>
+                  <label className="pc-radio-label"><input type="radio" name="questionType" onChange={() => { questionTypeRef.current = 'need_approval'; }} /> 需要审批</label>
                 </div>
               </div>
               <div className="pc-question-notes">
-                <label>备注</label>
-                <textarea placeholder="请输入备注信息..." rows={3}></textarea>
+                <label>备注说明</label>
+                <textarea ref={questionNotesRef} rows={3} placeholder="请输入疑问说明..." style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px', marginTop: '8px', resize: 'vertical', outline: 'none' }} />
               </div>
             </div>
-            <div className="pc-modal-footer">
-              <button className="pc-btn pc-btn-ghost" onClick={() => setShowQuestionModal(null)}>取消</button>
-              <button
-                className="pc-btn pc-btn-primary"
-                onClick={() => {
-                  handleCheckStatus(showQuestionModal.trainNo, 'questioned');
-                  setShowQuestionModal(null);
-                  notify('warning', `已标记 ${showQuestionModal.trainNo} 为有疑问`);
-                }}
-              >
-                <MessageSquare className="pc-icon-sm" /> 保存并标记
+            <div style={{ padding: '16px 20px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+              <button style={btnStyles.ghost} onClick={() => setShowQuestionModal(null)}>取消</button>
+              <button style={btnStyles.primary} onClick={() => {
+                handleCheckStatus(showQuestionModal.trainNo, 'questioned', {
+                  questionType: questionTypeRef.current,
+                  notes: questionNotesRef.current?.value || '',
+                });
+                setShowQuestionModal(null);
+                questionTypeRef.current = 'data_anomaly';
+                notify('warning', `已标记 ${showQuestionModal.trainNo} 为有疑问`);
+              }}>
+                <MessageSquare style={{ width: '14px', height: '14px' }} /> 保存并标记
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {showEditModal && (
+        <EditModal
+          trainNo={showEditModal.trainNo}
+          initialData={showEditModal.data}
+          onSave={handleSaveEdit}
+          onCancel={() => setShowEditModal(null)}
+        />
       )}
 
       {showKeyboardHelp && (
-        <div className="pc-modal-overlay" onClick={() => setShowKeyboardHelp(false)}>
-          <div className="pc-modal pc-help-modal" onClick={e => e.stopPropagation()}>
-            <div className="pc-modal-header">
-              <div className="pc-modal-title">
-                <Keyboard className="pc-icon-sm" />
-                <span>快捷键帮助</span>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ width: '400px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Keyboard style={{ width: '18px', height: '18px', color: '#374151' }} />
+                <span style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>快捷键帮助</span>
               </div>
-              <button className="pc-modal-close" onClick={() => setShowKeyboardHelp(false)}>
-                <X className="pc-icon-sm" />
-              </button>
+              <button onClick={() => setShowKeyboardHelp(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '4px' }}><X style={{ width: '18px', height: '18px' }} /></button>
             </div>
-            <div className="pc-modal-body">
-              <div className="pc-help-section">
-                <h4>导航</h4>
-                <div className="pc-help-item"><kbd>↑</kbd> / <kbd>↓</kbd> <span>上一条/下一条车次</span></div>
-                <div className="pc-help-item"><kbd>Space</kbd> <span>标记当前行为"已核对"</span></div>
-                <div className="pc-help-item"><kbd>Enter</kbd> <span>查看详情</span></div>
-                <div className="pc-help-item"><kbd>Ctrl+F</kbd> <span>搜索车次</span></div>
-                <div className="pc-help-item"><kbd>Esc</kbd> <span>关闭弹窗</span></div>
+            <div style={{ padding: '20px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {[
+                  { key: '↑↓', desc: '上下移动聚焦行' },
+                  { key: 'Enter', desc: '查看详情' },
+                  { key: 'Space', desc: '标记已核对 / 取消核对' },
+                  { key: 'Shift+Space', desc: '标记有疑问' },
+                  { key: 'Ctrl+F', desc: '搜索车次' },
+                  { key: 'Esc', desc: '关闭弹窗' },
+                ].map(({ key, desc }) => (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '4px 0' }}>
+                    <span style={{ minWidth: '60px', padding: '4px 8px', backgroundColor: '#F3F4F6', border: '1px solid #E5E7EB', borderRadius: '4px', fontSize: '11px', fontFamily: 'monospace', color: '#374151', textAlign: 'center' }}>{key}</span>
+                    <span style={{ fontSize: '13px', color: '#6B7280' }}>{desc}</span>
+                  </div>
+                ))}
               </div>
+            </div>
+            <div style={{ padding: '16px 20px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end' }}>
+              <button style={btnStyles.primary} onClick={() => setShowKeyboardHelp(false)}>知道了</button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+};
 
-      {notification && (
-        <div className={`pc-toast pc-toast-${notification.type}`}>
-          {notification.type === 'success' && <CheckCircle2 className="pc-icon-sm" />}
-          {notification.type === 'warning' && <AlertCircle className="pc-icon-sm" />}
-          {notification.type === 'error' && <AlertCircle className="pc-icon-sm" />}
-          <span>{notification.message}</span>
+const EditModal: React.FC<{
+  trainNo: string;
+  initialData: any;
+  onSave: (trainNo: string, data: any) => void;
+  onCancel: () => void;
+}> = ({ trainNo, initialData, onSave, onCancel }) => {
+  const [formData, setFormData] = useState<any>({ ...initialData });
+  return (
+    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+      <div style={{ width: '640px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <Edit style={{ width: '18px', height: '18px', color: '#5e6ad2' }} />
+            <span style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>修改</span>
+          </div>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '4px' }}><X style={{ width: '18px', height: '18px' }} /></button>
         </div>
-      )}
+        <div style={{ padding: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px 20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>始发站</label>
+              <input
+                type="text"
+                value={formData.originStation || ''}
+                onChange={e => setFormData({ ...formData, originStation: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>终到站</label>
+              <input
+                type="text"
+                value={formData.terminalStation || ''}
+                onChange={e => setFormData({ ...formData, terminalStation: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>到点</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="datetime-local"
+                  value={formData.arrivalTime || ''}
+                  onChange={e => setFormData({ ...formData, arrivalTime: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', paddingRight: '36px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s' }}
+                />
+                <Clock style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#9CA3AF' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>开点</label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="datetime-local"
+                  value={formData.departureTime || ''}
+                  onChange={e => setFormData({ ...formData, departureTime: e.target.value })}
+                  style={{ width: '100%', padding: '9px 12px', paddingRight: '36px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s' }}
+                />
+                <Clock style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: '#9CA3AF' }} />
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>股道</label>
+              <select
+                value={formData.track || ''}
+                onChange={e => setFormData({ ...formData, track: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s', backgroundColor: '#fff' }}
+              >
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'].map(n => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>编组</label>
+              <input
+                type="text"
+                value={formData.formation || ''}
+                onChange={e => setFormData({ ...formData, formation: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>车型</label>
+              <input
+                type="text"
+                value={formData.model || ''}
+                onChange={e => setFormData({ ...formData, model: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s' }}
+              />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>上水</label>
+              <select
+                value={formData.waterSupply || '否'}
+                onChange={e => setFormData({ ...formData, waterSupply: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s', backgroundColor: '#fff' }}
+              >
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>吸污</label>
+              <select
+                value={formData.sewageSuction || '否'}
+                onChange={e => setFormData({ ...formData, sewageSuction: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s', backgroundColor: '#fff' }}
+              >
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>行包</label>
+              <select
+                value={formData.baggage || '否'}
+                onChange={e => setFormData({ ...formData, baggage: e.target.value })}
+                style={{ padding: '9px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none', transition: 'border 0.15s', backgroundColor: '#fff' }}
+              >
+                <option value="是">是</option>
+                <option value="否">否</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+          <button
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '1px solid #D1D5DB', backgroundColor: 'transparent', color: '#6B7280' }}
+            onClick={onCancel}
+          >
+            取消
+          </button>
+          <button
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '7px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', border: '1px solid #5e6ad2', backgroundColor: '#5e6ad2', color: '#fff' }}
+            onClick={() => onSave(trainNo, formData)}
+          >
+            保存
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

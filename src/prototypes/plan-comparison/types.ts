@@ -2,6 +2,8 @@ export interface templateData {
   id: string;
   trainNo: string;
   trainType: 'high-speed' | 'normal';
+  originStation?: string;
+  terminalStation?: string;
   arrivalTime?: string;
   departureTime?: string;
   track?: string;
@@ -10,6 +12,13 @@ export interface templateData {
   exitGate?: string;
   formation?: string;
   model?: string;
+  stopDirection?: string;
+  orderDirection?: '正序' | '倒序';
+  landmarkColor?: '红' | '绿' | '黄' | '蓝';
+  focusFlag?: boolean;
+  waterSupply?: string;
+  sewageSuction?: string;
+  baggage?: string;
   entryCheckOffset?: number;
   exitCheckOffset?: number;
   status?: string;
@@ -65,6 +74,12 @@ export interface differenceSummary {
   lockedConflicts: planLockState[];
 }
 
+export interface DiffFilter {
+  type: 'all' | 'added' | 'removed' | 'modified' | 'unchanged';
+  checkStatus: 'all' | checkProgress['checkStatus'];
+  showDiffOnly: boolean;
+}
+
 const SENSITIVE_FIELDS: Record<string, 'P0' | 'P1' | 'P2'> = {
   arrivalTime: 'P0',
   departureTime: 'P0',
@@ -74,6 +89,15 @@ const SENSITIVE_FIELDS: Record<string, 'P0' | 'P1' | 'P2'> = {
   exitGate: 'P1',
   formation: 'P1',
   model: 'P1',
+  originStation: 'P1',
+  terminalStation: 'P1',
+  stopDirection: 'P1',
+  orderDirection: 'P1',
+  landmarkColor: 'P1',
+  waterSupply: 'P2',
+  sewageSuction: 'P2',
+  baggage: 'P2',
+  focusFlag: 'P2',
   entryCheckOffset: 'P2',
   exitCheckOffset: 'P2',
 };
@@ -151,7 +175,9 @@ export function detectLockedPlanRegeneration(
     const newData = newPlan.find(t => t.trainNo === lock.trainNo);
     if (!newData) continue;
 
-    const hasChanges = detectFieldChanges(lock.regeneratedData || {}, newData).length > 0;
+    const hasChanges = lock.regeneratedData
+      ? detectFieldChanges(lock.regeneratedData, newData).length > 0
+      : true;
 
     if (hasChanges) {
       regenerated.push({
@@ -168,6 +194,8 @@ export function detectLockedPlanRegeneration(
 
 export function getFieldLabel(field: keyof templateData): string {
   const labels: Record<string, string> = {
+    originStation: '始发站',
+    terminalStation: '终到站',
     arrivalTime: '到达时间',
     departureTime: '发车时间',
     track: '股道',
@@ -176,6 +204,13 @@ export function getFieldLabel(field: keyof templateData): string {
     exitGate: '出站口',
     formation: '编组',
     model: '车型',
+    stopDirection: '停靠方向',
+    orderDirection: '正倒序',
+    landmarkColor: '地标颜色',
+    waterSupply: '上水',
+    sewageSuction: '吸污',
+    baggage: '行包',
+    focusFlag: '重点关注',
     entryCheckOffset: '检票开始偏移',
     exitCheckOffset: '检票结束偏移',
     status: '状态',
