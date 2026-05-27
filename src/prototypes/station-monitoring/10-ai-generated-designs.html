@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10种生图高铁卡片设计</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 50%, #f472b6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #94a3b8;
+            margin-top: 8px;
+            font-size: 15px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 30px;
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .card-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .card-wrapper {
+            position: relative;
+            width: 320px;
+            height: 200px;
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        
+        .card-wrapper:hover {
+            transform: translateY(-10px) scale(1.03);
+            box-shadow: 0 35px 80px rgba(0,0,0,0.5);
+        }
+        
+        .card-bg {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.6s ease;
+        }
+        
+        .card-wrapper:hover .card-bg {
+            transform: scale(1.05);
+        }
+        
+        .card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.6) 100%);
+        }
+        
+        .card-content {
+            position: relative;
+            z-index: 10;
+            padding: 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+        }
+        
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .train-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .stop-type {
+            font-size: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .card-middle {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .train-no {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            line-height: 1;
+        }
+        
+        .train-route {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+        
+        .card-bottom {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .info-box {
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .card-title {
+            margin-top: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            color: white;
+        }
+        
+        .card-desc {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        .select-bar {
+            position: sticky;
+            bottom: 0;
+            background: rgba(15,23,42,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(148,163,184,0.2);
+            padding: 20px;
+            z-index: 100;
+        }
+        
+        .select-bar-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .select-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        
+        .info-section {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px 120px;
+        }
+        
+        .info-box-large {
+            background: rgba(30,41,59,0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(148,163,184,0.2);
+            border-radius: 24px;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>10种生图高铁卡片设计</h1>
+        <p>AI生成背景图片 + 精致卡片布局</p>
+    </div>
+    
+    <div class="cards-grid">
+        <!-- Design 1: Futuristic Bullet Train -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=futuristic%20bullet%20train%20at%20high%20speed%2C%20blue%20and%20cyan%20neon%20lights%2C%20sleek%20aerodynamic%20design%2C%20dark%20background%20with%20glowing%20reflections%2C%20motion%20blur%2C%20cinematic%20lighting%2C%20ultra%20realistic&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">G 高速</div>
+                        <div class="stop-type">终到</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">G8602</div>
+                        <div class="train-route">成都东 → 重庆东</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">07:12</div>
+                        <div class="info-box">3道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">1️⃣ 未来高铁</div>
+            <div class="card-desc">蓝色霓虹 · 速度感</div>
+        </div>
+        
+        <!-- Design 2: Aurora Night -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=aurora%20borealis%20night%20sky%2C%20northern%20lights%20green%20and%20purple%2C%20mountain%20silhouette%2C%20starry%20sky%2C%20ethereal%20atmospheric%20glow%2C%20peaceful%20landscape%2C%20cinematic%20photography&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">D 动车</div>
+                        <div class="stop-type">始发</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">D5134</div>
+                        <div class="train-route">重庆东 → 贵阳北</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">08:15</div>
+                        <div class="info-box">2道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">2️⃣ 极光夜空</div>
+            <div class="card-desc">绿色极光 · 神秘宁静</div>
+        </div>
+        
+        <!-- Design 3: Sunset Clouds -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=magnificent%20sunset%20cloudscape%2C%20orange%20and%20pink%20sky%2C%20dramatic%20cloud%20formations%2C%20golden%20hour%20lighting%2C%20cinematic%20vista%2C%20warm%20tones%2C%20atmospheric%20perspective&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">C 城际</div>
+                        <div class="stop-type">途经</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">C5821</div>
+                        <div class="train-route">重庆西 → 重庆东</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">11:22</div>
+                        <div class="info-box">1道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">3️⃣ 晚霞云海</div>
+            <div class="card-desc">橙粉天空 · 温暖壮丽</div>
+        </div>
+        
+        <!-- Design 4: Ocean Waves -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=powerful%20ocean%20waves%2C%20deep%20blue%20and%20teal%20water%2C%20foam%20spray%2C%20dramatic%20seascape%2C%20surreal%20lighting%2C%20cinematic%20composition%2C%20moody%20atmosphere&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">G 高速</div>
+                        <div class="stop-type">终到</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">G8616</div>
+                        <div class="train-route">长沙南 → 重庆东</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">13:55</div>
+                        <div class="info-box">4道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">4️⃣ 深海波涛</div>
+            <div class="card-desc">蓝色海洋 · 力量深邃</div>
+        </div>
+        
+        <!-- Design 5: Royal Purple -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=luxurious%20purple%20silk%20fabric%2C%20elegant%20waves%2C%20royal%20velvet%20texture%2C%20deep%20violet%20and%20lavender%20tones%2C%20sumptuous%20material%2C%20high-end%20fashion%20aesthetic%2C%20soft%20lighting&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">G 高速</div>
+                        <div class="stop-type">始发</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">G8605</div>
+                        <div class="train-route">重庆东 → 长沙南</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">07:30</div>
+                        <div class="info-box">5道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">5️⃣ 皇家紫绸</div>
+            <div class="card-desc">紫色丝绸 · 高贵典雅</div>
+        </div>
+        
+        <!-- Design 6: Forest Mist -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=magical%20forest%20fog%2C%20green%20trees%20in%20mist%2C%20ethereal%20light%20rays%20through%20leaves%2C%20mystical%20atmosphere%2C%20soft%20green%20tones%2C%20dreamy%20landscape%2C%20cinematic%20fog&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">D 动车</div>
+                        <div class="stop-type">始发</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">D5238</div>
+                        <div class="train-route">重庆东 → 成都东</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">08:15</div>
+                        <div class="info-box">7道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">6️⃣ 森林迷雾</div>
+            <div class="card-desc">绿色氤氲 · 神秘梦幻</div>
+        </div>
+        
+        <!-- Design 7: Cyber Grid -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cyberpunk%20cityscape%20at%20night%2C%20neon%20lights%2C%20holographic%20grids%2C%20blue%20and%20pink%20lasers%2C%20futuristic%20urban%20landscape%2C%20rain%20reflections%2C%20blade%20runner%20aesthetic%2C%20cinematic&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">G 高速</div>
+                        <div class="stop-type">始发</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">G8610</div>
+                        <div class="train-route">重庆东 → 武汉</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">10:20</div>
+                        <div class="info-box">3道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">7️⃣ 赛博都市</div>
+            <div class="card-desc">霓虹都市 · 未来科技</div>
+        </div>
+        
+        <!-- Design 8: Berry Gradient -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=abstract%20berry%20gradient%2C%20raspberry%20and%20strawberry%20colors%2C%20smooth%20color%20transition%2C%20soft%20focus%2C%20dreamy%20background%2C%20fashion%20photography%20style%2C%20warm%20tones&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">C 城际</div>
+                        <div class="stop-type">始发</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">C5832</div>
+                        <div class="train-route">重庆东 → 重庆西</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">11:40</div>
+                        <div class="info-box">1道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">8️⃣ 浆果渐变</div>
+            <div class="card-desc">莓果色调 · 温柔浪漫</div>
+        </div>
+        
+        <!-- Design 9: Golden Desert -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=majestic%20desert%20dunes%20at%20golden%20hour%2C%20warm%20sand%20waves%2C%20long%20shadows%2C%20orange%20and%20amber%20tones%2C%20epic%20landscape%2C%20cinematic%20lighting%2C%20sweeping%20curves&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">G 高速</div>
+                        <div class="stop-type">始发</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">G8620</div>
+                        <div class="train-route">重庆东 → 贵阳北</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">14:05</div>
+                        <div class="info-box">6道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">9️⃣ 金色沙丘</div>
+            <div class="card-desc">琥珀金沙 · 温暖壮阔</div>
+        </div>
+        
+        <!-- Design 10: Nebula Galaxy -->
+        <div class="card-item">
+            <div class="card-wrapper">
+                <div class="card-bg" style="background-image: url('https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=cosmic%20nebula%20galaxy%2C%20purple%20and%20blue%20space%20clouds%2C%20distant%20stars%2C%20supernova%20colors%2C%20deep%20space%20wonder%2C%20astronomical%20beauty%2C%20NASA%20telescope%20imagery%20style&image_size=landscape_4_3');"></div>
+                <div class="card-overlay"></div>
+                <div class="card-content">
+                    <div class="card-top">
+                        <div class="train-badge">G 高速</div>
+                        <div class="stop-type">途经</div>
+                    </div>
+                    <div class="card-middle">
+                        <div class="train-no">G307</div>
+                        <div class="train-route">西安北 → 成都东</div>
+                    </div>
+                    <div class="card-bottom">
+                        <div class="info-box">09:05</div>
+                        <div class="info-box">4道</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">🔟 星云银河</div>
+            <div class="card-desc">宇宙星云 · 神秘深邃</div>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <div class="info-box-large">
+            <h2 style="font-size: 24px; font-weight: 800; color: white; margin-bottom: 20px;">
+                🎨 设计特点
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div style="padding: 24px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #60a5fa; margin-bottom: 8px; font-size: 16px;">
+                        🖼️ AI生图背景
+                    </div>
+                    <div style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                        使用AI生成10张独特的背景图片，每张都有独特的视觉氛围
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: rgba(168,85,247,0.1); border: 1px solid rgba(168,85,247,0.3); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #a78bfa; margin-bottom: 8px; font-size: 16px;">
+                        ✨ 毛玻璃标签
+                    </div>
+                    <div style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                        半透明毛玻璃效果的信息标签，悬浮在背景图片之上
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: rgba(236,72,153,0.1); border: 1px solid rgba(236,72,153,0.3); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #f472b6; margin-bottom: 8px; font-size: 16px;">
+                        📐 居中布局
+                    </div>
+                    <div style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                        车次信息居中展示，大字体醒目，信息层次清晰
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #34d399; margin-bottom: 8px; font-size: 16px;">
+                        🎬 电影感
+                    </div>
+                    <div style="color: #94a3b8; font-size: 14px; line-height: 1.6;">
+                        深色渐变遮罩 + 悬停放大效果，营造电影级视觉体验
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="select-bar">
+        <div class="select-bar-content">
+            <button onclick="selectDesign(1)" class="select-btn" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">选 1</button>
+            <button onclick="selectDesign(2)" class="select-btn" style="background: linear-gradient(135deg, #10b981, #06b6d4);">选 2</button>
+            <button onclick="selectDesign(3)" class="select-btn" style="background: linear-gradient(135deg, #f97316, #f43f5e);">选 3</button>
+            <button onclick="selectDesign(4)" class="select-btn" style="background: linear-gradient(135deg, #2563eb, #06b6d4);">选 4</button>
+            <button onclick="selectDesign(5)" class="select-btn" style="background: linear-gradient(135deg, #7c3aed, #db2777);">选 5</button>
+            <button onclick="selectDesign(6)" class="select-btn" style="background: linear-gradient(135deg, #059669, #10b981);">选 6</button>
+            <button onclick="selectDesign(7)" class="select-btn" style="background: linear-gradient(135deg, #8b5cf6, #ec4899);">选 7</button>
+            <button onclick="selectDesign(8)" class="select-btn" style="background: linear-gradient(135deg, #db2777, #ec4899);">选 8</button>
+            <button onclick="selectDesign(9)" class="select-btn" style="background: linear-gradient(135deg, #d97706, #f59e0b);">选 9</button>
+            <button onclick="selectDesign(10)" class="select-btn" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">选 10</button>
+        </div>
+    </div>
+    
+    <script>
+        const designData = {
+            1: { name: '未来高铁', bg: '蓝色霓虹' },
+            2: { name: '极光夜空', bg: '绿色极光' },
+            3: { name: '晚霞云海', bg: '橙粉天空' },
+            4: { name: '深海波涛', bg: '蓝色海洋' },
+            5: { name: '皇家紫绸', bg: '紫色丝绸' },
+            6: { name: '森林迷雾', bg: '绿色氤氲' },
+            7: { name: '赛博都市', bg: '霓虹都市' },
+            8: { name: '浆果渐变', bg: '莓果色调' },
+            9: { name: '金色沙丘', bg: '琥珀金沙' },
+            10: { name: '星云银河', bg: '宇宙星云' }
+        };
+        
+        function selectDesign(num) {
+            const design = designData[num];
+            alert(`你选择了：${num}号「${design.name}」\n\n背景：${design.bg}\n\n请告诉我这个选择，我将为你实现到主页面！`);
+            console.log('Selected:', num, design);
+        }
+    </script>
+</body>
+</html>

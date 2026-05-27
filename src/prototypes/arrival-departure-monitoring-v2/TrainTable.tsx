@@ -1958,8 +1958,61 @@ export const TrainTable: React.FC<TrainTableProps> = ({
                         <div className="box-row">
                           <div className="box-row-left"><List size={14}/> 引导</div>
                           <div className="box-row-left">
-                            {/* 去掉每个设备前面的圆点 */}
-                            <span className={item.devices.guide.state === 'abnormal' ? 'text-red' : ''}>{item.devices.guide.value}</span>
+                            {(() => {
+                              // 模拟引导状态数据
+                              const guideStatus = (() => {
+                                // 根据索引返回不同状态，展示四种情况
+                                if (index % 4 === 0) {
+                                  return {
+                                    status: 'hasException', // 正在执行有异常
+                                    display: '5/6',
+                                    color: '#EF4444',
+                                    hasOcrError: true
+                                  };
+                                } else if (index % 4 === 1) {
+                                  return {
+                                    status: 'allCompleted', // 全部完成
+                                    display: '6/6',
+                                    color: '#10B981',
+                                    hasOcrError: false
+                                  };
+                                } else if (index % 4 === 2) {
+                                  return {
+                                    status: 'inProgressNormal', // 正在执行无异常
+                                    display: '3/6',
+                                    color: '#3B82F6',
+                                    hasOcrError: false
+                                  };
+                                } else {
+                                  return {
+                                    status: 'notStarted', // 全部未开始
+                                    display: '0/6',
+                                    color: '#9CA3AF',
+                                    hasOcrError: false
+                                  };
+                                }
+                              })();
+                              
+                              return (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  {guideStatus.hasOcrError && (
+                                    <div style={{ 
+                                      width: '6px', 
+                                      height: '6px', 
+                                      borderRadius: '50%', 
+                                      backgroundColor: '#EF4444',
+                                      boxShadow: '0 0 4px rgba(239, 68, 68, 0.6)'
+                                    }} />
+                                  )}
+                                  <span style={{ 
+                                    color: guideStatus.color, 
+                                    fontWeight: guideStatus.status === 'hasException' ? 600 : 500 
+                                  }}>
+                                    {guideStatus.display}
+                                  </span>
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                         <div className="box-row">

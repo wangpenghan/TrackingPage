@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Button, DatePicker, Tabs, message } from 'antd';
-import { X, Layers, Play, Square, Clock, Save } from 'lucide-react';
+import { Button, DatePicker, Tabs, message, Select } from 'antd';
+import { X, Layers, Play, Square, Clock, Save, TrainFront } from 'lucide-react';
 import dayjs, { Dayjs } from 'dayjs';
 
 const { RangePicker } = DatePicker;
+const { Option } = Select;
 
 const DRAWER_WIDTH = 560;
 const HEADER_PADDING = '14px 20px';
@@ -30,6 +31,24 @@ export const SceneModeDrawer: React.FC<SceneModeDrawerProps> = ({
   const [autoTimeRange, setAutoTimeRange] = useState<[Dayjs | null, Dayjs | null] | null>(null);
   const [manualStatus, setManualStatus] = useState<'stopped' | 'running'>('stopped');
   const drawerRef = useRef<HTMLDivElement>(null);
+
+  const [selectedTrains, setSelectedTrains] = useState<string[]>([]);
+  const [trainSearchValue, setTrainSearchValue] = useState('');
+
+  const mockTrainList = [
+    { trainNumber: 'G101', destination: '北京南', departureTime: '08:30' },
+    { trainNumber: 'G102', destination: '上海虹桥', departureTime: '09:15' },
+    { trainNumber: 'G103', destination: '广州南', departureTime: '10:00' },
+    { trainNumber: 'G201', destination: '深圳北', departureTime: '11:30' },
+    { trainNumber: 'G202', destination: '武汉', departureTime: '12:45' },
+    { trainNumber: 'G301', destination: '成都东', departureTime: '14:00' },
+    { trainNumber: 'G302', destination: '重庆北', departureTime: '15:20' },
+    { trainNumber: 'G401', destination: '西安北', departureTime: '16:30' },
+    { trainNumber: 'D102', destination: '杭州东', departureTime: '08:00' },
+    { trainNumber: 'D201', destination: '南京南', departureTime: '09:45' },
+    { trainNumber: 'K101', destination: '长沙', departureTime: '10:30' },
+    { trainNumber: 'Z201', destination: '郑州', departureTime: '11:00' },
+  ];
 
   // 点击外部关闭抽屉
   useEffect(() => {
@@ -74,6 +93,26 @@ export const SceneModeDrawer: React.FC<SceneModeDrawerProps> = ({
     setManualStatus('stopped');
     setSpecialStatus('stopped');
     message.info('专运模式已停止');
+  };
+
+  // 处理按车次启动专运
+  const handleTrainBasedStart = () => {
+    if (selectedTrains.length === 0) {
+      message.warning('请选择要启动专运的车次');
+      return;
+    }
+    
+    const trainNames = selectedTrains.join('、');
+    setSpecialStatus('manual-running');
+    message.success(`已为以下车次启动专运模式：${trainNames}`);
+  };
+
+  // 车次模糊搜索过滤
+  const filterTrains = (input: string, option: any) => {
+    const searchLower = input.toLowerCase();
+    const trainNumber = option.value?.toLowerCase() || '';
+    const destination = option.label?.props?.destination?.toLowerCase() || '';
+    return trainNumber.includes(searchLower) || destination.includes(searchLower);
   };
 
   // 获取状态显示文本
@@ -315,6 +354,170 @@ export const SceneModeDrawer: React.FC<SceneModeDrawerProps> = ({
             </div>
           </div>
 
+          {/* 按车次启动专运卡片 */}
+          <div style={getCardStyle()}>
+            <div style={getTagStyle(true)}>按车次启动</div>
+            
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ 
+                fontSize: '13px', 
+                color: darkMode ? '#94A3B8' : '#64748B', 
+                marginBottom: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <TrainFront size={14} />
+                选择车次（支持多选和模糊搜索）
+              </div>
+              <Select
+                mode="multiple"
+                placeholder="输入车次号或目的地进行搜索"
+                value={selectedTrains}
+                onChange={setSelectedTrains}
+                onSearch={setTrainSearchValue}
+                onInputKeyDown={(e) => {
+                  if (e.key === 'Enter' && trainSearchValue) {
+                    const matchingTrain = mockTrainList.find(
+                      t => t.trainNumber.toLowerCase().includes(trainSearchValue.toLowerCase()) ||
+                           t.destination.toLowerCase().includes(trainSearchValue.toLowerCase())
+                    );
+                    if (matchingTrain && !selectedTrains.includes(matchingTrain.trainNumber)) {
+                      setSelectedTrains([...selectedTrains, matchingTrain.trainNumber]);
+                      setTrainSearchValue('');
+                    }
+                  }
+                }}
+                filterOption={filterTrains}
+                showSearch
+                allowClear
+                style={{
+                  width: '100%',
+                  fontSize: '14px'
+                }}
+                styles={{
+                  popup: {
+                    maxHeight: '300px'
+                  }
+                }}
+                maxTagCount={3}
+                maxTagPlaceholder={(omittedValues) => `+${omittedValues.length}个车次`}
+              >
+                {mockTrainList.map((train) => (
+                  <Option 
+                    key={train.trainNumber} 
+                    value={train.trainNumber}
+                    destination={train.destination}
+                  >
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '2px 0'
+                    }}>
+                      <span style={{ fontWeight: 600 }}>{train.trainNumber}</span>
+                      <span style={{ 
+                        fontSize: '12px', 
+                        color: darkMode ? '#94A3B8' : '#64748B',
+                        marginLeft: '12px'
+                      }}>
+                        {train.destination} · {train.departureTime}
+                      </span>
+                    </div>
+                  </Option>
+                ))}
+              </Select>
+            </div>
+
+            {selectedTrains.length > 0 && (
+              <div style={{
+                padding: '10px 12px',
+                background: darkMode ? 'rgba(42, 107, 124, 0.1)' : 'rgba(29, 78, 95, 0.04)',
+                borderRadius: '8px',
+                marginBottom: '12px',
+                border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)'
+              }}>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  marginBottom: '6px'
+                }}>
+                  已选择 {selectedTrains.length} 个车次：
+                </div>
+                <div style={{ 
+                  display: 'flex', 
+                  flexWrap: 'wrap', 
+                  gap: '6px' 
+                }}>
+                  {selectedTrains.map((trainNum) => {
+                    const train = mockTrainList.find(t => t.trainNumber === trainNum);
+                    return (
+                      <div 
+                        key={trainNum}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '4px 8px',
+                          background: darkMode ? 'rgba(42, 107, 124, 0.2)' : 'rgba(29, 78, 95, 0.08)',
+                          borderRadius: '4px',
+                          fontSize: '12px',
+                          color: darkMode ? '#E2E8F0' : '#1F2937'
+                        }}
+                      >
+                        <span style={{ fontWeight: 600 }}>{trainNum}</span>
+                        {train && (
+                          <span style={{ 
+                            fontSize: '11px', 
+                            color: darkMode ? '#94A3B8' : '#6B7280' 
+                          }}>
+                            {train.destination}
+                          </span>
+                        )}
+                        <span
+                          onClick={() => setSelectedTrains(selectedTrains.filter(t => t !== trainNum))}
+                          style={{
+                            cursor: 'pointer',
+                            marginLeft: '4px',
+                            color: darkMode ? '#F87171' : '#DC2626',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          ×
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="primary"
+              icon={<Play size={16} />}
+              onClick={handleTrainBasedStart}
+              disabled={selectedTrains.length === 0}
+              style={{
+                width: '100%',
+                height: '40px',
+                borderRadius: BUTTON_BORDER_RADIUS,
+                background: selectedTrains.length > 0
+                  ? 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+                  : darkMode ? 'rgba(42, 107, 124, 0.3)' : 'rgba(29, 78, 95, 0.15)',
+                border: 'none',
+                boxShadow: selectedTrains.length > 0 
+                  ? '0 2px 4px rgba(16, 185, 129, 0.3)' 
+                  : 'none',
+                fontSize: '14px',
+                fontWeight: 500
+              }}
+            >
+              {selectedTrains.length > 0 
+                ? `为 ${selectedTrains.length} 个车次启动专运` 
+                : '启动专运'}
+            </Button>
+          </div>
+
           {/* 说明文字 */}
           <div style={{
             padding: '12px 16px',
@@ -328,7 +531,7 @@ export const SceneModeDrawer: React.FC<SceneModeDrawerProps> = ({
               color: darkMode ? '#94A3B8' : '#64748B',
               lineHeight: '1.6'
             }}>
-              专运模式下，系统将启用特定的上下屏显示规则和广播规则。自动模式将在设定的时间范围内自动启动和停止，手动模式需要人工操作。
+              专运模式下，系统将启用特定的上下屏显示规则和广播规则。支持三种启动方式：自动模式在设定时间范围内自动运行，手动模式一键全量启动，按车次启动可针对特定车次精准启用专运。
             </p>
           </div>
         </div>

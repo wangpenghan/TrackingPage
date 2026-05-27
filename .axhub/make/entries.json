@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-05-10T05:54:58.220Z",
+  "generatedAt": "2026-05-19T02:34:58.472Z",
   "items": {
     "components/ref-button": {
       "group": "components",
@@ -19,6 +19,12 @@
       "name": "side-menu",
       "js": "src/components/side-menu/index.tsx",
       "html": "src/components/side-menu/index.html"
+    },
+    "components/train-info-card": {
+      "group": "components",
+      "name": "train-info-card",
+      "js": "src/components/train-info-card/index.tsx",
+      "html": "src/components/train-info-card/index.html"
     },
     "prototypes/arrival-departure-monitoring": {
       "group": "prototypes",
@@ -68,6 +74,12 @@
       "js": "src/prototypes/plan-comparison/index.tsx",
       "html": "src/prototypes/plan-comparison/index.html"
     },
+    "prototypes/station-monitoring": {
+      "group": "prototypes",
+      "name": "station-monitoring",
+      "js": "src/prototypes/station-monitoring/index.tsx",
+      "html": "src/prototypes/station-monitoring/index.html"
+    },
     "prototypes/station-passenger-template": {
       "group": "prototypes",
       "name": "station-passenger-template",
@@ -97,6 +109,7 @@
     "components/ref-button": "src/components/ref-button/index.tsx",
     "components/ref-line-chart": "src/components/ref-line-chart/index.tsx",
     "components/side-menu": "src/components/side-menu/index.tsx",
+    "components/train-info-card": "src/components/train-info-card/index.tsx",
     "prototypes/arrival-departure-monitoring": "src/prototypes/arrival-departure-monitoring/index.tsx",
     "prototypes/arrival-departure-monitoring-v2": "src/prototypes/arrival-departure-monitoring-v2/index.tsx",
     "prototypes/basic-plan": "src/prototypes/basic-plan/index.tsx",
@@ -105,6 +118,7 @@
     "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.tsx",
     "prototypes/operation-monitoring": "src/prototypes/operation-monitoring/index.tsx",
     "prototypes/plan-comparison": "src/prototypes/plan-comparison/index.tsx",
+    "prototypes/station-monitoring": "src/prototypes/station-monitoring/index.tsx",
     "prototypes/station-passenger-template": "src/prototypes/station-passenger-template/index.tsx",
     "themes/antd-new": "src/themes/antd-new/index.tsx",
     "themes/firecrawl": "src/themes/firecrawl/index.tsx",
@@ -114,6 +128,7 @@
     "components/ref-button": "src/components/ref-button/index.html",
     "components/ref-line-chart": "src/components/ref-line-chart/index.html",
     "components/side-menu": "src/components/side-menu/index.html",
+    "components/train-info-card": "src/components/train-info-card/index.html",
     "prototypes/arrival-departure-monitoring": "src/prototypes/arrival-departure-monitoring/index.html",
     "prototypes/arrival-departure-monitoring-v2": "src/prototypes/arrival-departure-monitoring-v2/index.html",
     "prototypes/basic-plan": "src/prototypes/basic-plan/index.html",
@@ -122,6 +137,7 @@
     "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.html",
     "prototypes/operation-monitoring": "src/prototypes/operation-monitoring/index.html",
     "prototypes/plan-comparison": "src/prototypes/plan-comparison/index.html",
+    "prototypes/station-monitoring": "src/prototypes/station-monitoring/index.html",
     "prototypes/station-passenger-template": "src/prototypes/station-passenger-template/index.html",
     "themes/antd-new": "src/themes/antd-new/index.html",
     "themes/firecrawl": "src/themes/firecrawl/index.html",

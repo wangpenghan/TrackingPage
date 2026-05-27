@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>火车信息卡片组件 - 完整预览</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+      padding: 40px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 14px;
+      color: #666;
+      margin: 30px 0 15px 0;
+    }
+    .card-row {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-label {
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  
+  <script type="text/babel">
+    // 往北开行组件
+    const TrainCardNorth = ({
+      trainNumber = 'G1101',
+      route = '重庆东→北京西',
+      track = '16正北',
+      departureTime = '08:19',
+      trackChange = '25→24',
+      delayMinutes,
+      status = 'normal',
+      services = [
+        { label: '水' },
+        { label: '污' },
+        { label: '包' },
+        { label: '餐' },
+        { label: '库' },
+      ],
+    }) => {
+      const showTrackChange = status === 'track-change';
+      const isDelayed = status === 'delayed';
+      const showTrackOnly = status === 'normal' || isDelayed;
+
+      return (
+        <div className="relative w-[210px] h-[109px] overflow-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
+          {/* 服务标签 - 右对齐 */}
+          <div className="absolute top-0 right-0 flex flex-row gap-[3px]">
+            {services.map((service, index) => (
+              <div key={index} className="relative w-[24px] h-[24px]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="23" height="23" rx="4.5" fill="#C5F6FF" stroke="#627C94"/>
+                </svg>
+                <span className="absolute left-[5px] top-[3px] text-[14px] font-bold text-black">
+                  {service.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* 主内容区 */}
+          <div className="absolute top-[25px] left-0 w-full">
+            {/* 背景 SVG */}
+            <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-0 left-0">
+              <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#north-grad)" stroke="#60BDE6"/>
+              <defs>
+                <linearGradient id="north-grad" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#E3F7FF"/>
+                  <stop offset="1" stopColor="#60BDE6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            
+            <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-[52px] left-0">
+              <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+              <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" strokeOpacity="0.34"/>
+            </svg>
+
+            {/* 车次标签 */}
+            <div className="absolute top-[5px] left-[44px] w-[88px] h-[28px]">
+              <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="url(#train-grad)" stroke="#D48806"/>
+                <defs>
+                  <linearGradient id="train-grad" x1="0" y1="14" x2="88" y2="14" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#ECE6DA"/>
+                    <stop offset="1" stopColor="#FFD18F"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="absolute top-[5px] left-[25.5px] text-[16px] font-bold text-[#D48806]">
+                {trainNumber}
+              </span>
+            </div>
+
+            {/* 路线 */}
+            <span className="absolute top-[35px] left-[19px] text-[13px] text-[#3D3B3B]">
+              {route}
+            </span>
+
+            {/* 股道信息 */}
+            <div className="absolute top-[5px] left-[139px] w-[65px] h-[44px]">
+              <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#track-grad)" stroke="#4B4F52"/>
+                <defs>
+                  <linearGradient id="track-grad" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#D9D9D9"/>
+                    <stop offset="1" stopColor="#737373"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="absolute top-[6px] left-[7px] text-[16px] font-bold text-[#2E3237]">
+                {showTrackOnly ? track : ''}
+              </span>
+              <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-[10px] top-[29px]">
+                <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+              </svg>
+            </div>
+
+            {/* 晚点圆圈 */}
+            {isDelayed && delayMinutes && (
+              <div className="absolute top-[13px] left-[0px] w-[40px] h-[40px]">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#FCB3AD" stroke="#C00F0C"/>
+                </svg>
+                <span className="absolute top-[11px] left-0 w-full text-center text-[14px] font-bold text-black">
+                  {delayMinutes}
+                </span>
+              </div>
+            )}
+
+            {/* 时间框 */}
+            <div className="absolute top-[56px] left-[8px] w-[124px] h-[24px]">
+              <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-0 top-0">
+                <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#time-grad)" stroke="#7D7979"/>
+                <defs>
+                  <linearGradient id="time-grad" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse">
+                    {isDelayed || showTrackChange ? (
+                      <>
+                        <stop stopColor="#E60000"/>
+                        <stop offset="1" stopColor="#800000"/>
+                      </>
+                    ) : (
+                      <>
+                        <stop stopColor="#E6E6E6"/>
+                        <stop offset="1" stopColor="#808080"/>
+                      </>
+                    )}
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className={`absolute top-[3px] left-0 w-full text-center text-[14px] font-bold ${isDelayed || showTrackChange ? 'text-white' : 'text-[#2E3237]'}`}>
+                {departureTime}
+              </span>
+            </div>
+
+            {/* 变道框 */}
+            {showTrackChange && (
+              <div className="absolute top-[56px] left-[139px] w-[66px] h-[24px]">
+                <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#change-grad)" stroke="#7D7979"/>
+                  <defs>
+                    <linearGradient id="change-grad" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#E60000"/>
+                      <stop offset="1" stopColor="#800000"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute top-[3px] left-[8px] text-[14px] font-bold text-white">
+                  {trackChange}
+                </span>
+              </div>
+            )}
+
+            {/* 股道号（无变道时居中显示） */}
+            {showTrackOnly && (
+              <div className="absolute top-[56px] left-[139px] w-[66px] h-[24px]">
+                <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#track-only-grad)" stroke="#7D7979"/>
+                  <defs>
+                    <linearGradient id="track-only-grad" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#E6E6E6"/>
+                      <stop offset="1" stopColor="#808080"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute top-[3px] left-0 w-full text-center text-[14px] font-bold text-[#413F3F]">
+                  {track.split('正')[0]}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    // 往南开行组件
+    const TrainCardSouth = ({
+      trainNumber = 'G1101',
+      route = '重庆东→北京西',
+      track = '16正南',
+      departureTime = '08:19',
+      trackChange = '25→24',
+      delayMinutes,
+      status = 'normal',
+      services = [
+        { label: '水' },
+        { label: '污' },
+        { label: '包' },
+        { label: '餐' },
+        { label: '库' },
+      ],
+    }) => {
+      const showTrackChange = status === 'track-change';
+      const isDelayed = status === 'delayed';
+      const showTrackOnly = status === 'normal' || isDelayed;
+
+      return (
+        <div className="relative w-[210px] h-[109px] overflow-hidden" style={{ fontFamily: 'Inter, sans-serif' }}>
+          {/* 服务标签 - 左侧对齐 */}
+          <div className="absolute top-0 left-0 flex flex-row gap-[3px]">
+            {services.map((service, index) => (
+              <div key={index} className="relative w-[24px] h-[24px]">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="23" height="23" rx="4.5" fill="#C5F6FF" stroke="#627C94"/>
+                </svg>
+                <span className="absolute left-[5px] top-[3px] text-[14px] font-bold text-black">
+                  {service.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* 主内容区 */}
+          <div className="absolute top-[25px] left-0 w-full">
+            {/* 背景 SVG - 火车头朝右 */}
+            <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-0 left-0">
+              <path d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" fill="url(#south-grad)" stroke="#60BDE6"/>
+              <defs>
+                <linearGradient id="south-grad" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse">
+                  <stop stopColor="#E3F7FF"/>
+                  <stop offset="1" stopColor="#60BDE6"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            
+            <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute top-[52px] left-0">
+              <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+              <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" strokeOpacity="0.34"/>
+            </svg>
+
+            {/* 股道信息 - 左侧 */}
+            <div className="absolute top-[5px] left-[6px] w-[65px] h-[44px]">
+              <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#track-south-grad)" stroke="#4B4F52"/>
+                <defs>
+                  <linearGradient id="track-south-grad" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#D9D9D9"/>
+                    <stop offset="1" stopColor="#737373"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="absolute top-[6px] left-[7px] text-[16px] font-bold text-[#2E3237]">
+                {showTrackOnly ? track : ''}
+              </span>
+              <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-[9px] top-[29px]">
+                <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+              </svg>
+            </div>
+
+            {/* 车次标签 - 弧形朝右 */}
+            <div className="absolute top-[5px] left-[78px] w-[88px] h-[28px]">
+              <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M65.5996 0.5H6C2.96244 0.5 0.5 2.96243 0.5 6V22C0.5 25.0376 2.96244 27.5 6 27.5H82.4004C85.2167 27.4998 87.4998 25.2167 87.5 22.4004C87.5 10.3054 77.6946 0.5 65.5996 0.5Z" fill="url(#train-south-grad)" stroke="#D48806"/>
+                <defs>
+                  <linearGradient id="train-south-grad" x1="88" y1="14" x2="0" y2="14" gradientUnits="userSpaceOnUse">
+                    <stop stopColor="#ECE6DA"/>
+                    <stop offset="1" stopColor="#FFD18F"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className="absolute top-[5px] left-[15.5px] text-[16px] font-bold text-[#D48806]">
+                {trainNumber}
+              </span>
+            </div>
+
+            {/* 路线 */}
+            <span className="absolute top-[35px] left-[78px] text-[13px] text-[#3D3B3B]">
+              {route}
+            </span>
+
+            {/* 晚点圆圈 - 右侧 */}
+            {isDelayed && delayMinutes && (
+              <div className="absolute top-[13px] right-[0px] w-[40px] h-[40px]">
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#FCB3AD" stroke="#C00F0C"/>
+                </svg>
+                <span className="absolute top-[11px] left-0 w-full text-center text-[14px] font-bold text-black">
+                  {delayMinutes}
+                </span>
+              </div>
+            )}
+
+            {/* 变道框 - 左侧 */}
+            {showTrackChange && (
+              <div className="absolute top-[56px] left-[5px] w-[66px] h-[24px]">
+                <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#change-south-grad)" stroke="#7D7979"/>
+                  <defs>
+                    <linearGradient id="change-south-grad" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#E60000"/>
+                      <stop offset="1" stopColor="#800000"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute top-[3px] left-[8px] text-[14px] font-bold text-white">
+                  {trackChange}
+                </span>
+              </div>
+            )}
+
+            {/* 股道号（无变道时居中显示） */}
+            {showTrackOnly && (
+              <div className="absolute top-[56px] left-[5px] w-[66px] h-[24px]">
+                <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#track-only-south-grad)" stroke="#7D7979"/>
+                  <defs>
+                    <linearGradient id="track-only-south-grad" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#E6E6E6"/>
+                      <stop offset="1" stopColor="#808080"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <span className="absolute top-[3px] left-0 w-full text-center text-[14px] font-bold text-[#413F3F]">
+                  {track.split('正')[0]}
+                </span>
+              </div>
+            )}
+
+            {/* 时间框 - 右侧 */}
+            <div className="absolute top-[56px] left-[78px] w-[124px] h-[24px]">
+              <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="absolute left-0 top-0">
+                <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#time-south-grad)" stroke="#7D7979"/>
+                <defs>
+                  <linearGradient id="time-south-grad" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse">
+                    {isDelayed || showTrackChange ? (
+                      <>
+                        <stop stopColor="#E60000"/>
+                        <stop offset="1" stopColor="#800000"/>
+                      </>
+                    ) : (
+                      <>
+                        <stop stopColor="#E6E6E6"/>
+                        <stop offset="1" stopColor="#808080"/>
+                      </>
+                    )}
+                  </linearGradient>
+                </defs>
+              </svg>
+              <span className={`absolute top-[3px] left-0 w-full text-center text-[14px] font-bold ${isDelayed || showTrackChange ? 'text-white' : 'text-[#2E3237]'}`}>
+                {departureTime}
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // 预览应用
+    const App = () => {
+      return (
+        <div className="container">
+          <h1>🚄 火车信息卡片组件</h1>
+          
+          <h2>往北开行 (TrainCardNorth)</h2>
+          <div className="card-row">
+            <div className="card-wrapper">
+              <TrainCardNorth status="normal" />
+              <span className="card-label">正常状态</span>
+            </div>
+            <div className="card-wrapper">
+              <TrainCardNorth status="track-change" />
+              <span className="card-label">股道变更</span>
+            </div>
+            <div className="card-wrapper">
+              <TrainCardNorth status="delayed" delayMinutes={45} />
+              <span className="card-label">晚点45分钟</span>
+            </div>
+          </div>
+
+          <h2>往南开行 (TrainCardSouth)</h2>
+          <div className="card-row">
+            <div className="card-wrapper">
+              <TrainCardSouth status="normal" track="16正南" />
+              <span className="card-label">正常状态</span>
+            </div>
+            <div className="card-wrapper">
+              <TrainCardSouth status="track-change" track="16正南" />
+              <span className="card-label">股道变更</span>
+            </div>
+            <div className="card-wrapper">
+              <TrainCardSouth status="delayed" track="16正南" delayMinutes={45} />
+              <span className="card-label">晚点45分钟</span>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>

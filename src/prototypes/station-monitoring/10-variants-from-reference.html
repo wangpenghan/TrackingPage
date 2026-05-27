@@ -1,0 +1,1309 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10种高铁卡片变体 - 基于参考设计</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: white;
+            padding: 40px 20px;
+            text-align: center;
+            border-bottom: 1px solid #bae6fd;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #0369a1 0%, #0891b2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            color: #64748b;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            padding: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .card-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .card-wrapper {
+            position: relative;
+            width: 400px;
+            border-radius: 24px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.12);
+        }
+        
+        .card-wrapper:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+        }
+        
+        .card-title {
+            margin-top: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #0f172a;
+        }
+        
+        .card-desc {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        
+        /* Common styles */
+        .top-tags {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            justify-content: center;
+        }
+        
+        .tag {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+        
+        .middle-section {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+        }
+        
+        .train-number-box {
+            flex: 1.5;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .train-number {
+            font-size: 52px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+        
+        .route-text {
+            font-size: 24px;
+            margin-top: 4px;
+            font-weight: 600;
+        }
+        
+        .direction-box {
+            flex: 1;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .direction-number {
+            font-size: 48px;
+            font-weight: 900;
+        }
+        
+        .direction-text {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .platform-box {
+            margin-top: 12px;
+            padding: 10px 24px;
+            border-radius: 16px;
+        }
+        
+        .platform-text {
+            font-size: 32px;
+            font-weight: 900;
+        }
+        
+        .bottom-section {
+            display: flex;
+            gap: 16px;
+            padding: 16px;
+        }
+        
+        .time-box {
+            flex: 2;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .time-text {
+            font-size: 40px;
+            font-weight: 900;
+        }
+        
+        .platform-change-box {
+            flex: 1;
+            padding: 16px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .platform-change-text {
+            font-size: 36px;
+            font-weight: 900;
+        }
+        
+        /* Variant 1 - Original */
+        .variant-1 {
+            background: linear-gradient(180deg, #bae6fd 0%, #e0f2fe 100%);
+        }
+        
+        .variant-1 .tag {
+            background: white;
+            color: #0369a1;
+            border: 2px solid #0ea5e9;
+        }
+        
+        .variant-1 .train-number-box {
+            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px solid #ca8a04;
+        }
+        
+        .variant-1 .train-number {
+            color: #b45309;
+        }
+        
+        .variant-1 .route-text {
+            color: #1f2937;
+        }
+        
+        .variant-1 .direction-box {
+            background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);
+            border: 3px solid #6b7280;
+        }
+        
+        .variant-1 .direction-number,
+        .variant-1 .direction-text {
+            color: #1f2937;
+        }
+        
+        .variant-1 .platform-box {
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .variant-1 .platform-text {
+            color: white;
+        }
+        
+        .variant-1 .time-box {
+            background: white;
+            border: 2px solid #9ca3af;
+        }
+        
+        .variant-1 .time-text {
+            color: #1f2937;
+        }
+        
+        .variant-1 .platform-change-box {
+            background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+        }
+        
+        .variant-1 .platform-change-text {
+            color: white;
+        }
+        
+        /* Variant 2 - Dark Tech */
+        .variant-2 {
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        }
+        
+        .variant-2 .tag {
+            background: rgba(59,130,246,0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59,130,246,0.4);
+        }
+        
+        .variant-2 .train-number-box {
+            background: linear-gradient(180deg, rgba(59,130,246,0.3) 0%, rgba(59,130,246,0.15) 100%);
+            border: 2px solid rgba(59,130,246,0.5);
+        }
+        
+        .variant-2 .train-number {
+            color: #60a5fa;
+        }
+        
+        .variant-2 .route-text {
+            color: #cbd5e1;
+        }
+        
+        .variant-2 .direction-box {
+            background: linear-gradient(180deg, rgba(148,163,184,0.3) 0%, rgba(148,163,184,0.15) 100%);
+            border: 2px solid rgba(148,163,184,0.5);
+        }
+        
+        .variant-2 .direction-number,
+        .variant-2 .direction-text {
+            color: #e2e8f0;
+        }
+        
+        .variant-2 .platform-box {
+            background: linear-gradient(180deg, rgba(52,211,153,0.4) 0%, rgba(52,211,153,0.2) 100%);
+            border: 1px solid rgba(52,211,153,0.6);
+        }
+        
+        .variant-2 .platform-text {
+            color: #6ee7b7;
+        }
+        
+        .variant-2 .time-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .variant-2 .time-text {
+            color: white;
+        }
+        
+        .variant-2 .platform-change-box {
+            background: linear-gradient(180deg, rgba(239,68,68,0.4) 0%, rgba(239,68,68,0.2) 100%);
+            border: 1px solid rgba(239,68,68,0.6);
+        }
+        
+        .variant-2 .platform-change-text {
+            color: #fca5a5;
+        }
+        
+        /* Variant 3 - Premium Gold */
+        .variant-3 {
+            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+        }
+        
+        .variant-3 .tag {
+            background: white;
+            color: #b45309;
+            border: 2px solid #f59e0b;
+            box-shadow: 0 2px 8px rgba(180,83,9,0.15);
+        }
+        
+        .variant-3 .train-number-box {
+            background: linear-gradient(180deg, #fefce8 0%, #fef08a 100%);
+            border: 3px solid #eab308;
+            box-shadow: inset 0 2px 8px rgba(250,204,21,0.3);
+        }
+        
+        .variant-3 .train-number {
+            color: #854d0e;
+            text-shadow: 0 2px 4px rgba(250,204,21,0.3);
+        }
+        
+        .variant-3 .route-text {
+            color: #713f12;
+        }
+        
+        .variant-3 .direction-box {
+            background: linear-gradient(180deg, #fef9c3 0%, #fef08a 100%);
+            border: 3px solid #ca8a04;
+            box-shadow: inset 0 2px 8px rgba(250,204,21,0.2);
+        }
+        
+        .variant-3 .direction-number,
+        .variant-3 .direction-text {
+            color: #854d0e;
+        }
+        
+        .variant-3 .platform-box {
+            background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+        }
+        
+        .variant-3 .platform-text {
+            color: white;
+        }
+        
+        .variant-3 .time-box {
+            background: white;
+            border: 2px solid #d97706;
+            box-shadow: 0 4px 12px rgba(217,119,6,0.15);
+        }
+        
+        .variant-3 .time-text {
+            color: #78350f;
+        }
+        
+        .variant-3 .platform-change-box {
+            background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+            box-shadow: 0 4px 12px rgba(220,38,38,0.3);
+        }
+        
+        .variant-3 .platform-change-text {
+            color: white;
+        }
+        
+        /* Variant 4 - Aurora Glass */
+        .variant-4 {
+            background: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+        }
+        
+        .variant-4 .tag {
+            background: rgba(255,255,255,0.25);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .variant-4 .train-number-box {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.4);
+            backdrop-filter: blur(20px);
+        }
+        
+        .variant-4 .train-number {
+            color: white;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .variant-4 .route-text {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        .variant-4 .direction-box {
+            background: rgba(255,255,255,0.18);
+            border: 2px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(20px);
+        }
+        
+        .variant-4 .direction-number,
+        .variant-4 .direction-text {
+            color: white;
+        }
+        
+        .variant-4 .platform-box {
+            background: rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .variant-4 .platform-text {
+            color: #0f172a;
+        }
+        
+        .variant-4 .time-box {
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(20px);
+        }
+        
+        .variant-4 .time-text {
+            color: white;
+        }
+        
+        .variant-4 .platform-change-box {
+            background: rgba(255,255,255,0.25);
+            border: 1px solid rgba(255,255,255,0.35);
+            backdrop-filter: blur(20px);
+        }
+        
+        .variant-4 .platform-change-text {
+            color: #dc2626;
+        }
+        
+        /* Variant 5 - Minimal White */
+        .variant-5 {
+            background: white;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .variant-5 .tag {
+            background: #f9fafb;
+            color: #4b5563;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .variant-5 .train-number-box {
+            background: white;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .variant-5 .train-number {
+            color: #0f172a;
+        }
+        
+        .variant-5 .route-text {
+            color: #6b7280;
+        }
+        
+        .variant-5 .direction-box {
+            background: #f9fafb;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .variant-5 .direction-number,
+        .variant-5 .direction-text {
+            color: #374151;
+        }
+        
+        .variant-5 .platform-box {
+            background: #f3f4f6;
+        }
+        
+        .variant-5 .platform-text {
+            color: #1f2937;
+        }
+        
+        .variant-5 .time-box {
+            background: white;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .variant-5 .time-text {
+            color: #111827;
+        }
+        
+        .variant-5 .platform-change-box {
+            background: #fee2e2;
+        }
+        
+        .variant-5 .platform-change-text {
+            color: #dc2626;
+        }
+        
+        /* Variant 6 - Ocean Blue */
+        .variant-6 {
+            background: linear-gradient(180deg, #0ea5e9 0%, #38bdf8 100%);
+        }
+        
+        .variant-6 .tag {
+            background: rgba(255,255,255,0.9);
+            color: #0369a1;
+            border: none;
+        }
+        
+        .variant-6 .train-number-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.85) 100%);
+            border: 3px solid rgba(255,255,255,0.6);
+        }
+        
+        .variant-6 .train-number {
+            color: #0369a1;
+        }
+        
+        .variant-6 .route-text {
+            color: #0c4a6e;
+        }
+        
+        .variant-6 .direction-box {
+            background: rgba(255,255,255,0.85);
+            border: 3px solid rgba(255,255,255,0.5);
+        }
+        
+        .variant-6 .direction-number,
+        .variant-6 .direction-text {
+            color: #0c4a6e;
+        }
+        
+        .variant-6 .platform-box {
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .variant-6 .platform-text {
+            color: #0369a1;
+        }
+        
+        .variant-6 .time-box {
+            background: white;
+            border: 2px solid rgba(255,255,255,0.6);
+        }
+        
+        .variant-6 .time-text {
+            color: #0c4a6e;
+        }
+        
+        .variant-6 .platform-change-box {
+            background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+        }
+        
+        .variant-6 .platform-change-text {
+            color: white;
+        }
+        
+        /* Variant 7 - Forest Green */
+        .variant-7 {
+            background: linear-gradient(180deg, #059669 0%, #10b981 100%);
+        }
+        
+        .variant-7 .tag {
+            background: rgba(255,255,255,0.95);
+            color: #047857;
+            border: none;
+        }
+        
+        .variant-7 .train-number-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(255,255,255,0.88) 100%);
+            border: 3px solid rgba(255,255,255,0.7);
+        }
+        
+        .variant-7 .train-number {
+            color: #065f46;
+        }
+        
+        .variant-7 .route-text {
+            color: #065f46;
+        }
+        
+        .variant-7 .direction-box {
+            background: rgba(255,255,255,0.88);
+            border: 3px solid rgba(255,255,255,0.6);
+        }
+        
+        .variant-7 .direction-number,
+        .variant-7 .direction-text {
+            color: #064e3b;
+        }
+        
+        .variant-7 .platform-box {
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .variant-7 .platform-text {
+            color: #047857;
+        }
+        
+        .variant-7 .time-box {
+            background: white;
+            border: 2px solid rgba(255,255,255,0.7);
+        }
+        
+        .variant-7 .time-text {
+            color: #064e3b;
+        }
+        
+        .variant-7 .platform-change-box {
+            background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+        }
+        
+        .variant-7 .platform-change-text {
+            color: white;
+        }
+        
+        /* Variant 8 - Sunset Orange */
+        .variant-8 {
+            background: linear-gradient(180deg, #ea580c 0%, #f97316 100%);
+        }
+        
+        .variant-8 .tag {
+            background: rgba(255,255,255,0.95);
+            color: #c2410c;
+            border: none;
+        }
+        
+        .variant-8 .train-number-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.9) 100%);
+            border: 3px solid rgba(255,255,255,0.7);
+        }
+        
+        .variant-8 .train-number {
+            color: #c2410c;
+        }
+        
+        .variant-8 .route-text {
+            color: #7c2d12;
+        }
+        
+        .variant-8 .direction-box {
+            background: rgba(255,255,255,0.9);
+            border: 3px solid rgba(255,255,255,0.6);
+        }
+        
+        .variant-8 .direction-number,
+        .variant-8 .direction-text {
+            color: #7c2d12;
+        }
+        
+        .variant-8 .platform-box {
+            background: rgba(255,255,255,0.92);
+        }
+        
+        .variant-8 .platform-text {
+            color: #c2410c;
+        }
+        
+        .variant-8 .time-box {
+            background: white;
+            border: 2px solid rgba(255,255,255,0.7);
+        }
+        
+        .variant-8 .time-text {
+            color: #7c2d12;
+        }
+        
+        .variant-8 .platform-change-box {
+            background: linear-gradient(180deg, #b91c1c 0%, #dc2626 100%);
+        }
+        
+        .variant-8 .platform-change-text {
+            color: white;
+        }
+        
+        /* Variant 9 - Cyberpunk */
+        .variant-9 {
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+        }
+        
+        .variant-9 .tag {
+            background: rgba(168,85,247,0.3);
+            color: #c4b5fd;
+            border: 1px solid rgba(168,85,247,0.5);
+            box-shadow: 0 0 12px rgba(168,85,247,0.2);
+        }
+        
+        .variant-9 .train-number-box {
+            background: linear-gradient(180deg, rgba(168,85,247,0.25) 0%, rgba(99,102,241,0.15) 100%);
+            border: 2px solid rgba(168,85,247,0.5);
+            box-shadow: 0 0 20px rgba(168,85,247,0.25);
+        }
+        
+        .variant-9 .train-number {
+            color: #c4b5fd;
+            text-shadow: 0 0 10px rgba(168,85,247,0.4);
+        }
+        
+        .variant-9 .route-text {
+            color: #a5b4fc;
+        }
+        
+        .variant-9 .direction-box {
+            background: linear-gradient(180deg, rgba(59,130,246,0.2) 0%, rgba(37,99,235,0.1) 100%);
+            border: 2px solid rgba(59,130,246,0.5);
+            box-shadow: 0 0 16px rgba(59,130,246,0.2);
+        }
+        
+        .variant-9 .direction-number,
+        .variant-9 .direction-text {
+            color: #bfdbfe;
+        }
+        
+        .variant-9 .platform-box {
+            background: linear-gradient(180deg, rgba(52,211,153,0.3) 0%, rgba(16,185,129,0.15) 100%);
+            box-shadow: 0 0 16px rgba(52,211,153,0.25);
+        }
+        
+        .variant-9 .platform-text {
+            color: #86efac;
+            text-shadow: 0 0 8px rgba(52,211,153,0.4);
+        }
+        
+        .variant-9 .time-box {
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        
+        .variant-9 .time-text {
+            color: white;
+        }
+        
+        .variant-9 .platform-change-box {
+            background: linear-gradient(180deg, rgba(239,68,68,0.35) 0%, rgba(220,38,38,0.2) 100%);
+            border: 1px solid rgba(239,68,68,0.6);
+            box-shadow: 0 0 16px rgba(239,68,68,0.25);
+        }
+        
+        .variant-9 .platform-change-text {
+            color: #fca5a5;
+            text-shadow: 0 0 8px rgba(239,68,68,0.4);
+        }
+        
+        /* Variant 10 - Gradient Modern */
+        .variant-10 {
+            background: linear-gradient(180deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+        }
+        
+        .variant-10 .tag {
+            background: rgba(255,255,255,0.9);
+            color: #6d28d9;
+            border: none;
+        }
+        
+        .variant-10 .train-number-box {
+            background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.9) 100%);
+            border: 3px solid rgba(255,255,255,0.7);
+        }
+        
+        .variant-10 .train-number {
+            color: #6d28d9;
+        }
+        
+        .variant-10 .route-text {
+            color: #4c1d95;
+        }
+        
+        .variant-10 .direction-box {
+            background: rgba(255,255,255,0.9);
+            border: 3px solid rgba(255,255,255,0.6);
+        }
+        
+        .variant-10 .direction-number,
+        .variant-10 .direction-text {
+            color: #5b21b6;
+        }
+        
+        .variant-10 .platform-box {
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .variant-10 .platform-text {
+            color: #7c3aed;
+        }
+        
+        .variant-10 .time-box {
+            background: white;
+            border: 2px solid rgba(255,255,255,0.7);
+        }
+        
+        .variant-10 .time-text {
+            color: #4c1d95;
+        }
+        
+        .variant-10 .platform-change-box {
+            background: linear-gradient(180deg, #dc2626 0%, #ef4444 100%);
+        }
+        
+        .variant-10 .platform-change-text {
+            color: white;
+        }
+        
+        .select-bar {
+            position: sticky;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid #e2e8f0;
+            padding: 20px;
+            z-index: 100;
+        }
+        
+        .select-bar-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .select-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        
+        .info-section {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px 120px;
+        }
+        
+        .info-box-large {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>10种高铁卡片变体 - 基于参考设计</h1>
+        <p>保留原有布局的10种不同风格设计</p>
+    </div>
+    
+    <div class="cards-grid">
+        <!-- Variant 1 - Original -->
+        <div class="card-item">
+            <div class="card-wrapper variant-1">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">1️⃣ 原版复刻</div>
+            <div class="card-desc">原设计风格，浅蓝背景</div>
+        </div>
+        
+        <!-- Variant 2 - Dark Tech -->
+        <div class="card-item">
+            <div class="card-wrapper variant-2">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">2️⃣ 深色科技</div>
+            <div class="card-desc">深蓝渐变，科技质感</div>
+        </div>
+        
+        <!-- Variant 3 - Premium Gold -->
+        <div class="card-item">
+            <div class="card-wrapper variant-3">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">3️⃣ 金色尊贵</div>
+            <div class="card-desc">金色渐变，高端质感</div>
+        </div>
+        
+        <!-- Variant 4 - Aurora Glass -->
+        <div class="card-item">
+            <div class="card-wrapper variant-4">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">4️⃣ 极光玻璃</div>
+            <div class="card-desc">彩虹渐变，毛玻璃效果</div>
+        </div>
+        
+        <!-- Variant 5 - Minimal White -->
+        <div class="card-item">
+            <div class="card-wrapper variant-5">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">5️⃣ 极简白</div>
+            <div class="card-desc">纯白设计，简洁专业</div>
+        </div>
+        
+        <!-- Variant 6 - Ocean Blue -->
+        <div class="card-item">
+            <div class="card-wrapper variant-6">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">6️⃣ 海洋蓝调</div>
+            <div class="card-desc">蓝色渐变，清新海洋</div>
+        </div>
+        
+        <!-- Variant 7 - Forest Green -->
+        <div class="card-item">
+            <div class="card-wrapper variant-7">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">7️⃣ 森林绿意</div>
+            <div class="card-desc">绿色渐变，自然清新</div>
+        </div>
+        
+        <!-- Variant 8 - Sunset Orange -->
+        <div class="card-item">
+            <div class="card-wrapper variant-8">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">8️⃣ 日落橙红</div>
+            <div class="card-desc">橙色渐变，温暖热情</div>
+        </div>
+        
+        <!-- Variant 9 - Cyberpunk -->
+        <div class="card-item">
+            <div class="card-wrapper variant-9">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">9️⃣ 赛博朋克</div>
+            <div class="card-desc">紫蓝渐变，霓虹发光</div>
+        </div>
+        
+        <!-- Variant 10 - Gradient Modern -->
+        <div class="card-item">
+            <div class="card-wrapper variant-10">
+                <div class="top-tags">
+                    <span class="tag">库</span>
+                    <span class="tag">餐</span>
+                    <span class="tag">包</span>
+                    <span class="tag">污</span>
+                    <span class="tag">水</span>
+                </div>
+                <div class="middle-section">
+                    <div class="train-number-box">
+                        <div class="train-number">G1001</div>
+                        <div class="route-text">重庆东→北京西</div>
+                    </div>
+                    <div class="direction-box">
+                        <div class="direction-number">16</div>
+                        <div class="direction-text">正北</div>
+                        <div class="platform-box">
+                            <div class="platform-text">6</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bottom-section">
+                    <div class="time-box">
+                        <div class="time-text">08:19/08:35</div>
+                    </div>
+                    <div class="platform-change-box">
+                        <div class="platform-change-text">6→12</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">🔟 现代渐变</div>
+            <div class="card-desc">紫粉渐变，时尚现代</div>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <div class="info-box-large">
+            <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin-bottom: 20px;">
+                📐 设计特点
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div style="padding: 24px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #1d4ed8; margin-bottom: 8px; font-size: 16px;">
+                        📍 保留布局
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        完全保留原有布局结构：顶部标签、车次+路线、编组+方向、时间、股道变更
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #7c3aed; margin-bottom: 8px; font-size: 16px;">
+                        🎨 10种配色
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        从原版复刻、深色科技、金色尊贵到赛博朋克等10种不同配色风格
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #b45309; margin-bottom: 8px; font-size: 16px;">
+                        ✨ 渐变效果
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        每个变体都使用精美的渐变色，包括线性渐变、彩虹渐变等
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #16a34a; margin-bottom: 8px; font-size: 16px;">
+                        🔲 圆角设计
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        现代圆角设计，从8px到16px不等，营造柔和现代感
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="select-bar">
+        <div class="select-bar-content">
+            <button onclick="selectDesign(1)" class="select-btn" style="background: linear-gradient(135deg, #0ea5e9, #38bdf8);">选 1</button>
+            <button onclick="selectDesign(2)" class="select-btn" style="background: linear-gradient(135deg, #0f172a, #3b82f6);">选 2</button>
+            <button onclick="selectDesign(3)" class="select-btn" style="background: linear-gradient(135deg, #d97706, #f59e0b);">选 3</button>
+            <button onclick="selectDesign(4)" class="select-btn" style="background: linear-gradient(135deg, #06b6d4, #ec4899);">选 4</button>
+            <button onclick="selectDesign(5)" class="select-btn" style="background: linear-gradient(135deg, #4b5563, #1f2937);">选 5</button>
+            <button onclick="selectDesign(6)" class="select-btn" style="background: linear-gradient(135deg, #0284c7, #0ea5e9);">选 6</button>
+            <button onclick="selectDesign(7)" class="select-btn" style="background: linear-gradient(135deg, #047857, #10b981);">选 7</button>
+            <button onclick="selectDesign(8)" class="select-btn" style="background: linear-gradient(135deg, #c2410c, #f97316);">选 8</button>
+            <button onclick="selectDesign(9)" class="select-btn" style="background: linear-gradient(135deg, #1e1b4b, #8b5cf6);">选 9</button>
+            <button onclick="selectDesign(10)" class="select-btn" style="background: linear-gradient(135deg, #6366f1, #ec4899);">选 10</button>
+        </div>
+    </div>
+    
+    <script>
+        const designData = {
+            1: { name: '原版复刻', style: '浅蓝背景' },
+            2: { name: '深色科技', style: '深蓝渐变' },
+            3: { name: '金色尊贵', style: '金色渐变' },
+            4: { name: '极光玻璃', style: '彩虹渐变' },
+            5: { name: '极简白', style: '纯白设计' },
+            6: { name: '海洋蓝调', style: '蓝色渐变' },
+            7: { name: '森林绿意', style: '绿色渐变' },
+            8: { name: '日落橙红', style: '橙色渐变' },
+            9: { name: '赛博朋克', style: '紫蓝渐变' },
+            10: { name: '现代渐变', style: '紫粉渐变' }
+        };
+        
+        function selectDesign(num) {
+            const design = designData[num];
+            alert(`你选择了：${num}号「${design.name}」\n\n风格：${design.style}\n\n请告诉我这个选择，我将为你实现到主页面！`);
+            console.log('Selected:', num, design);
+        }
+    </script>
+</body>
+</html>

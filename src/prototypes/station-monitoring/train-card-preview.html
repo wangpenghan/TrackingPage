@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高铁异形卡片设计方案预览</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .train-card-1 {
+            background: linear-gradient(180deg, rgba(30,64,175,0.95) 0%, rgba(59,130,246,0.95) 50%, rgba(255,255,255,0.98) 100%);
+        }
+        
+        .train-card-2 {
+            background: linear-gradient(180deg, rgba(15,118,110,0.95) 0%, rgba(20,184,166,0.95) 50%, rgba(255,255,255,0.98) 100%);
+        }
+        
+        .train-card-3 {
+            background: linear-gradient(180deg, rgba(88,28,135,0.95) 0%, rgba(124,58,237,0.95) 50%, rgba(255,255,255,0.98) 100%);
+        }
+        
+        .train-card-4 {
+            background: linear-gradient(180deg, rgba(30,27,75,0.95) 0%, rgba(49,46,129,0.95) 50%, rgba(255,255,255,0.98) 100%);
+        }
+        
+        .train-card-5 {
+            background: linear-gradient(180deg, rgba(39,39,42,0.95) 0%, rgba(63,63,70,0.95) 50%, rgba(255,255,255,0.98) 100%);
+        }
+        
+        .card-container {
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            pointer-events: none;
+        }
+        
+        .train-silhouette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+        }
+        
+        .transition-card {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-gradient-light {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+        
+        .code-block {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+        
+        .code-block code {
+            color: #e2e8f0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .color-swatch {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.5rem;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-white to-slate-100 min-h-screen">
+    
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <h1 class="text-3xl font-bold text-gray-800">🚄 高铁异形卡片设计方案预览</h1>
+            <p class="text-gray-600 mt-2">5种不同风格的高铁侧视剪影卡片设计代码展示</p>
+        </div>
+    </header>
+    
+    <main class="max-w-7xl mx-auto px-6 py-8">
+        
+        <!-- Design 1: 流线型子弹头 -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg mb-6">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">方案一：流线型子弹头 ⭐⭐⭐⭐⭐</h2>
+                        <p class="text-gray-600">经典高铁造型，流线型车头设计，强调速度感与现代感。</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="color-swatch" style="background: #1e40af;"></div>
+                        <div class="color-swatch" style="background: #3b82f6;"></div>
+                        <div class="color-swatch" style="background: #0ea5e9;"></div>
+                    </div>
+                </div>
+                
+                <!-- Preview Card -->
+                <div class="bg-gradient-light rounded-xl p-8 flex justify-center mb-6">
+                    <div class="card-container w-72 h-40 transition-card card-hover cursor-pointer">
+                        <!-- SVG Silhouette -->
+                        <svg class="train-silhouette" viewBox="0 0 288 80">
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#1e40af"/>
+                                    <stop offset="50%" style="stop-color:#3b82f6"/>
+                                    <stop offset="100%" style="stop-color:#60a5fa"/>
+                                </linearGradient>
+                                <linearGradient id="gloss1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)"/>
+                                    <stop offset="50%" style="stop-color:rgba(255,255,255,0.1)"/>
+                                    <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 0 80 L 0 35 Q 0 15 20 10 L 100 5 Q 140 3 160 15 L 180 25 Q 200 35 220 45 L 260 50 L 288 53 L 288 80 Z" fill="url(#grad1)"/>
+                            <path d="M 0 35 Q 0 15 20 10 L 100 5 Q 140 3 160 15 L 180 25 Q 200 35 220 45 L 260 50 L 288 53" fill="url(#gloss1)"/>
+                            <ellipse cx="45" cy="70" rx="12" ry="8" fill="rgba(0,0,0,0.2)"/>
+                            <ellipse cx="95" cy="70" rx="12" ry="8" fill="rgba(0,0,0,0.2)"/>
+                            <ellipse cx="145" cy="70" rx="12" ry="8" fill="rgba(0,0,0,0.2)"/>
+                            <ellipse cx="195" cy="70" rx="12" ry="8" fill="rgba(0,0,0,0.2)"/>
+                            <rect x="100" y="20" width="30" height="20" rx="3" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+                        </svg>
+                        
+                        <!-- Card Content -->
+                        <div class="absolute inset-0 p-3 pt-20 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold text-white bg-green-600">G</span>
+                                <span class="text-xl font-bold text-blue-600">G8602</span>
+                                <span class="text-sm text-gray-500">成都→重庆</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">到</span>
+                                    <span class="text-lg font-bold text-blue-500">07:12</span>
+                                </div>
+                                <div class="px-3 py-1 rounded-lg text-sm font-bold bg-blue-100 text-blue-600 border border-blue-200">
+                                    3道
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Code Block -->
+                <div class="code-block">
+                    <code>
+<pre class="text-gray-300">
+// 方案1：流线型子弹头 SVG
+&lt;svg viewBox="0 0 288 80"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="trainGrad1" x1="0%" y1="0%" x2="0%" y2="100%"&gt;
+      &lt;stop offset="0%" stopColor="#1e40af" /&gt;
+      &lt;stop offset="50%" stopColor="#3b82f6" /&gt;
+      &lt;stop offset="100%" stopColor="#60a5fa" /&gt;
+    &lt;/linearGradient&gt;
+  &lt;/defs&gt;
+  &lt;path
+    d="M 0 80 L 0 35 Q 0 15 20 10 L 100 5 Q 140 3 160 15 
+       L 180 25 Q 200 35 220 45 L 260 50 L 288 53 L 288 80 Z"
+    fill="url(#trainGrad1)"
+  /&gt;
+  &lt;ellipse cx="45" cy="70" rx="12" ry="8" fill="rgba(0,0,0,0.2)" /&gt;
+  &lt;!-- 车轮、车窗等细节... --&gt;
+&lt;/svg&gt;
+
+// 容器样式
+.card-container {
+  background: linear-gradient(180deg, 
+    rgba(30,64,175,0.95) 0%, 
+    rgba(59,130,246,0.95) 50%, 
+    rgba(255,255,255,0.98) 100%);
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+}
+</pre>
+                    </code>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Design 2: 低阻力水滴型 -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg mb-6">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">方案二：低阻力水滴型 ⭐⭐⭐⭐</h2>
+                        <p class="text-gray-600">灵感来自水滴形状，更加有机柔和，适合长时间盯控。</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="color-swatch" style="background: #0f766e;"></div>
+                        <div class="color-swatch" style="background: #14b8a6;"></div>
+                        <div class="color-swatch" style="background: #5eead4;"></div>
+                    </div>
+                </div>
+                
+                <!-- Preview Card -->
+                <div class="bg-gradient-light rounded-xl p-8 flex justify-center mb-6">
+                    <div class="card-container w-72 h-40 transition-card card-hover cursor-pointer" style="background: linear-gradient(180deg, rgba(15,118,110,0.95) 0%, rgba(20,184,166,0.95) 50%, rgba(255,255,255,0.98) 100%);">
+                        <svg class="train-silhouette" viewBox="0 0 288 80">
+                            <defs>
+                                <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#0f766e"/>
+                                    <stop offset="50%" style="stop-color:#14b8a6"/>
+                                    <stop offset="100%" style="stop-color:#5eead4"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 0 80 L 0 40 Q 30 30 80 25 Q 150 20 200 35 Q 240 45 288 55 L 288 80 Z" fill="url(#grad2)"/>
+                            <ellipse cx="50" cy="68" rx="10" ry="6" fill="rgba(0,0,0,0.2)"/>
+                            <ellipse cx="110" cy="65" rx="10" ry="6" fill="rgba(0,0,0,0.2)"/>
+                            <ellipse cx="170" cy="68" rx="10" ry="6" fill="rgba(0,0,0,0.2)"/>
+                            <ellipse cx="230" cy="70" rx="10" ry="6" fill="rgba(0,0,0,0.2)"/>
+                            <path d="M 80 30 Q 150 25 200 35" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none"/>
+                        </svg>
+                        
+                        <div class="absolute inset-0 p-3 pt-20 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold text-white bg-green-600">G</span>
+                                <span class="text-xl font-bold" style="color: #0f766e;">G8602</span>
+                                <span class="text-sm text-gray-500">成都→重庆</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">到</span>
+                                    <span class="text-lg font-bold" style="color: #14b8a6;">07:12</span>
+                                </div>
+                                <div class="px-3 py-1 rounded-lg text-sm font-bold" style="background: rgba(94,234,212,0.2); color: #0f766e; border: 1px solid rgba(94,234,212,0.4);">
+                                    3道
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <code>
+<pre class="text-gray-300">
+// 方案2：低阻力水滴型 SVG
+&lt;svg viewBox="0 0 288 80"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="trainGrad2" x1="0%" y1="0%" x2="0%" y2="100%"&gt;
+      &lt;stop offset="0%" stopColor="#0f766e" /&gt;
+      &lt;stop offset="50%" stopColor="#14b8a6" /&gt;
+      &lt;stop offset="100%" stopColor="#5eead4" /&gt;
+    &lt;/linearGradient&gt;
+  &lt;/defs&gt;
+  &lt;path
+    d="M 0 80 L 0 40 Q 30 30 80 25 Q 150 20 200 35 
+       Q 240 45 288 55 L 288 80 Z"
+    fill="url(#trainGrad2)"
+  /&gt;
+  &lt;!-- 更圆润的曲线，模拟水滴形状 --&gt;
+&lt;/svg&gt;
+
+// 配色方案
+colors: {
+  primary: '#0f766e',   // 深青
+  secondary: '#14b8a6', // 青绿
+  accent: '#5eead4'      // 薄荷
+}
+</pre>
+                    </code>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Design 3: 蒸汽复古融合 -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg mb-6">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">方案三：蒸汽复古融合 ⭐⭐⭐</h2>
+                        <p class="text-gray-600">复古蒸汽机车优雅线条与现代设计结合，高贵典雅。</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="color-swatch" style="background: #581c87;"></div>
+                        <div class="color-swatch" style="background: #7c3aed;"></div>
+                        <div class="color-swatch" style="background: #a78bfa;"></div>
+                    </div>
+                </div>
+                
+                <!-- Preview Card -->
+                <div class="bg-gradient-light rounded-xl p-8 flex justify-center mb-6">
+                    <div class="card-container w-72 h-40 transition-card card-hover cursor-pointer" style="background: linear-gradient(180deg, rgba(88,28,135,0.95) 0%, rgba(124,58,237,0.95) 50%, rgba(255,255,255,0.98) 100%);">
+                        <svg class="train-silhouette" viewBox="0 0 288 80">
+                            <defs>
+                                <linearGradient id="grad3" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#581c87"/>
+                                    <stop offset="50%" style="stop-color:#7c3aed"/>
+                                    <stop offset="100%" style="stop-color:#a78bfa"/>
+                                </linearGradient>
+                                <pattern id="rivets" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                                    <circle cx="10" cy="10" r="2" fill="rgba(255,255,255,0.2)"/>
+                                </pattern>
+                            </defs>
+                            <path d="M 0 80 L 0 35 L 15 35 Q 15 20 40 15 L 120 10 Q 180 8 220 25 L 240 35 L 260 40 L 288 45 L 288 80 Z" fill="url(#grad3)"/>
+                            <rect x="0" y="35" width="288" height="45" fill="url(#rivets)"/>
+                            <rect x="15" y="25" width="25" height="15" rx="2" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)"/>
+                            <rect x="60" y="25" width="25" height="15" rx="2" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.3)"/>
+                            <ellipse cx="45" cy="72" rx="11" ry="7" fill="rgba(0,0,0,0.25)"/>
+                            <ellipse cx="95" cy="72" rx="11" ry="7" fill="rgba(0,0,0,0.25)"/>
+                            <ellipse cx="145" cy="72" rx="11" ry="7" fill="rgba(0,0,0,0.25)"/>
+                            <ellipse cx="195" cy="72" rx="11" ry="7" fill="rgba(0,0,0,0.25)"/>
+                            <circle cx="245" cy="50" r="6" fill="rgba(255,200,0,0.8)"/>
+                        </svg>
+                        
+                        <div class="absolute inset-0 p-3 pt-20 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold text-white bg-green-600">G</span>
+                                <span class="text-xl font-bold" style="color: #581c87;">G8602</span>
+                                <span class="text-sm text-gray-500">成都→重庆</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">到</span>
+                                    <span class="text-lg font-bold" style="color: #7c3aed;">07:12</span>
+                                </div>
+                                <div class="px-3 py-1 rounded-lg text-sm font-bold" style="background: rgba(167,139,250,0.2); color: #581c87; border: 1px solid rgba(167,139,250,0.4);">
+                                    3道
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <code>
+<pre class="text-gray-300">
+// 方案3：蒸汽复古融合 SVG
+&lt;svg viewBox="0 0 288 80"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="trainGrad3" x1="0%" y1="0%" x2="0%" y2="100%"&gt;
+      &lt;stop offset="0%" stopColor="#581c87" /&gt;
+      &lt;stop offset="50%" stopColor="#7c3aed" /&gt;
+      &lt;stop offset="100%" stopColor="#a78bfa" /&gt;
+    &lt;/linearGradient&gt;
+    &lt;!-- 铆钉纹理 --&gt;
+    &lt;pattern id="rivets" patternUnits="userSpaceOnUse"&gt;
+      &lt;circle r="2" fill="rgba(255,255,255,0.2)"/&gt;
+    &lt;/pattern&gt;
+  &lt;/defs&gt;
+  &lt;path d="M 0 80 L 0 35 L 15 35 Q 15 20 40 15 L 120 10..." fill="url(#trainGrad3)"/&gt;
+  &lt;rect y="35" width="288" height="45" fill="url(#rivets)"/&gt;
+  &lt;circle cx="245" cy="50" r="6" fill="rgba(255,200,0,0.8)"/&gt;
+&lt;/svg&gt;
+
+// 配色方案
+colors: {
+  primary: '#581c87',   // 深紫
+  secondary: '#7c3aed', // 紫色
+  accent: '#a78bfa'     // 淡紫
+}
+</pre>
+                    </code>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Design 4: 未来飞行器 -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg mb-6">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">方案四：未来飞行器 ⭐⭐⭐</h2>
+                        <p class="text-gray-600">科幻飞行器设计语言，全息玻璃效果，强烈科技感。</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="color-swatch" style="background: #312e81;"></div>
+                        <div class="color-swatch" style="background: #4338ca;"></div>
+                        <div class="color-swatch" style="background: #8b5cf6;"></div>
+                    </div>
+                </div>
+                
+                <!-- Preview Card -->
+                <div class="bg-gradient-light rounded-xl p-8 flex justify-center mb-6">
+                    <div class="card-container w-72 h-40 transition-card card-hover cursor-pointer" style="background: linear-gradient(180deg, rgba(30,27,75,0.95) 0%, rgba(49,46,129,0.95) 50%, rgba(255,255,255,0.98) 100%);">
+                        <svg class="train-silhouette" viewBox="0 0 288 80">
+                            <defs>
+                                <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#312e81"/>
+                                    <stop offset="50%" style="stop-color:#4338ca"/>
+                                    <stop offset="100%" style="stop-color:#6366f1"/>
+                                </linearGradient>
+                                <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" style="stop-color:#06b6d4"/>
+                                    <stop offset="50%" style="stop-color:#8b5cf6"/>
+                                    <stop offset="100%" style="stop-color:#ec4899"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 0 80 L 0 40 Q 20 35 60 32 Q 140 28 200 40 Q 240 48 288 55 L 288 80 Z" fill="url(#grad4)"/>
+                            <path d="M 0 40 Q 20 35 60 32 Q 140 28 200 40 Q 240 48 288 55" stroke="url(#neon)" stroke-width="2" fill="none"/>
+                            <ellipse cx="50" cy="70" rx="9" ry="5" fill="rgba(6,182,212,0.5)"/>
+                            <ellipse cx="100" cy="68" rx="9" ry="5" fill="rgba(139,92,246,0.5)"/>
+                            <ellipse cx="150" cy="68" rx="9" ry="5" fill="rgba(236,72,153,0.5)"/>
+                            <rect x="60" y="35" width="80" height="20" rx="5" fill="rgba(139,92,246,0.2)" stroke="rgba(139,92,246,0.5)"/>
+                        </svg>
+                        
+                        <div class="absolute inset-0 p-3 pt-20 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold text-white bg-green-600">G</span>
+                                <span class="text-xl font-bold" style="color: #312e81;">G8602</span>
+                                <span class="text-sm text-gray-500">成都→重庆</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">到</span>
+                                    <span class="text-lg font-bold" style="color: #4338ca;">07:12</span>
+                                </div>
+                                <div class="px-3 py-1 rounded-lg text-sm font-bold" style="background: rgba(139,92,246,0.2); color: #312e81; border: 1px solid rgba(139,92,246,0.4);">
+                                    3道
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <code>
+<pre class="text-gray-300">
+// 方案4：未来飞行器 SVG
+&lt;svg viewBox="0 0 288 80"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="trainGrad4" x1="0%" y1="0%" x2="100%" y2="100%"&gt;
+      &lt;stop offset="0%" stopColor="#312e81" /&gt;
+      &lt;stop offset="50%" stopColor="#4338ca" /&gt;
+      &lt;stop offset="100%" stopColor="#6366f1" /&gt;
+    &lt;/linearGradient&gt;
+    &lt;!-- 霓虹渐变 --&gt;
+    &lt;linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="0%"&gt;
+      &lt;stop offset="0%" stopColor="#06b6d4" /&gt;
+      &lt;stop offset="50%" stopColor="#8b5cf6" /&gt;
+      &lt;stop offset="100%" stopColor="#ec4899" /&gt;
+    &lt;/linearGradient&gt;
+  &lt;/defs&gt;
+  &lt;path d="..." fill="url(#trainGrad4)"/&gt;
+  &lt;path d="..." stroke="url(#neon)" stroke-width="2" fill="none"/&gt;
+  &lt;!-- 霓虹发光边框 --&gt;
+&lt;/svg&gt;
+
+// 配色方案
+colors: {
+  primary: '#312e81',   // 靛蓝
+  secondary: '#4338ca', // 靛紫
+  accent: '#8b5cf6'     // 紫罗兰
+}
+</pre>
+                    </code>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Design 5: 极简几何线条 -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg mb-6">
+                <div class="flex items-start justify-between mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-2">方案五：极简几何线条 ⭐⭐⭐⭐</h2>
+                        <p class="text-gray-600">最少线条勾勒高铁轮廓，极简主义，信息优先。</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="color-swatch" style="background: #27272a;"></div>
+                        <div class="color-swatch" style="background: #3f3f46;"></div>
+                        <div class="color-swatch" style="background: #52525b;"></div>
+                    </div>
+                </div>
+                
+                <!-- Preview Card -->
+                <div class="bg-gradient-light rounded-xl p-8 flex justify-center mb-6">
+                    <div class="card-container w-72 h-40 transition-card card-hover cursor-pointer" style="background: linear-gradient(180deg, rgba(39,39,42,0.95) 0%, rgba(63,63,70,0.95) 50%, rgba(255,255,255,0.98) 100%);">
+                        <svg class="train-silhouette" viewBox="0 0 288 80">
+                            <defs>
+                                <linearGradient id="grad5" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#27272a"/>
+                                    <stop offset="100%" style="stop-color:#3f3f46"/>
+                                </linearGradient>
+                            </defs>
+                            <path d="M 0 80 L 0 35 L 10 35 L 10 25 L 25 15 L 150 10 L 200 25 L 220 35 L 250 45 L 260 50 L 288 55 L 288 80 Z" fill="url(#grad5)" stroke="#52525b" stroke-width="1"/>
+                            <line x1="10" y1="25" x2="25" y2="15" stroke="#71717a" stroke-width="2"/>
+                            <line x1="25" y1="15" x2="150" y2="10" stroke="#71717a" stroke-width="2"/>
+                            <line x1="150" y1="10" x2="200" y2="25" stroke="#71717a" stroke-width="2"/>
+                            <line x1="200" y1="25" x2="220" y2="35" stroke="#71717a" stroke-width="2"/>
+                            <circle cx="50" cy="72" r="5" fill="none" stroke="#71717a" stroke-width="1.5"/>
+                            <circle cx="110" cy="72" r="5" fill="none" stroke="#71717a" stroke-width="1.5"/>
+                            <circle cx="170" cy="72" r="5" fill="none" stroke="#71717a" stroke-width="1.5"/>
+                            <rect x="50" y="30" width="40" height="15" rx="1" fill="none" stroke="#71717a" stroke-width="1"/>
+                            <rect x="100" y="30" width="40" height="15" rx="1" fill="none" stroke="#71717a" stroke-width="1"/>
+                            <rect x="150" y="30" width="40" height="15" rx="1" fill="none" stroke="#71717a" stroke-width="1"/>
+                        </svg>
+                        
+                        <div class="absolute inset-0 p-3 pt-20 flex flex-col justify-center">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-0.5 rounded text-xs font-bold text-white bg-green-600">G</span>
+                                <span class="text-xl font-bold" style="color: #27272a;">G8602</span>
+                                <span class="text-sm text-gray-500">成都→重庆</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1">
+                                    <span class="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">到</span>
+                                    <span class="text-lg font-bold" style="color: #3f3f46;">07:12</span>
+                                </div>
+                                <div class="px-3 py-1 rounded-lg text-sm font-bold" style="background: rgba(82,82,91,0.2); color: #27272a; border: 1px solid rgba(82,82,91,0.4);">
+                                    3道
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="code-block">
+                    <code>
+<pre class="text-gray-300">
+// 方案5：极简几何线条 SVG
+&lt;svg viewBox="0 0 288 80"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="trainGrad5" x1="0%" y1="0%" x2="0%" y2="100%"&gt;
+      &lt;stop offset="0%" stopColor="#27272a" /&gt;
+      &lt;stop offset="100%" stopColor="#3f3f46" /&gt;
+    &lt;/linearGradient&gt;
+  &lt;/defs&gt;
+  &lt;!-- 简约线条轮廓 --&gt;
+  &lt;path d="M 0 80 L 0 35 L 10 35 L 10 25 L 25 15 L 150 10..." 
+        fill="url(#trainGrad5)" stroke="#52525b" stroke-width="1"/&gt;
+  
+  &lt;!-- 线条细节 --&gt;
+  &lt;line x1="10" y1="25" x2="25" y2="15" stroke="#71717a" stroke-width="2"/&gt;
+  &lt;line x1="25" y1="15" x2="150" y2="10" stroke="#71717a" stroke-width="2"/&gt;
+  
+  &lt;!-- 圆圈车轮 --&gt;
+  &lt;circle cx="50" cy="72" r="5" fill="none" stroke="#71717a" stroke-width="1.5"/&gt;
+  
+  &lt;!-- 方形车窗 --&gt;
+  &lt;rect x="50" y="30" width="40" height="15" rx="1" 
+        fill="none" stroke="#71717a" stroke-width="1"/&gt;
+&lt;/svg&gt;
+
+// 配色方案
+colors: {
+  primary: '#27272a',   // 纯黑
+  secondary: '#3f3f46', // 深灰
+  accent: '#52525b'      // 中灰
+}
+</pre>
+                    </code>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Comparison Table -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 text-center">📊 设计对比表</h2>
+                
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b-2 border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">方案</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">视觉强度</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">专业感</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">科技感</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">可读性</th>
+                                <th class="text-center py-3 px-4 font-semibold text-gray-700">推荐指数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gray-100 hover:bg-blue-50 transition-colors">
+                                <td class="py-3 px-4 font-medium text-gray-800">流线型子弹头</td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-green-600 font-bold">⭐⭐⭐⭐⭐</span></td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-teal-50 transition-colors">
+                                <td class="py-3 px-4 font-medium text-gray-800">低阻力水滴型</td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-green-600 font-bold">⭐⭐⭐⭐</span></td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-purple-50 transition-colors">
+                                <td class="py-3 px-4 font-medium text-gray-800">蒸汽复古融合</td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-green-600 font-bold">⭐⭐⭐</span></td>
+                            </tr>
+                            <tr class="border-b border-gray-100 hover:bg-indigo-50 transition-colors">
+                                <td class="py-3 px-4 font-medium text-gray-800">未来飞行器</td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-green-600 font-bold">⭐⭐⭐</span></td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="py-3 px-4 font-medium text-gray-800">极简几何线条</td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-yellow-500">⭐⭐⭐⭐⭐</span></td>
+                                <td class="text-center py-3 px-4"><span class="text-green-600 font-bold">⭐⭐⭐⭐</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Key Features -->
+        <section class="mb-16">
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">💡 设计亮点</h3>
+                <ul class="space-y-3 text-gray-700">
+                    <li class="flex items-start gap-3">
+                        <span class="text-blue-500 mt-1">✓</span>
+                        <span><strong>深色车头剪影</strong>：使用SVG绘制高铁侧视轮廓，包含车头、车窗、车轮等元素</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-blue-500 mt-1">✓</span>
+                        <span><strong>浅色信息容器</strong>：保持浅色背景，减少视觉疲劳，便于长时间盯控</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-blue-500 mt-1">✓</span>
+                        <span><strong>科技感渐变</strong>：车头部分使用渐变色，增加层次感和科技感</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-blue-500 mt-1">✓</span>
+                        <span><strong>交互友好</strong>：支持悬停效果，提升用户体验</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                        <span class="text-blue-500 mt-1">✓</span>
+                        <span><strong>信息突出</strong>：车次、时间、股道等关键信息清晰易读</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+        
+        <!-- Next Steps -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg text-center">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">🚀 下一步</h3>
+                <p class="text-gray-600 mb-6">
+                    请告诉我你选择哪个方案（1-5），我将为你完整实现到主页面中！
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 max-w-4xl mx-auto">
+                    <button onclick="selectDesign(1)" class="px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl font-medium">
+                        🚄 方案1<br><span class="text-xs opacity-80">流线型子弹头</span>
+                    </button>
+                    <button onclick="selectDesign(2)" class="px-6 py-4 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-xl hover:from-teal-600 hover:to-teal-700 transition-all shadow-lg hover:shadow-xl font-medium">
+                        💧 方案2<br><span class="text-xs opacity-80">低阻力水滴型</span>
+                    </button>
+                    <button onclick="selectDesign(3)" class="px-6 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl font-medium">
+                        🎩 方案3<br><span class="text-xs opacity-80">蒸汽复古融合</span>
+                    </button>
+                    <button onclick="selectDesign(4)" class="px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 transition-all shadow-lg hover:shadow-xl font-medium">
+                        🚀 方案4<br><span class="text-xs opacity-80">未来飞行器</span>
+                    </button>
+                    <button onclick="selectDesign(5)" class="px-6 py-4 bg-gradient-to-r from-gray-600 to-gray-700 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all shadow-lg hover:shadow-xl font-medium">
+                        📐 方案5<br><span class="text-xs opacity-80">极简几何线条</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Code Implementation Guide -->
+        <section class="mb-16">
+            <div class="bg-white rounded-2xl p-8 shadow-lg">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">📝 完整实现代码</h3>
+                <p class="text-gray-600 mb-4">
+                    以下是完整的React组件代码，你可以直接复制到项目中使用：
+                </p>
+                
+                <div class="code-block">
+                    <code>
+<pre class="text-gray-300">
+import React from 'react';
+
+const TrainCard = ({ trainData, design = 1 }) => {
+  const designs = {
+    1: { primary: '#1e40af', secondary: '#3b82f6', accent: '#0ea5e9' },
+    2: { primary: '#0f766e', secondary: '#14b8a6', accent: '#5eead4' },
+    3: { primary: '#581c87', secondary: '#7c3aed', accent: '#a78bfa' },
+    4: { primary: '#312e81', secondary: '#4338ca', accent: '#8b5cf6' },
+    5: { primary: '#27272a', secondary: '#3f3f46', accent: '#52525b' },
+  };
+  
+  const colors = designs[design];
+  
+  return (
+    &lt;div className="card-container"&gt;
+      {/* SVG车头剪影 */}
+      &lt;svg viewBox="0 0 288 80"&gt;
+        &lt;defs&gt;
+          &lt;linearGradient id="trainGrad" x1="0%" y1="0%" x2="0%" y2="100%"&gt;
+            &lt;stop offset="0%" stopColor={colors.primary} /&gt;
+            &lt;stop offset="100%" stopColor={colors.secondary} /&gt;
+          &lt;/linearGradient&gt;
+        &lt;/defs&gt;
+        {/* 车头路径... */}
+      &lt;/svg&gt;
+      
+      {/* 信息内容 */}
+      &lt;div className="p-3 pt-20"&gt;
+        &lt;span style={{ color: colors.primary }}&gt;
+          {trainData.trainNo}
+        &lt;/span&gt;
+        &lt;span style={{ color: colors.secondary }}&gt;
+          {trainData.arrivalTime}
+        &lt;/span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+};
+
+export default TrainCard;
+</pre>
+                    </code>
+                </div>
+            </div>
+        </section>
+        
+    </main>
+    
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="max-w-7xl mx-auto px-6 text-center">
+            <p class="text-gray-400">高铁异形卡片设计方案展示</p>
+            <p class="text-sm text-gray-500 mt-2">
+                使用 HTML + Tailwind CSS + SVG 实现
+            </p>
+        </div>
+    </footer>
+    
+    <script>
+        function selectDesign(designNumber) {
+            const designNames = {
+                1: '流线型子弹头',
+                2: '低阻力水滴型',
+                3: '蒸汽复古融合',
+                4: '未来飞行器',
+                5: '极简几何线条'
+            };
+            
+            alert('你选择了：方案' + designNumber + ' - ' + designNames[designNumber] + '\n\n请告诉我这个选择，我将为你实现到主页面中！');
+            
+            // 记录选择到控制台
+            console.log('Selected Design:', designNumber, designNames[designNumber]);
+        }
+        
+        // 添加卡片悬停效果
+        document.querySelectorAll('.card-hover').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-5px)';
+                this.style.boxShadow = '0 12px 40px rgba(0,0,0,0.2)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)';
+            });
+        });
+    </script>
+</body>
+</html>

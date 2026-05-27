@@ -434,180 +434,210 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
   const statusColor = getCtcStatusColor();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {/* 图定信息 - 紧凑布局 */}
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* CTC接收状态 - 最醒目区域，放置在顶部 */}
+      <div style={{
+        background: darkMode
+          ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.18) 0%, rgba(180, 83, 9, 0.12) 100%)'
+          : 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
+        padding: '16px',
+        borderRadius: '12px',
+        border: darkMode ? '2px solid rgba(217, 119, 6, 0.4)' : '2px solid rgba(217, 119, 6, 0.25)',
+        boxShadow: darkMode ? '0 4px 12px rgba(217, 119, 6, 0.2)' : '0 4px 12px rgba(217, 119, 6, 0.15)'
+      }}>
+        <Row gutter={16} align="middle">
+          <Col span={16}>
+            <Row gutter={[16, 8]}>
+              <Col span={12}>
+                <div style={{ fontSize: '13px', color: darkMode ? '#FCD34D' : '#92400E', marginBottom: '6px', fontWeight: '600' }}>CTC到点</div>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: darkMode ? '#FEF3C7' : '#78350F', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                  {ctcData.arrivalTime}
+                </div>
+              </Col>
+              <Col span={12}>
+                <div style={{ fontSize: '13px', color: darkMode ? '#FCD34D' : '#92400E', marginBottom: '6px', fontWeight: '600' }}>CTC发点</div>
+                <div style={{ fontSize: '22px', fontWeight: 'bold', color: darkMode ? '#FEF3C7' : '#78350F', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                  {ctcData.departureTime}
+                </div>
+              </Col>
+            </Row>
+          </Col>
+          <Col span={8}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 'bold',
+                background: statusColor.bg,
+                color: statusColor.color,
+                border: `1px solid ${statusColor.color}50`,
+                boxShadow: `0 2px 6px ${statusColor.color}30`
+              }}>
+                {ctcStatus === 'auto' ? (
+                  <><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: statusColor.color, animation: 'pulse 1.5s infinite' }} />自动接收中</>
+                ) : (
+                  <><Pause size={14} />已停止接收</>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Tooltip title={ctcStatus === 'auto' ? '停止接收' : '恢复自动接收'}>
+                  <Button
+                    size="small"
+                    icon={ctcStatus === 'auto' ? <Pause size={14} /> : <Play size={14} />}
+                    onClick={handleToggleCtcReceive}
+                    style={{
+                      height: '34px',
+                      width: '34px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: ctcStatus === 'auto' 
+                        ? (darkMode ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2')
+                        : (darkMode ? 'rgba(34, 197, 94, 0.2)' : '#DCFCE7'),
+                      border: ctcStatus === 'auto'
+                        ? (darkMode ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(220, 38, 38, 0.3)')
+                        : (darkMode ? '1px solid rgba(34, 197, 94, 0.4)' : '1px solid rgba(34, 197, 94, 0.3)'),
+                      color: ctcStatus === 'auto'
+                        ? (darkMode ? '#F87171' : '#DC2626')
+                        : (darkMode ? '#4ADE80' : '#16A34A')
+                    }}
+                  />
+                </Tooltip>
+                <Tooltip title="手动接收CTC数据">
+                  <Button
+                    size="small"
+                    icon={<Hand size={14} />}
+                    onClick={handleManualReceive}
+                    disabled={ctcStatus !== 'stopped'}
+                    style={{
+                      height: '34px',
+                      width: '34px',
+                      borderRadius: '8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: ctcStatus === 'stopped'
+                        ? (darkMode ? 'rgba(59, 130, 246, 0.2)' : '#DBEAFE')
+                        : (darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F1F5F9'),
+                      border: ctcStatus === 'stopped'
+                        ? (darkMode ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(59, 130, 246, 0.3)')
+                        : (darkMode ? '1px solid rgba(42, 107, 124, 0.3)' : '1px solid rgba(29, 78, 95, 0.2)'),
+                      color: ctcStatus === 'stopped'
+                        ? (darkMode ? '#60A5FA' : '#2563EB')
+                        : (darkMode ? '#64748B' : '#9CA3AF'),
+                      opacity: ctcStatus !== 'stopped' ? 0.6 : 1
+                    }}
+                  />
+                </Tooltip>
+              </div>
+            </div>
+          </Col>
+        </Row>
+      </div>
+
+      {/* 图定信息 - 大字体醒目展示 */}
       <Row gutter={12}>
         <Col span={12}>
           <div style={{
-            background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            border: darkMode ? '1px solid rgba(42, 107, 124, 0.25)' : '1px solid rgba(29, 78, 95, 0.08)'
+            background: darkMode 
+              ? 'linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(42, 107, 124, 0.12) 100%)' 
+              : 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+            padding: '14px 16px',
+            borderRadius: '10px',
+            border: darkMode ? '1px solid rgba(42, 107, 124, 0.35)' : '1px solid rgba(20, 184, 166, 0.2)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>图定到点</div>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
-              {displayDateStr} {train.arrival.time}
+            <div style={{ fontSize: '13px', color: darkMode ? '#5EEAD4' : '#0F766E', marginBottom: '8px', fontWeight: '600' }}>图定到点</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: darkMode ? '#F0FDFA' : '#134E4A', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
+              {train.arrival.time}
             </div>
           </div>
         </Col>
         <Col span={12}>
           <div style={{
-            background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            border: darkMode ? '1px solid rgba(42, 107, 124, 0.25)' : '1px solid rgba(29, 78, 95, 0.08)'
+            background: darkMode 
+              ? 'linear-gradient(135deg, rgba(42, 107, 124, 0.2) 0%, rgba(42, 107, 124, 0.12) 100%)' 
+              : 'linear-gradient(135deg, #F0FDFA 0%, #CCFBF1 100%)',
+            padding: '14px 16px',
+            borderRadius: '10px',
+            border: darkMode ? '1px solid rgba(42, 107, 124, 0.35)' : '1px solid rgba(20, 184, 166, 0.2)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
           }}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>图定发点</div>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
-              {displayDateStr} {train.departure.time}
+            <div style={{ fontSize: '13px', color: darkMode ? '#5EEAD4' : '#0F766E', marginBottom: '8px', fontWeight: '600' }}>图定发点</div>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: darkMode ? '#F0FDFA' : '#134E4A', whiteSpace: 'nowrap', letterSpacing: '0.3px' }}>
+              {train.departure.time}
             </div>
           </div>
         </Col>
       </Row>
 
-      {/* CTC信息 - 图标按钮，带状态逻辑 */}
+      {/* 实际时间调整 - 突出展示关键时间 */}
       <div style={{
-        background: darkMode
-          ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(180, 83, 9, 0.06) 100%)'
-          : 'linear-gradient(135deg, #FEF7E6 0%, #FDECD0 100%)',
-        padding: '10px 12px',
-        borderRadius: '8px',
-        border: darkMode ? '1px solid rgba(217, 119, 6, 0.25)' : '1px solid rgba(217, 119, 6, 0.15)'
+        background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#FFFFFF',
+        padding: '16px',
+        borderRadius: '12px',
+        border: darkMode ? '2px solid rgba(42, 107, 124, 0.35)' : '2px solid rgba(29, 78, 95, 0.15)',
+        boxShadow: darkMode ? '0 4px 12px rgba(0, 0, 0, 0.25)' : '0 4px 12px rgba(29, 78, 95, 0.1)'
       }}>
-        <Row gutter={12} align="middle">
-          <Col span={7}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>CTC到点</div>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
-              {displayDateStr} {ctcData.arrivalTime}
-            </div>
-          </Col>
-          <Col span={7}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>CTC发点</div>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
-              {displayDateStr} {ctcData.departureTime}
-            </div>
-          </Col>
-          <Col span={4} style={{ textAlign: 'center' }}>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: statusColor.bg,
-              color: statusColor.color,
-              padding: '4px 8px',
-              borderRadius: '6px',
-              fontSize: '11px',
-              fontWeight: '600',
-              border: darkMode ? `1px solid ${statusColor.color}40` : `1px solid ${statusColor.color}30`
-            }}>
-              {getCtcStatusLabel()}
-            </div>
-          </Col>
-          <Col span={6} style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-            <Tooltip title={ctcStatus === 'auto' ? '停止接收' : '接收CTC'}>
-              <Button
-                size="small"
-                icon={ctcStatus === 'auto' ? <Pause size={14} /> : <Play size={14} />}
-                onClick={handleToggleCtcReceive}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  ...getSecondaryButtonStyle(darkMode)
-                }}
-              />
-            </Tooltip>
-            <Tooltip title="手动接收">
-              <Button
-                size="small"
-                icon={<Hand size={14} />}
-                onClick={handleManualReceive}
-                disabled={ctcStatus !== 'stopped'}
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  ...getSecondaryButtonStyle(darkMode),
-                  opacity: ctcStatus !== 'stopped' ? 0.5 : 1
-                }}
-              />
-            </Tooltip>
-          </Col>
-        </Row>
-      </div>
-
-      {/* 实际时间调整 - 2x2紧凑布局 */}
-      <div style={{
-        background: darkMode ? 'rgba(42, 107, 124, 0.08)' : '#FFFFFF',
-        padding: '12px',
-        borderRadius: '8px',
-        border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)'
-      }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#E2E8F0' : '#374151', marginBottom: '10px' }}>实际时间调整</div>
+        <div style={{ fontSize: '14px', fontWeight: '700', color: darkMode ? '#E2E8F0' : '#374151', marginBottom: '14px', letterSpacing: '0.5px' }}>实际时间调整</div>
         <Row gutter={12}>
           <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>到站日期</div>
-            <Input
-              value={times.arrivalDate}
-              onChange={(e) => setTimes(prev => ({ ...prev, arrivalDate: e.target.value }))}
-              placeholder="YYYY-MM-DD"
-              style={{ ...getInputStyle(darkMode), height: '36px', ...getChangedStyle(times.arrivalDate !== initialTimes.arrivalDate, darkMode) }}
-            />
-          </Col>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>离站日期</div>
-            <Input
-              value={times.departureDate}
-              onChange={(e) => setTimes(prev => ({ ...prev, departureDate: e.target.value }))}
-              placeholder="YYYY-MM-DD"
-              style={{ ...getInputStyle(darkMode), height: '36px', ...getChangedStyle(times.departureDate !== initialTimes.departureDate, darkMode) }}
-            />
-          </Col>
-        </Row>
-        <Row gutter={12} style={{ marginTop: '8px' }}>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>到站时间</div>
+            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '6px', fontWeight: '500' }}>到站时间</div>
             <Input
               value={times.arrivalTime}
               onChange={(e) => setTimes(prev => ({ ...prev, arrivalTime: e.target.value }))}
               placeholder="HH:mm"
-              style={{ ...getInputStyle(darkMode), height: '36px', ...getChangedStyle(times.arrivalTime !== initialTimes.arrivalTime, darkMode) }}
+              style={{ 
+                ...getInputStyle(darkMode), 
+                height: '44px',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                letterSpacing: '1px',
+                ...getChangedStyle(times.arrivalTime !== initialTimes.arrivalTime, darkMode)
+              }}
             />
           </Col>
           <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>发车时间</div>
+            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '6px', fontWeight: '500' }}>发车时间</div>
             <Input
               value={times.departureTime}
               onChange={(e) => setTimes(prev => ({ ...prev, departureTime: e.target.value }))}
               placeholder="HH:mm"
-              style={{ ...getInputStyle(darkMode), height: '36px', ...getChangedStyle(times.departureTime !== initialTimes.departureTime, darkMode) }}
+              style={{ 
+                ...getInputStyle(darkMode), 
+                height: '44px',
+                fontSize: '20px',
+                fontWeight: 'bold',
+                letterSpacing: '1px',
+                ...getChangedStyle(times.departureTime !== initialTimes.departureTime, darkMode)
+              }}
             />
           </Col>
         </Row>
       </div>
 
-      {/* 快速调整 - 累加标签在标题右侧 */}
+      {/* 快速调整 - 辅助功能区 */}
       <div style={{
-        background: darkMode ? 'rgba(42, 107, 124, 0.08)' : '#FFFFFF',
-        padding: '12px',
-        borderRadius: '8px',
-        border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)'
+        background: darkMode ? 'rgba(42, 107, 124, 0.06)' : '#FAFAF9',
+        padding: '14px',
+        borderRadius: '10px',
+        border: darkMode ? '1px solid rgba(42, 107, 124, 0.15)' : '1px solid rgba(29, 78, 95, 0.06)'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#E2E8F0' : '#374151' }}>快速调整</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#94A3B8' : '#6B7280' }}>快速调整</span>
           <div
             onClick={() => setIsCumulative(!isCumulative)}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '3px 10px',
+              padding: '4px 10px',
               borderRadius: '12px',
               fontSize: '11px',
               fontWeight: '600',
@@ -618,7 +648,7 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
                 : (darkMode ? 'transparent' : 'transparent'),
               color: isCumulative
                 ? '#FFFFFF'
-                : (darkMode ? '#94A3B8' : '#9CA3AF'),
+                : (darkMode ? '#64748B' : '#9CA3AF'),
               border: `1px solid ${isCumulative
                 ? (darkMode ? '#2A6B7C' : '#1D4E5F')
                 : (darkMode ? 'rgba(148, 163, 184, 0.3)' : '#D1D5DB')}`,
@@ -640,19 +670,19 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
               placeholder="分钟"
               value={adjustValue}
               onChange={(e) => setAdjustValue(e.target.value)}
-              style={{ ...getInputStyle(darkMode), height: '36px' }}
+              style={{ ...getInputStyle(darkMode), height: '38px', fontSize: '15px' }}
             />
           </Col>
           <Col span={18} style={{ display: 'flex', gap: '8px' }}>
             <Button
               onClick={() => handleQuickAdjust('arrival')}
-              style={{ flex: 1, height: '36px', fontSize: '12px', borderRadius: '6px', ...getSecondaryButtonStyle(darkMode) }}
+              style={{ flex: 1, height: '38px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode) }}
             >
               到点调整
             </Button>
             <Button
               onClick={() => handleQuickAdjust('departure')}
-              style={{ flex: 1, height: '36px', fontSize: '12px', borderRadius: '6px', ...getSecondaryButtonStyle(darkMode) }}
+              style={{ flex: 1, height: '38px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode) }}
             >
               发点调整
             </Button>
@@ -660,15 +690,15 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
         </Row>
       </div>
 
-      {/* 开停检时间 - 联动调整标题，顺延标签 */}
+      {/* 联动调整 - 作为辅助信息降低视觉权重 */}
       <div style={{
-        background: darkMode ? 'rgba(42, 107, 124, 0.08)' : '#FFFFFF',
-        padding: '12px',
-        borderRadius: '8px',
-        border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)'
+        background: darkMode ? 'rgba(42, 107, 124, 0.04)' : '#FAFAF9',
+        padding: '12px 14px',
+        borderRadius: '10px',
+        border: darkMode ? '1px dashed rgba(42, 107, 124, 0.2)' : '1px dashed rgba(29, 78, 95, 0.08)'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#E2E8F0' : '#374151' }}>联动调整</span>
+          <span style={{ fontSize: '12px', fontWeight: '500', color: darkMode ? '#64748B' : '#9CA3AF' }}>联动调整</span>
           <div
             onClick={() => setIsDefer(!isDefer)}
             style={{
@@ -682,15 +712,15 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
               cursor: 'pointer',
               transition: 'all 0.2s',
               background: isDefer
-                ? (darkMode ? '#D97706' : '#D97706')
+                ? (darkMode ? 'rgba(217, 119, 6, 0.25)' : 'rgba(217, 119, 6, 0.15)')
                 : (darkMode ? 'transparent' : 'transparent'),
               color: isDefer
                 ? '#FFFFFF'
-                : (darkMode ? '#94A3B8' : '#9CA3AF'),
+                : (darkMode ? '#64748B' : '#9CA3AF'),
               border: `1px solid ${isDefer
-                ? (darkMode ? '#D97706' : '#D97706')
-                : (darkMode ? 'rgba(148, 163, 184, 0.3)' : '#D1D5DB')}`,
-              boxShadow: isDefer ? '0 2px 4px rgba(0,0,0,0.2)' : 'none'
+                ? (darkMode ? 'rgba(217, 119, 6, 0.5)' : 'rgba(217, 119, 6, 0.3)')
+                : (darkMode ? 'rgba(148, 163, 184, 0.2)' : '#D1D5DB')}`,
+              boxShadow: isDefer ? '0 2px 4px rgba(217, 119, 6, 0.2)' : 'none'
             }}
           >
             <span style={{
@@ -705,41 +735,41 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
         <Row gutter={16}>
           <Col span={12}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>进站开检</span>
+              <span style={{ fontSize: '11px', color: darkMode ? '#64748B' : '#9CA3AF' }}>进站开检</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {times.checkInOpenTime !== initialTimes.checkInOpenTime && (
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
                 )}
-                <span style={{ fontSize: '14px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>{times.checkInOpenTime}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#94A3B8' : '#6B7280', whiteSpace: 'nowrap' }}>{times.checkInOpenTime}</span>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>进站停检</span>
+              <span style={{ fontSize: '11px', color: darkMode ? '#64748B' : '#9CA3AF' }}>进站停检</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {times.checkInCloseTime !== initialTimes.checkInCloseTime && (
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
                 )}
-                <span style={{ fontSize: '14px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>{times.checkInCloseTime}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#94A3B8' : '#6B7280', whiteSpace: 'nowrap' }}>{times.checkInCloseTime}</span>
               </div>
             </div>
           </Col>
           <Col span={12}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>出站开检</span>
+              <span style={{ fontSize: '11px', color: darkMode ? '#64748B' : '#9CA3AF' }}>出站开检</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {times.checkOutOpenTime !== initialTimes.checkOutOpenTime && (
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
                 )}
-                <span style={{ fontSize: '14px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>{times.checkOutOpenTime}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#94A3B8' : '#6B7280', whiteSpace: 'nowrap' }}>{times.checkOutOpenTime}</span>
               </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>出站停检</span>
+              <span style={{ fontSize: '11px', color: darkMode ? '#64748B' : '#9CA3AF' }}>出站停检</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {times.checkOutCloseTime !== initialTimes.checkOutCloseTime && (
                   <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#F59E0B' }} />
                 )}
-                <span style={{ fontSize: '14px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>{times.checkOutCloseTime}</span>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#94A3B8' : '#6B7280', whiteSpace: 'nowrap' }}>{times.checkOutCloseTime}</span>
               </div>
             </div>
           </Col>
@@ -766,7 +796,6 @@ const TimeAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; dar
 
 const CheckInOutAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => void; darkMode: boolean; onUnsavedChanges: (hasChanges: boolean) => void }> = ({ train, onClose, darkMode, onUnsavedChanges }) => {
   const now = dayjs();
-  const today = now.startOf('day');
   const displayDateStr = now.format('YYYY/M/D');
 
   // 获取基准时间（到点或发点）
@@ -777,60 +806,33 @@ const CheckInOutAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => voi
     return dayjs(`${now.format('YYYY-MM-DD')} ${timeStr}`);
   };
 
-  // 计算默认开检时间（发车前20分钟）
-  const defaultOpenTime = getBaseTime('departure').subtract(20, 'minute');
-  // 计算默认停检时间（发车前5分钟）
-  const defaultCloseTime = getBaseTime('departure').subtract(5, 'minute');
-
-  // 初始状态
-  const initialState = {
-    checkInDate: defaultOpenTime,
-    checkInTime: defaultOpenTime,
-    checkInBase: 'arrival' as 'arrival' | 'departure',
-    checkInOffset: '-15',
-    checkOutDate: defaultCloseTime,
-    checkOutTime: defaultCloseTime,
-    checkOutBase: 'departure' as 'arrival' | 'departure',
-    checkOutOffset: '-3'
-  };
+  // 初始状态 - 默认使用发点作为基准
+  const defaultCheckInBase = 'departure';
+  const defaultCheckInOffset = -20; // 发车前20分钟
+  const defaultCheckOutBase = 'departure';
+  const defaultCheckOutOffset = -5; // 发车前5分钟
 
   // 开检状态
-  const [checkInDate, setCheckInDate] = useState<dayjs.Dayjs>(initialState.checkInDate);
-  const [checkInTime, setCheckInTime] = useState<dayjs.Dayjs>(initialState.checkInTime);
-  const [checkInBase, setCheckInBase] = useState<'arrival' | 'departure'>(initialState.checkInBase);
-  const [checkInOffset, setCheckInOffset] = useState<string>(initialState.checkInOffset);
+  const [checkInBase, setCheckInBase] = useState<'arrival' | 'departure'>(defaultCheckInBase);
+  const [checkInOffset, setCheckInOffset] = useState<number>(defaultCheckInOffset);
 
   // 停检状态
-  const [checkOutDate, setCheckOutDate] = useState<dayjs.Dayjs>(initialState.checkOutDate);
-  const [checkOutTime, setCheckOutTime] = useState<dayjs.Dayjs>(initialState.checkOutTime);
-  const [checkOutBase, setCheckOutBase] = useState<'arrival' | 'departure'>(initialState.checkOutBase);
-  const [checkOutOffset, setCheckOutOffset] = useState<string>(initialState.checkOutOffset);
+  const [checkOutBase, setCheckOutBase] = useState<'arrival' | 'departure'>(defaultCheckOutBase);
+  const [checkOutOffset, setCheckOutOffset] = useState<number>(defaultCheckOutOffset);
+
+  // 计算当前开检/停检时间
+  const getCheckInTime = () => getBaseTime(checkInBase).add(checkInOffset, 'minute');
+  const getCheckOutTime = () => getBaseTime(checkOutBase).add(checkOutOffset, 'minute');
 
   // 检测是否有未保存的修改
   useEffect(() => {
-    const currentState = {
-      checkInDate: checkInDate.format('YYYY-MM-DD'),
-      checkInTime: checkInTime.format('YYYY-MM-DD HH:mm'),
-      checkInBase,
-      checkInOffset,
-      checkOutDate: checkOutDate.format('YYYY-MM-DD'),
-      checkOutTime: checkOutTime.format('YYYY-MM-DD HH:mm'),
-      checkOutBase,
-      checkOutOffset
-    };
-    const initialStateStr = {
-      checkInDate: initialState.checkInDate.format('YYYY-MM-DD'),
-      checkInTime: initialState.checkInTime.format('YYYY-MM-DD HH:mm'),
-      checkInBase: initialState.checkInBase,
-      checkInOffset: initialState.checkInOffset,
-      checkOutDate: initialState.checkOutDate.format('YYYY-MM-DD'),
-      checkOutTime: initialState.checkOutTime.format('YYYY-MM-DD HH:mm'),
-      checkOutBase: initialState.checkOutBase,
-      checkOutOffset: initialState.checkOutOffset
-    };
-    const hasChanges = JSON.stringify(currentState) !== JSON.stringify(initialStateStr);
+    const hasChanges = 
+      checkInBase !== defaultCheckInBase || 
+      checkInOffset !== defaultCheckInOffset || 
+      checkOutBase !== defaultCheckOutBase || 
+      checkOutOffset !== defaultCheckOutOffset;
     onUnsavedChanges(hasChanges);
-  }, [checkInDate, checkInTime, checkInBase, checkInOffset, checkOutDate, checkOutTime, checkOutBase, checkOutOffset, initialState, onUnsavedChanges]);
+  }, [checkInBase, checkInOffset, checkOutBase, checkOutOffset, onUnsavedChanges]);
 
   // 参数变化颜色提醒样式
   const getChangedStyle = (isChanged: boolean, darkMode: boolean): React.CSSProperties => ({
@@ -841,90 +843,45 @@ const CheckInOutAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => voi
   });
 
   // 判断值是否变化
-  const isCheckInDateChanged = !checkInDate.isSame(defaultOpenTime, 'day');
-  const isCheckInTimeChanged = !checkInTime.isSame(defaultOpenTime, 'minute');
-  const isCheckInBaseChanged = checkInBase !== 'arrival';
-  const isCheckInOffsetChanged = checkInOffset !== '-15';
-  const isCheckOutDateChanged = !checkOutDate.isSame(defaultCloseTime, 'day');
-  const isCheckOutTimeChanged = !checkOutTime.isSame(defaultCloseTime, 'minute');
-  const isCheckOutBaseChanged = checkOutBase !== 'departure';
-  const isCheckOutOffsetChanged = checkOutOffset !== '-3';
+  const isCheckInBaseChanged = checkInBase !== defaultCheckInBase;
+  const isCheckInOffsetChanged = checkInOffset !== defaultCheckInOffset;
+  const isCheckOutBaseChanged = checkOutBase !== defaultCheckOutBase;
+  const isCheckOutOffsetChanged = checkOutOffset !== defaultCheckOutOffset;
 
-  // 根据基准和相对时间计算开检时间
-  const handleCheckInAdjust = () => {
-    const baseTime = getBaseTime(checkInBase);
-    const offsetMinutes = parseInt(checkInOffset) || 0;
-    const newTime = baseTime.add(offsetMinutes, 'minute');
-    setCheckInDate(newTime);
-    setCheckInTime(newTime);
-  };
+  // 计算相对时间样式 - 放大突出
+  const getOffsetStyle = (isChanged: boolean, darkMode: boolean): React.CSSProperties => ({
+    fontSize: '28px',
+    fontWeight: 'bold',
+    color: isChanged ? (darkMode ? '#F59E0B' : '#D97706') : (darkMode ? '#F1F5F9' : '#1F2937'),
+    transition: 'all 0.2s ease',
+    textShadow: isChanged ? (darkMode ? '0 0 8px rgba(245, 158, 11, 0.4)' : '0 0 8px rgba(217, 119, 6, 0.3)') : 'none'
+  });
 
-  // 根据基准和相对时间计算停检时间
-  const handleCheckOutAdjust = () => {
-    const baseTime = getBaseTime(checkOutBase);
-    const offsetMinutes = parseInt(checkOutOffset) || 0;
-    const newTime = baseTime.add(offsetMinutes, 'minute');
-    setCheckOutDate(newTime);
-    setCheckOutTime(newTime);
-  };
-
-  // 当直接修改开检时间时，反向计算相对时间
-  const handleCheckInTimeChange = (time: dayjs.Dayjs | null) => {
-    if (time) {
-      setCheckInTime(time);
-      const baseTime = getBaseTime(checkInBase);
-      const diffMinutes = time.diff(baseTime, 'minute');
-      setCheckInOffset(diffMinutes.toString());
+  // 快速调整按钮
+  const handleQuickAdjust = (type: 'checkIn' | 'checkOut', delta: number) => {
+    if (type === 'checkIn') {
+      setCheckInOffset(prev => prev + delta);
+    } else {
+      setCheckOutOffset(prev => prev + delta);
     }
-  };
-
-  // 当直接修改停检时间时，反向计算相对时间
-  const handleCheckOutTimeChange = (time: dayjs.Dayjs | null) => {
-    if (time) {
-      setCheckOutTime(time);
-      const baseTime = getBaseTime(checkOutBase);
-      const diffMinutes = time.diff(baseTime, 'minute');
-      setCheckOutOffset(diffMinutes.toString());
-    }
-  };
-
-  // 当修改基准时，重新计算相对时间
-  const handleCheckInBaseChange = (base: 'arrival' | 'departure') => {
-    setCheckInBase(base);
-    const baseTime = getBaseTime(base);
-    const diffMinutes = checkInTime.diff(baseTime, 'minute');
-    setCheckInOffset(diffMinutes.toString());
-  };
-
-  const handleCheckOutBaseChange = (base: 'arrival' | 'departure') => {
-    setCheckOutBase(base);
-    const baseTime = getBaseTime(base);
-    const diffMinutes = checkOutTime.diff(baseTime, 'minute');
-    setCheckOutOffset(diffMinutes.toString());
   };
 
   const handleReset = () => {
-    setCheckInDate(initialState.checkInDate);
-    setCheckInTime(initialState.checkInTime);
-    setCheckInBase(initialState.checkInBase);
-    setCheckInOffset(initialState.checkInOffset);
-    setCheckOutDate(initialState.checkOutDate);
-    setCheckOutTime(initialState.checkOutTime);
-    setCheckOutBase(initialState.checkOutBase);
-    setCheckOutOffset(initialState.checkOutOffset);
+    setCheckInBase(defaultCheckInBase);
+    setCheckInOffset(defaultCheckInOffset);
+    setCheckOutBase(defaultCheckOutBase);
+    setCheckOutOffset(defaultCheckOutOffset);
   };
 
   const handleSave = () => {
     console.log('Save check in/out adjustments:', {
       checkIn: {
-        date: checkInDate.format('YYYY-MM-DD'),
-        time: checkInTime.format('HH:mm'),
+        time: getCheckInTime().format('YYYY-MM-DD HH:mm'),
         base: checkInBase,
         offset: checkInOffset
       },
       checkOut: {
-        date: checkOutDate.format('YYYY-MM-DD'),
-        time: checkOutTime.format('HH:mm'),
+        time: getCheckOutTime().format('YYYY-MM-DD HH:mm'),
         base: checkOutBase,
         offset: checkOutOffset
       }
@@ -934,173 +891,386 @@ const CheckInOutAdjustPanel: React.FC<{ train: TrainSchedule; onClose: () => voi
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {/* 实际时间信息 - 紧凑布局 */}
-      <Row gutter={12}>
-        <Col span={12}>
-          <div style={{
-            background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            border: darkMode ? '1px solid rgba(42, 107, 124, 0.25)' : '1px solid rgba(29, 78, 95, 0.08)'
-          }}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>实际到点</div>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* 实际时间信息 */}
+      <div style={{
+        background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
+        padding: '14px 16px',
+        borderRadius: '10px',
+        border: darkMode ? '1px solid rgba(42, 107, 124, 0.25)' : '1px solid rgba(29, 78, 95, 0.08)'
+      }}>
+        <Row gutter={16}>
+          <Col span={12}>
+            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '6px' }}>实际到点</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
               {displayDateStr} {train.arrival.actualTime || train.arrival.time}
             </div>
-          </div>
-        </Col>
-        <Col span={12}>
-          <div style={{
-            background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
-            padding: '10px 12px',
-            borderRadius: '8px',
-            border: darkMode ? '1px solid rgba(42, 107, 124, 0.25)' : '1px solid rgba(29, 78, 95, 0.08)'
-          }}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>实际发点</div>
-            <div style={{ fontSize: '15px', fontWeight: '600', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
+          </Col>
+          <Col span={12}>
+            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '6px' }}>实际发点</div>
+            <div style={{ fontSize: '18px', fontWeight: 'bold', color: darkMode ? '#F1F5F9' : '#1F2937', whiteSpace: 'nowrap' }}>
               {displayDateStr} {train.departure.actualTime || train.departure.time}
-            </div>
-          </div>
-        </Col>
-      </Row>
-
-      {/* 进站开检调整 */}
-      <div style={{
-        background: darkMode ? 'rgba(42, 107, 124, 0.08)' : '#FFFFFF',
-        padding: '12px',
-        borderRadius: '8px',
-        border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)'
-      }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#E2E8F0' : '#374151', marginBottom: '10px' }}>进站开检调整</div>
-        <Row gutter={12}>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>开检日期</div>
-            <DatePicker 
-              value={checkInDate}
-              onChange={(date) => date && setCheckInDate(date)}
-              style={{ ...getSelectStyle(darkMode), height: '36px', width: '100%', ...getChangedStyle(isCheckInDateChanged, darkMode) }}
-              format="YYYY-MM-DD"
-            />
-          </Col>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>开检时间</div>
-            <TimePicker 
-              value={checkInTime}
-              onChange={handleCheckInTimeChange}
-              style={{ ...getSelectStyle(darkMode), height: '36px', width: '100%', ...getChangedStyle(isCheckInTimeChanged, darkMode) }}
-              format="HH:mm"
-              minuteStep={1}
-            />
-          </Col>
-        </Row>
-        <Row gutter={12} style={{ marginTop: '8px' }}>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>开检基准</div>
-            <Select 
-              value={checkInBase} 
-              onChange={handleCheckInBaseChange}
-              style={{ ...getSelectStyle(darkMode), height: '36px', ...getChangedStyle(isCheckInBaseChanged, darkMode) }}
-            >
-              <Option value="arrival">到点</Option>
-              <Option value="departure">发点</Option>
-            </Select>
-          </Col>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>相对时间(分钟)</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Input 
-                value={checkInOffset}
-                onChange={(e) => setCheckInOffset(e.target.value)}
-                style={{ flex: 1, height: '36px', fontSize: '13px', borderRadius: '8px', ...getChangedStyle(isCheckInOffsetChanged, darkMode) }}
-              />
-              <Button 
-                onClick={handleCheckInAdjust}
-                style={{ height: '36px', fontSize: '12px', padding: '0 16px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode) }}
-              >
-                调整
-              </Button>
             </div>
           </Col>
         </Row>
       </div>
 
-      {/* 进站停检调整 */}
+      {/* 开停检调整 */}
       <div style={{
         background: darkMode ? 'rgba(42, 107, 124, 0.08)' : '#FFFFFF',
-        padding: '12px',
-        borderRadius: '8px',
+        padding: '16px',
+        borderRadius: '10px',
         border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)'
       }}>
-        <div style={{ fontSize: '13px', fontWeight: '600', color: darkMode ? '#E2E8F0' : '#374151', marginBottom: '10px' }}>进站停检调整</div>
-        <Row gutter={12}>
+        <Row gutter={20}>
+          {/* 左侧 - 开检调整 */}
           <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>停检日期</div>
-            <DatePicker 
-              value={checkOutDate}
-              onChange={(date) => date && setCheckOutDate(date)}
-              style={{ ...getSelectStyle(darkMode), height: '36px', width: '100%', ...getChangedStyle(isCheckOutDateChanged, darkMode) }}
-              format="YYYY-MM-DD"
-            />
-          </Col>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>停检时间</div>
-            <TimePicker 
-              value={checkOutTime}
-              onChange={handleCheckOutTimeChange}
-              style={{ ...getSelectStyle(darkMode), height: '36px', width: '100%', ...getChangedStyle(isCheckOutTimeChanged, darkMode) }}
-              format="HH:mm"
-              minuteStep={1}
-            />
-          </Col>
-        </Row>
-        <Row gutter={12} style={{ marginTop: '8px' }}>
-          <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>停检基准</div>
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '16px',
+              padding: '8px 0',
+              background: darkMode ? 'rgba(42, 107, 124, 0.2)' : 'rgba(29, 78, 95, 0.05)',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '15px',
+                fontWeight: '700',
+                color: darkMode ? '#E2E8F0' : '#374151'
+              }}>开检时间</span>
+            </div>
+            
+            {/* 相对时间 - 核心交互区域 */}
+            <div style={{
+              textAlign: 'center',
+              padding: '20px 0',
+              marginBottom: '16px',
+              background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F8FAFC',
+              borderRadius: '10px',
+              border: darkMode ? '1px solid rgba(42, 107, 124, 0.3)' : '1px solid rgba(29, 78, 95, 0.12)'
+            }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '8px', fontWeight: '500' }}>相对于基准时间</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
+                <button
+                  onClick={() => handleQuickAdjust('checkIn', -1)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #E5E7EB',
+                    background: darkMode ? 'rgba(42, 107, 124, 0.2)' : '#FFFFFF',
+                    color: darkMode ? '#E2E8F0' : '#374151',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  -
+                </button>
+                <div style={getOffsetStyle(isCheckInOffsetChanged, darkMode)}>
+                  {checkInOffset > 0 ? `+${checkInOffset}` : checkInOffset}
+                </div>
+                <button
+                  onClick={() => handleQuickAdjust('checkIn', 1)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #E5E7EB',
+                    background: darkMode ? 'rgba(42, 107, 124, 0.2)' : '#FFFFFF',
+                    color: darkMode ? '#E2E8F0' : '#374151',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  +
+                </button>
+              </div>
+              <div style={{ fontSize: '13px', color: darkMode ? '#94A3B8' : '#64748B', fontWeight: '500' }}>分钟</div>
+            </div>
+
+            {/* 快速调整按钮 */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => handleQuickAdjust('checkIn', -5)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                -5
+              </button>
+              <button
+                onClick={() => handleQuickAdjust('checkIn', -1)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                -1
+              </button>
+              <button
+                onClick={() => handleQuickAdjust('checkIn', 1)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                +1
+              </button>
+              <button
+                onClick={() => handleQuickAdjust('checkIn', 5)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                +5
+              </button>
+            </div>
+
+            {/* 计算出的实际开检时间 */}
+            <div style={{
+              textAlign: 'center',
+              padding: '12px',
+              background: darkMode ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              border: darkMode ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid #A7F3D0'
+            }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#6EE7B7' : '#065F46', marginBottom: '4px' }}>开检时间</div>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: darkMode ? '#A7F3D0' : '#047857', fontFamily: 'monospace' }}>
+                {getCheckInTime().format('HH:mm')}
+              </div>
+            </div>
+
+            {/* 基准选择 */}
+            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '6px', fontWeight: '500' }}>基准时间</div>
             <Select 
-              value={checkOutBase} 
-              onChange={handleCheckOutBaseChange}
-              style={{ ...getSelectStyle(darkMode), height: '36px', ...getChangedStyle(isCheckOutBaseChanged, darkMode) }}
+              value={checkInBase} 
+              onChange={setCheckInBase}
+              style={{ ...getSelectStyle(darkMode), height: '40px', ...getChangedStyle(isCheckInBaseChanged, darkMode) }}
             >
-              <Option value="departure">发点</Option>
-              <Option value="arrival">到点</Option>
+              <Option value="arrival">到点 - {train.arrival.actualTime || train.arrival.time}</Option>
+              <Option value="departure">发点 - {train.departure.actualTime || train.departure.time}</Option>
             </Select>
           </Col>
+
+          {/* 右侧 - 停检调整 */}
           <Col span={12}>
-            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>相对时间(分钟)</div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Input 
-                value={checkOutOffset}
-                onChange={(e) => setCheckOutOffset(e.target.value)}
-                style={{ flex: 1, height: '36px', fontSize: '13px', borderRadius: '8px', ...getChangedStyle(isCheckOutOffsetChanged, darkMode) }}
-              />
-              <Button 
-                onClick={handleCheckOutAdjust}
-                style={{ height: '36px', fontSize: '12px', padding: '0 16px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode) }}
-              >
-                调整
-              </Button>
+            <div style={{ 
+              textAlign: 'center', 
+              marginBottom: '16px',
+              padding: '8px 0',
+              background: darkMode ? 'rgba(239, 68, 68, 0.1)' : '#FEF2F2',
+              borderRadius: '8px'
+            }}>
+              <span style={{
+                fontSize: '15px',
+                fontWeight: '700',
+                color: darkMode ? '#FCA5A5' : '#991B1B'
+              }}>停检时间</span>
             </div>
+            
+            {/* 相对时间 - 核心交互区域 */}
+            <div style={{
+              textAlign: 'center',
+              padding: '20px 0',
+              marginBottom: '16px',
+              background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F8FAFC',
+              borderRadius: '10px',
+              border: darkMode ? '1px solid rgba(42, 107, 124, 0.3)' : '1px solid rgba(29, 78, 95, 0.12)'
+            }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '8px', fontWeight: '500' }}>相对于基准时间</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
+                <button
+                  onClick={() => handleQuickAdjust('checkOut', -1)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #E5E7EB',
+                    background: darkMode ? 'rgba(42, 107, 124, 0.2)' : '#FFFFFF',
+                    color: darkMode ? '#E2E8F0' : '#374151',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  -
+                </button>
+                <div style={getOffsetStyle(isCheckOutOffsetChanged, darkMode)}>
+                  {checkOutOffset > 0 ? `+${checkOutOffset}` : checkOutOffset}
+                </div>
+                <button
+                  onClick={() => handleQuickAdjust('checkOut', 1)}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #E5E7EB',
+                    background: darkMode ? 'rgba(42, 107, 124, 0.2)' : '#FFFFFF',
+                    color: darkMode ? '#E2E8F0' : '#374151',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  +
+                </button>
+              </div>
+              <div style={{ fontSize: '13px', color: darkMode ? '#94A3B8' : '#64748B', fontWeight: '500' }}>分钟</div>
+            </div>
+
+            {/* 快速调整按钮 */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', justifyContent: 'center' }}>
+              <button
+                onClick={() => handleQuickAdjust('checkOut', -5)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                -5
+              </button>
+              <button
+                onClick={() => handleQuickAdjust('checkOut', -1)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                -1
+              </button>
+              <button
+                onClick={() => handleQuickAdjust('checkOut', 1)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                +1
+              </button>
+              <button
+                onClick={() => handleQuickAdjust('checkOut', 5)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: darkMode ? '1px solid rgba(255,255,255,0.15)' : '1px solid #E5E7EB',
+                  background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F3F4F6',
+                  color: darkMode ? '#94A3B8' : '#64748B',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer'
+                }}
+              >
+                +5
+              </button>
+            </div>
+
+            {/* 计算出的实际停检时间 */}
+            <div style={{
+              textAlign: 'center',
+              padding: '12px',
+              background: darkMode ? 'rgba(239, 68, 68, 0.1)' : '#FEF2F2',
+              borderRadius: '8px',
+              marginBottom: '12px',
+              border: darkMode ? '1px solid rgba(239, 68, 68, 0.2)' : '1px solid #FECACA'
+            }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#FCA5A5' : '#991B1B', marginBottom: '4px' }}>停检时间</div>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: darkMode ? '#FECACA' : '#B91C1C', fontFamily: 'monospace' }}>
+                {getCheckOutTime().format('HH:mm')}
+              </div>
+            </div>
+
+            {/* 基准选择 */}
+            <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '6px', fontWeight: '500' }}>基准时间</div>
+            <Select 
+              value={checkOutBase} 
+              onChange={setCheckOutBase}
+              style={{ ...getSelectStyle(darkMode), height: '40px', ...getChangedStyle(isCheckOutBaseChanged, darkMode) }}
+            >
+              <Option value="arrival">到点 - {train.arrival.actualTime || train.arrival.time}</Option>
+              <Option value="departure">发点 - {train.departure.actualTime || train.departure.time}</Option>
+            </Select>
           </Col>
         </Row>
       </div>
 
       {/* 底部按钮 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px', alignItems: 'center' }}>
-        <Button onClick={handleReset} style={{ ...getSecondaryButtonStyle(darkMode) }} icon={<RotateCcw size={14} />}>
+        <Button onClick={handleReset} style={{ ...getSecondaryButtonStyle(darkMode), height: '42px', fontSize: '14px' }} icon={<RotateCcw size={16} />}>
           恢复默认
         </Button>
         <Popconfirm
           title="确认保存开停检调整？"
-          description={`开检时间：${checkInDate.format('YYYY-MM-DD')} ${checkInTime.format('HH:mm')}\n停检时间：${checkOutDate.format('YYYY-MM-DD')} ${checkOutTime.format('HH:mm')}`}
+          description={`开检时间：${getCheckInTime().format('YYYY-MM-DD HH:mm')}\n停检时间：${getCheckOutTime().format('YYYY-MM-DD HH:mm')}`}
           onConfirm={handleSave}
           okText="确认"
           cancelText="取消"
         >
           <Button 
             type="primary" 
-            style={{ ...getPrimaryButtonStyle(darkMode), display: 'flex', alignItems: 'center', gap: '6px' }}
-            icon={<Save size={14} />}
+            style={{ ...getPrimaryButtonStyle(darkMode), height: '42px', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}
+            icon={<Save size={16} />}
           >
             保存
           </Button>

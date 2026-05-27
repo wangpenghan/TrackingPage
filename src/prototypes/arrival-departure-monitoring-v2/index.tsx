@@ -13,7 +13,7 @@ import { HeaderStats } from './HeaderStats';
 import { FilterBar } from './FilterBar';
 import { TrainTable } from './TrainTable';
 import { mockTrainSchedules } from './mock-data';
-import { PlanChangeOverview } from './components/PlanChangeOverview';
+
 import './style.css';
 import './grid-style.css';
 
@@ -291,9 +291,6 @@ const Component = forwardRef<AxureHandle, AxureProps>(function ArrivalDepartureM
   // 快速定位类型
   const [quickFilterType, setQuickFilterType] = useState<'none' | 'abnormal' | 'operating'>('none');
 
-  // 计划变更总览状态
-  const [planChangeOverviewVisible, setPlanChangeOverviewVisible] = useState(false);
-
   const [managedStations, setManagedStations] = useState<Station[]>([
     { id: '1', name: '重庆东', trainCount: 45, abnormalCount: 2, alarmCount: 8, delayCount: 1 },
     { id: '2', name: '巴南', trainCount: 28, abnormalCount: 1, alarmCount: 5, delayCount: 0 },
@@ -566,44 +563,9 @@ const Component = forwardRef<AxureHandle, AxureProps>(function ArrivalDepartureM
           onSimpleModeChange={handleSimpleModeChange}
           initialColumnOrder={columnOrder}
           initialPassengerFlowThreshold={passengerFlowThreshold}
-          onPlanChangeOverviewClick={() => setPlanChangeOverviewVisible(true)}
         />
 
-        {/* 计划变更总览 */}
-        <PlanChangeOverview
-          visible={planChangeOverviewVisible}
-          onClose={() => setPlanChangeOverviewVisible(false)}
-          darkMode={darkMode}
-          onViewTrain={(trainId) => {
-            setPlanChangeOverviewVisible(false);
-            // 找到对应的车次并选中
-            const train = mockTrainSchedules.find(t => t.id === trainId);
-            if (train) {
-              setSelectedTrainId(trainId);
-              emitEvent('on_train_select', trainId);
-            }
-          }}
-          onBatchConfirm={(trainIds) => {
-            // 批量确认选中的车次
-            trainIds.forEach(trainId => {
-              const train = mockTrainSchedules.find(t => t.id === trainId);
-              if (train?.planChangeInfo) {
-                train.planChangeInfo.planStatus = 'synced';
-              }
-            });
-            handleDataChange();
-          }}
-          onBatchLock={(trainIds) => {
-            // 批量锁定选中的车次
-            trainIds.forEach(trainId => {
-              const train = mockTrainSchedules.find(t => t.id === trainId);
-              if (train?.planChangeInfo) {
-                train.planChangeInfo.planStatus = 'locked';
-              }
-            });
-            handleDataChange();
-          }}
-        />
+
 
         <div className="flex-1 overflow-auto" style={{ minHeight: 0 }}>
           <TrainTable

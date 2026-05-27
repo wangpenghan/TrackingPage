@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Tabs, Button, Input, Select, Table, Tag, DatePicker, Checkbox, Row, Col, Card, Switch, Space, Modal, Popconfirm } from 'antd';
+import { Tabs, Button, Input, Select, Table, Tag, DatePicker, Checkbox, Row, Col, Card, Switch, Space, Modal, Popconfirm, message } from 'antd';
 import { X, Save, Play, RefreshCw, AlertCircle, Edit, Square, Link, RotateCcw, FileText, Ticket, Train, DoorOpen } from 'lucide-react';
 import dayjs from 'dayjs';
 
@@ -268,6 +268,25 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
   const [isLateUndetermined, setIsLateUndetermined] = useState(false);
   const [isLateUndeterminedModalVisible, setIsLateUndeterminedModalVisible] = useState(false);
   const [isUndeterminedRecoveryModalVisible, setIsUndeterminedRecoveryModalVisible] = useState(false);
+  const [broadcastFilter, setBroadcastFilter] = useState<'all' | 'daily' | 'thematic' | 'conflict'>('all');
+  const [guideFilter, setGuideFilter] = useState<'all' | 'entrance' | 'waiting' | 'platform' | 'exit'>('all');
+  const [guidePreviewVisible, setGuidePreviewVisible] = useState(false);
+  const [selectedGuideRecord, setSelectedGuideRecord] = useState<any>(null);
+  const [hasGuideChanges, setHasGuideChanges] = useState(false);
+  const [hasBroadcastChanges, setHasBroadcastChanges] = useState(false);
+  const [guideData, setGuideData] = useState<any[]>([
+    { key: '1', screenName: '候车室综合屏', area: 'waiting', startTime: '2026-02-03 03:22:00', endTime: '2026-02-03 11:28:00', upperMode: 'manual', upperSignal: '无', lowerMode: 'manual', lowerSignal: '无', priority: 10, status: '正在执行', hasOcrSupport: true, ocrStatus: 'normal' },
+    { key: '2', screenName: '检票口引导屏', area: 'entrance', startTime: '2026-02-03 03:22:00', endTime: '2026-02-03 11:23:00', upperMode: 'automatic', upperSignal: '无', lowerMode: 'automatic', lowerSignal: '无', priority: 10, status: '正在执行', hasOcrSupport: true, ocrStatus: 'abnormal' },
+    { key: '3', screenName: '1站台引导屏', area: 'platform', startTime: '2026-02-03 03:22:00', endTime: '2026-02-03 11:23:00', upperMode: 'automatic', upperSignal: '无', lowerMode: 'automatic', lowerSignal: '无', priority: 10, status: '等待执行', hasOcrSupport: false },
+    { key: '4', screenName: '2站台引导屏', area: 'platform', startTime: '2026-02-03 03:22:00', endTime: '2026-02-03 11:23:00', upperMode: 'automatic', upperSignal: '无', lowerMode: 'automatic', lowerSignal: '无', priority: 10, status: '等待执行', hasOcrSupport: true, ocrStatus: 'normal' },
+    { key: '5', screenName: '出站口引导屏', area: 'exit', startTime: '2026-02-03 03:22:00', endTime: '2026-02-03 11:23:00', upperMode: 'manual', upperSignal: '无', lowerMode: 'manual', lowerSignal: '无', priority: 10, status: '已完成', hasOcrSupport: true, ocrStatus: 'normal' },
+    { key: '6', screenName: '北进站口引导屏', area: 'entrance', startTime: '2026-02-03 03:22:00', endTime: '2026-02-03 11:23:00', upperMode: 'automatic', upperSignal: '无', lowerMode: 'automatic', lowerSignal: '无', priority: 10, status: '正在执行', hasOcrSupport: true, ocrStatus: 'normal' },
+  ]);
+  const [broadcastData, setBroadcastData] = useState<any[]>([
+    { key: '1', area: '候车室全区', content: `${train?.trainNo || 'G100'}次列车开始检票通知`, startTime: '2026-02-03 16:22:00', status: '正在播放', triggerSignal: '时间', mode: 'manual', playCount: 1 },
+    { key: '2', area: '5号站台', content: `${train?.trainNo || 'G100'}次列车即将到达`, startTime: '2026-02-03 16:40:00', status: '等待执行', triggerSignal: '时间', mode: 'automatic', playCount: 1 },
+    { key: '3', area: '出站口', content: `${train?.trainNo || 'G100'}次列车到达广播`, startTime: '2026-02-03 16:50:00', status: '等待执行', triggerSignal: '时间', mode: 'manual', playCount: 1 },
+  ]);
 
   const train = mockTrainSchedules.find(t => t.id === trainId);
   
@@ -331,6 +350,52 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
     const previousTimes = history[history.length - 1];
     setTimes(previousTimes);
     setHistory(prev => prev.slice(0, -1));
+  };
+
+  // 切换引导计划上下屏模式
+  const handleGuideModeChange = (key: string, type: 'upper' | 'lower', checked: boolean) => {
+    setGuideData(prev => prev.map(item => {
+      if (item.key === key) {
+        return {
+          ...item,
+          [type === 'upper' ? 'upperMode' : 'lowerMode']: checked ? 'manual' : 'automatic'
+        };
+      }
+      return item;
+    }));
+    setHasGuideChanges(true);
+    if (onUnsavedChanges) onUnsavedChanges(true);
+  };
+
+  // 切换广播计划模式
+  const handleBroadcastModeChange = (key: string, checked: boolean) => {
+    setBroadcastData(prev => prev.map(item => {
+      if (item.key === key) {
+        return {
+          ...item,
+          mode: checked ? 'manual' : 'automatic'
+        };
+      }
+      return item;
+    }));
+    setHasBroadcastChanges(true);
+    if (onUnsavedChanges) onUnsavedChanges(true);
+  };
+
+  // 保存引导计划
+  const handleSaveGuide = () => {
+    setHasGuideChanges(false);
+    if (onDataChange) onDataChange();
+    if (onUnsavedChanges) onUnsavedChanges(hasBroadcastChanges);
+    message.success('引导计划已保存');
+  };
+
+  // 保存广播计划
+  const handleSaveBroadcast = () => {
+    setHasBroadcastChanges(false);
+    if (onDataChange) onDataChange();
+    if (onUnsavedChanges) onUnsavedChanges(hasGuideChanges);
+    message.success('广播计划已保存');
   };
 
   if (!train) {
@@ -1131,12 +1196,97 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                   label: <span style={{ fontSize: '13px', color: darkMode ? '#94A3B8' : '#64748B' }}>引导计划</span>,
                   children: (
                     <div style={{ padding: '12px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      {/* 引导计划过滤标签 */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', gap: '8px', padding: '8px 12px', background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC', borderRadius: '8px', border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)' }}>
+                          <Button 
+                            type={guideFilter === 'all' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setGuideFilter('all')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: guideFilter === 'all' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: guideFilter === 'all' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: guideFilter === 'all' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            全部 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{guideData.length}</Tag>
+                          </Button>
+                          <Button 
+                            type={guideFilter === 'entrance' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setGuideFilter('entrance')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: guideFilter === 'entrance' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: guideFilter === 'entrance' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: guideFilter === 'entrance' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            进站口 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{guideData.filter(item => item.area === 'entrance').length}</Tag>
+                          </Button>
+                          <Button 
+                            type={guideFilter === 'waiting' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setGuideFilter('waiting')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: guideFilter === 'waiting' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: guideFilter === 'waiting' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: guideFilter === 'waiting' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            候车室 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{guideData.filter(item => item.area === 'waiting').length}</Tag>
+                          </Button>
+                          <Button 
+                            type={guideFilter === 'platform' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setGuideFilter('platform')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: guideFilter === 'platform' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: guideFilter === 'platform' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: guideFilter === 'platform' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            站台 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{guideData.filter(item => item.area === 'platform').length}</Tag>
+                          </Button>
+                          <Button 
+                            type={guideFilter === 'exit' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setGuideFilter('exit')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: guideFilter === 'exit' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: guideFilter === 'exit' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: guideFilter === 'exit' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            出站口 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{guideData.filter(item => item.area === 'exit').length}</Tag>
+                          </Button>
+                        </div>
+                        <Button 
+                          type="primary" 
+                          size="small"
+                          icon={<Save size={14} />}
+                          onClick={handleSaveGuide}
+                          disabled={!hasGuideChanges}
+                          style={{ borderRadius: '6px', fontSize: '12px' }}
+                        >
+                          保存
+                        </Button>
+                      </div>
                       <Table 
                         columns={[
                           { 
                             title: <span style={{ color: darkMode ? '#94A3B8' : '#64748B' }}>屏名称</span>, 
                             dataIndex: 'screenName', 
-                            width: 240, 
+                            width: 200, 
                             render: (text: string, record: any) => (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
                                 <span style={{ fontWeight: 500, color: darkMode ? '#E2E8F0' : '#1F2937' }}>{text}</span>
@@ -1169,10 +1319,10 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                             dataIndex: 'upperMode', 
                             width: 80, 
                             align: 'center', 
-                            render: (mode: string) => (
+                            render: (mode: string, record: any) => (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                                 <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>{mode === 'manual' ? '手动' : '自动'}</span>
-                                <Switch size="small" checked={mode === 'manual'} />
+                                <Switch size="small" checked={mode === 'manual'} onChange={(checked) => handleGuideModeChange(record.key, 'upper', checked)} />
                               </div>
                             )
                           },
@@ -1188,10 +1338,10 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                             dataIndex: 'lowerMode', 
                             width: 80, 
                             align: 'center', 
-                            render: (mode: string) => (
+                            render: (mode: string, record: any) => (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                                 <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>{mode === 'manual' ? '手动' : '自动'}</span>
-                                <Switch size="small" checked={mode === 'manual'} />
+                                <Switch size="small" checked={mode === 'manual'} onChange={(checked) => handleGuideModeChange(record.key, 'lower', checked)} />
                               </div>
                             )
                           },
@@ -1203,26 +1353,38 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                             render: (text: string) => <span style={{ color: darkMode ? '#64748B' : '#94A3B8' }}>{text || '无'}</span> 
                           },
                           { 
+                            title: <span style={{ color: darkMode ? '#94A3B8' : '#64748B' }}>OCR识别</span>, 
+                            dataIndex: 'ocrStatus', 
+                            width: 80, 
+                            align: 'center', 
+                            render: (text: string, record: any) => {
+                              if (!record.hasOcrSupport) {
+                                return <span style={{ color: darkMode ? '#64748B' : '#94A3B8', fontSize: '12px' }}>不支持</span>;
+                              }
+                              return (
+                                <Tag color={text === 'abnormal' ? 'error' : (text === 'normal' ? 'success' : 'default')}>
+                                  {text === 'abnormal' ? '异常' : '正常'}
+                                </Tag>
+                              );
+                            }
+                          },
+                          { 
                             title: <span style={{ color: darkMode ? '#94A3B8' : '#64748B' }}>操作</span>, 
                             key: 'action', 
-                            width: 140, 
+                            width: 160, 
                             align: 'center', 
                             render: (_, record: any) => (
                               <Space size="small">
                                 <Button type="text" size="small" icon={<Link size={14} />} style={{ color: '#D97706' }} title="关联屏" />
-                                <Button type="text" size="small" icon={<Play size={14} />} style={{ color: '#D97706' }} title="立即执行" />
+                                <Button type="text" size="small" icon={<Play size={14} />} style={{ color: '#10B981' }} title="预览" onClick={() => { setSelectedGuideRecord(record); setGuidePreviewVisible(true); }} />
+                                <Button type="text" size="small" icon={<RefreshCw size={14} />} style={{ color: '#3B82F6' }} title="回读" onClick={() => { setSelectedGuideRecord(record); setGuidePreviewVisible(true); }} />
                                 <Button type="text" size="small" icon={<Square size={14} fill="currentColor" />} style={{ color: '#EF4444' }} title="停止执行" />
                                 <Button type="text" size="small" icon={<FileText size={14} />} style={{ color: '#10B981' }} title="手动录入" onClick={() => handleManualCommand(record)} />
                               </Space>
                             )
                           },
                         ]}
-                        dataSource={[
-                          { key: '1', screenName: '候车室综合屏', startTime: '2026-02-03 03:23:00', endTime: '2026-02-03 11:28:00', upperMode: 'manual', upperSignal: '无', lowerMode: 'manual', lowerSignal: '无', priority: 10, status: '正在执行' },
-                          { key: '2', screenName: '检票口引导屏', startTime: '2026-02-03 03:23:00', endTime: '2026-02-03 11:23:00', upperMode: 'manual', upperSignal: '无', lowerMode: 'manual', lowerSignal: '无', priority: 10, status: '正在执行' },
-                          { key: '3', screenName: '站台引导屏', startTime: '2026-02-03 03:23:00', endTime: '2026-02-03 11:23:00', upperMode: 'manual', upperSignal: '无', lowerMode: 'manual', lowerSignal: '无', priority: 10, status: '正在执行' },
-                          { key: '4', screenName: '出站口引导屏', startTime: '2026-02-03 03:23:00', endTime: '2026-02-03 11:23:00', upperMode: 'manual', upperSignal: '无', lowerMode: 'manual', lowerSignal: '无', priority: 10, status: '正在执行' },
-                        ]}
+                        dataSource={guideData.filter(item => guideFilter === 'all' ? true : item.area === guideFilter)}
                         pagination={false}
                         size="small"
                         bordered
@@ -1237,6 +1399,76 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                   label: <span style={{ fontSize: '13px', color: darkMode ? '#94A3B8' : '#64748B' }}>广播计划</span>,
                   children: (
                     <div style={{ padding: '12px', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                        <div style={{ display: 'flex', gap: '8px', padding: '8px 12px', background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC', borderRadius: '8px', border: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid rgba(29, 78, 95, 0.08)' }}>
+                          <Button 
+                            type={broadcastFilter === 'all' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setBroadcastFilter('all')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: broadcastFilter === 'all' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: broadcastFilter === 'all' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: broadcastFilter === 'all' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            全部 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{broadcastData.length}</Tag>
+                          </Button>
+                          <Button 
+                            type={broadcastFilter === 'daily' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setBroadcastFilter('daily')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: broadcastFilter === 'daily' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: broadcastFilter === 'daily' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: broadcastFilter === 'daily' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            日常广播 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{2}</Tag>
+                          </Button>
+                          <Button 
+                            type={broadcastFilter === 'thematic' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setBroadcastFilter('thematic')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: broadcastFilter === 'thematic' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : 'transparent',
+                              borderColor: broadcastFilter === 'thematic' ? (darkMode ? '#2A6B7C' : '#2A6B7C') : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: broadcastFilter === 'thematic' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            专题广播 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px' }}>{1}</Tag>
+                          </Button>
+                          <Button 
+                            type={broadcastFilter === 'conflict' ? 'primary' : 'default'}
+                            size="small"
+                            onClick={() => setBroadcastFilter('conflict')}
+                            style={{ 
+                              borderRadius: '6px',
+                              background: broadcastFilter === 'conflict' ? '#EF4444' : 'transparent',
+                              borderColor: broadcastFilter === 'conflict' ? '#EF4444' : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                              color: broadcastFilter === 'conflict' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                              fontSize: '12px'
+                            }}
+                          >
+                            冲突广播 <Tag style={{ marginLeft: '4px', marginRight: 0, fontSize: '10px', padding: '0 4px', height: '18px', lineHeight: '18px', background: broadcastFilter === 'conflict' ? 'rgba(255,255,255,0.2)' : (darkMode ? 'rgba(239, 68, 68, 0.2)' : '#FEE2E2'), color: broadcastFilter === 'conflict' ? '#FFFFFF' : '#EF4444' }}>0</Tag>
+                          </Button>
+                        </div>
+                        <Button 
+                          type="primary" 
+                          size="small"
+                          icon={<Save size={14} />}
+                          onClick={handleSaveBroadcast}
+                          disabled={!hasBroadcastChanges}
+                          style={{ borderRadius: '6px', fontSize: '12px' }}
+                        >
+                          保存
+                        </Button>
+                      </div>
                       <Table 
                         columns={[
                           { 
@@ -1284,10 +1516,10 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                             dataIndex: 'mode', 
                             width: 80, 
                             align: 'center', 
-                            render: (mode: string) => (
+                            render: (mode: string, record: any) => (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                                 <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B' }}>{mode === 'manual' ? '手动' : '自动'}</span>
-                                <Switch size="small" checked={mode === 'manual'} />
+                                <Switch size="small" checked={mode === 'manual'} onChange={(checked) => handleBroadcastModeChange(record.key, checked)} />
                               </div>
                             )
                           },
@@ -1298,18 +1530,13 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
                             align: 'center', 
                             render: () => (
                               <Space size="small">
-                                <Button type="text" size="small" icon={<Edit size={14} />} style={{ color: '#D97706' }} title="编辑分区" />
                                 <Button type="text" size="small" icon={<Play size={14} />} style={{ color: '#D97706' }} title="立即执行" />
                                 <Button type="text" size="small" icon={<Square size={14} fill="currentColor" />} style={{ color: '#EF4444' }} title="停止执行" />
                               </Space>
                             )
                           },
                         ]}
-                        dataSource={[
-                          { key: '1', area: '候车室全区', content: `${train?.trainNo || 'G100'}次列车开始检票通知`, startTime: '2026-02-03 16:22:00', status: '正在播放', triggerSignal: '时间', mode: 'manual', playCount: 1 },
-                          { key: '2', area: '5号站台', content: `${train?.trainNo || 'G100'}次列车即将到达`, startTime: '2026-02-03 16:40:00', status: '等待执行', triggerSignal: '时间', mode: 'manual', playCount: 1 },
-                          { key: '3', area: '出站口', content: `${train?.trainNo || 'G100'}次列车到达广播`, startTime: '2026-02-03 16:50:00', status: '等待执行', triggerSignal: '时间', mode: 'manual', playCount: 1 },
-                        ]}
+                        dataSource={broadcastData}
                         pagination={false}
                         size="small"
                         bordered
@@ -1385,6 +1612,97 @@ const TravelServiceInfo: React.FC<TravelServiceInfoProps> = ({ trainId, activeTa
            </Col>
         </Row>
       </div>
+
+      {/* 引导屏预览 Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: darkMode ? '#E2E8F0' : '#1F2937' }}>
+              {selectedGuideRecord?.screenName || '引导屏预览'}
+            </span>
+            <Tag color="success" style={{ margin: 0 }}>{selectedGuideRecord?.status || '正在执行'}</Tag>
+          </div>
+        }
+        open={guidePreviewVisible}
+        onCancel={() => setGuidePreviewVisible(false)}
+        footer={null}
+        width={500}
+        bodyStyle={{ padding: '20px', background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F8FAFC' }}
+        maskClosable
+      >
+        <div style={{ 
+          background: darkMode ? '#1E293B' : '#FFFFFF',
+          borderRadius: '12px',
+          padding: '24px',
+          border: darkMode ? '1px solid rgba(42, 107, 124, 0.3)' : '1px solid rgba(29, 78, 95, 0.1)',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <div style={{ 
+              fontSize: '28px', 
+              fontWeight: 700, 
+              color: '#EF4444',
+              textShadow: '0 0 10px rgba(239, 68, 68, 0.3)',
+              letterSpacing: '4px'
+            }}>
+              G{selectedGuideRecord ? Math.floor(Math.random() * 900 + 100) : '100'}
+            </div>
+            <div style={{ 
+              fontSize: '16px', 
+              color: darkMode ? '#E2E8F0' : '#1F2937',
+              marginTop: '8px',
+              fontWeight: 500
+            }}>
+              即将到达
+            </div>
+          </div>
+          
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '16px', 
+            padding: '12px',
+            background: darkMode ? 'rgba(42, 107, 124, 0.2)' : '#F0FDF4',
+            borderRadius: '8px',
+            marginBottom: '16px'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>到达站台</div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#10B981' }}>8</div>
+            </div>
+            <div style={{ width: '1px', background: darkMode ? 'rgba(42, 107, 124, 0.3)' : '#E5E7EB' }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>候车区域</div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#10B981' }}>8B-9B</div>
+            </div>
+          </div>
+
+          <div style={{ 
+            fontSize: '13px', 
+            color: darkMode ? '#94A3B8' : '#64748B', 
+            textAlign: 'center',
+            padding: '8px 0',
+            borderTop: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid #E5E7EB'
+          }}>
+            请各位旅客注意安全,站在安全线内候车
+          </div>
+        </div>
+        
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          marginTop: '16px',
+          padding: '12px 16px',
+          background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
+          borderRadius: '8px',
+          fontSize: '12px',
+          color: darkMode ? '#94A3B8' : '#64748B'
+        }}>
+          <div>执行模式: <span style={{ color: darkMode ? '#E2E8F0' : '#1F2937' }}>{selectedGuideRecord?.upperMode === 'manual' ? '手动' : '自动'}</span></div>
+          <div>上屏信号: <span style={{ color: darkMode ? '#E2E8F0' : '#1F2937' }}>{selectedGuideRecord?.upperSignal || '无'}</span></div>
+          <div>下屏信号: <span style={{ color: darkMode ? '#E2E8F0' : '#1F2937' }}>{selectedGuideRecord?.lowerSignal || '无'}</span></div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -1660,6 +1978,97 @@ const TagLog: React.FC<TagLogProps> = ({ darkMode = false }) => {
           />
         </div>
       </div>
+
+      {/* 引导屏预览 Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px', fontWeight: 600, color: darkMode ? '#E2E8F0' : '#1F2937' }}>
+              {selectedGuideRecord?.screenName || '引导屏预览'}
+            </span>
+            <Tag color="success" style={{ margin: 0 }}>{selectedGuideRecord?.status || '正在执行'}</Tag>
+          </div>
+        }
+        open={guidePreviewVisible}
+        onCancel={() => setGuidePreviewVisible(false)}
+        footer={null}
+        width={500}
+        bodyStyle={{ padding: '20px', background: darkMode ? 'rgba(42, 107, 124, 0.15)' : '#F8FAFC' }}
+        maskClosable
+      >
+        <div style={{ 
+          background: darkMode ? '#1E293B' : '#FFFFFF',
+          borderRadius: '12px',
+          padding: '24px',
+          border: darkMode ? '1px solid rgba(42, 107, 124, 0.3)' : '1px solid rgba(29, 78, 95, 0.1)',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+            <div style={{ 
+              fontSize: '28px', 
+              fontWeight: 700, 
+              color: '#EF4444',
+              textShadow: '0 0 10px rgba(239, 68, 68, 0.3)',
+              letterSpacing: '4px'
+            }}>
+              G{selectedGuideRecord ? Math.floor(Math.random() * 900 + 100) : '100'}
+            </div>
+            <div style={{ 
+              fontSize: '16px', 
+              color: darkMode ? '#E2E8F0' : '#1F2937',
+              marginTop: '8px',
+              fontWeight: 500
+            }}>
+              即将到达
+            </div>
+          </div>
+          
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: '16px', 
+            padding: '12px',
+            background: darkMode ? 'rgba(42, 107, 124, 0.2)' : '#F0FDF4',
+            borderRadius: '8px',
+            marginBottom: '16px'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>到达站台</div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#10B981' }}>8</div>
+            </div>
+            <div style={{ width: '1px', background: darkMode ? 'rgba(42, 107, 124, 0.3)' : '#E5E7EB' }} />
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#64748B', marginBottom: '4px' }}>候车区域</div>
+              <div style={{ fontSize: '20px', fontWeight: 600, color: '#10B981' }}>8B-9B</div>
+            </div>
+          </div>
+
+          <div style={{ 
+            fontSize: '13px', 
+            color: darkMode ? '#94A3B8' : '#64748B', 
+            textAlign: 'center',
+            padding: '8px 0',
+            borderTop: darkMode ? '1px solid rgba(42, 107, 124, 0.2)' : '1px solid #E5E7EB'
+          }}>
+            请各位旅客注意安全,站在安全线内候车
+          </div>
+        </div>
+        
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between',
+          marginTop: '16px',
+          padding: '12px 16px',
+          background: darkMode ? 'rgba(42, 107, 124, 0.12)' : '#F8FAFC',
+          borderRadius: '8px',
+          fontSize: '12px',
+          color: darkMode ? '#94A3B8' : '#64748B'
+        }}>
+          <div>执行模式: <span style={{ color: darkMode ? '#E2E8F0' : '#1F2937' }}>{selectedGuideRecord?.upperMode === 'manual' ? '手动' : '自动'}</span></div>
+          <div>上屏信号: <span style={{ color: darkMode ? '#E2E8F0' : '#1F2937' }}>{selectedGuideRecord?.upperSignal || '无'}</span></div>
+          <div>下屏信号: <span style={{ color: darkMode ? '#E2E8F0' : '#1F2937' }}>{selectedGuideRecord?.lowerSignal || '无'}</span></div>
+        </div>
+      </Modal>
     </div>
   );
 };

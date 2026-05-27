@@ -17,6 +17,7 @@ interface PlanDetailDrawerProps {
 interface GuidePlan {
   id: string;
   screenName: string;
+  area: 'waiting' | 'entrance' | 'platform' | 'exit';
   startTime: string;
   endTime: string;
   mode: 'auto' | 'manual';
@@ -25,11 +26,14 @@ interface GuidePlan {
   baseTime: string;
   offsetMinutes: number;
   isModified?: boolean;
+  hasOcrSupport?: boolean;
+  ocrStatus?: 'normal' | 'abnormal';
 }
 
 interface BroadcastPlan {
   id: string;
   name: string;
+  area: 'waiting' | 'entrance' | 'platform' | 'exit';
   playTime: string;
   playCount: number;
   triggerSignal: 'checkInOpen' | 'arrival' | 'departure';
@@ -38,6 +42,8 @@ interface BroadcastPlan {
   baseTime: string;
   offsetMinutes: number;
   isModified?: boolean;
+  category?: 'daily' | 'special' | 'conflict';
+  hasConflict?: boolean;
 }
 
 // 信号选项配置
@@ -97,12 +103,12 @@ const calculateOffset = (baseTime: string, startTime: string) => {
 };
 
 const mockGuidePlans: GuidePlan[] = [
-  { id: 'g1', screenName: '候车室综合屏', startTime: '03/20 03:23', endTime: '03/20 11:28', mode: 'manual', signal: 'checkInOpen', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: 0 },
-  { id: 'g2', screenName: '检票口引导屏', startTime: '03/20 03:18', endTime: '03/20 11:23', mode: 'auto', signal: 'arrival', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: -5 },
-  { id: 'g3', screenName: '站台引导屏', startTime: '03/20 03:18', endTime: '03/20 11:23', mode: 'auto', signal: 'arrival', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: -5 },
-  { id: 'g4', screenName: '出站口引导屏', startTime: '03/20 03:18', endTime: '03/20 11:23', mode: 'auto', signal: 'arrival', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: -5 },
-  { id: 'g5', screenName: '1号候车屏', startTime: '03/20 04:00', endTime: '03/20 12:00', mode: 'auto', signal: 'checkInOpen', status: '等待执行', baseTime: '03/20 04:00', offsetMinutes: 0 },
-  { id: 'g6', screenName: '2号候车屏', startTime: '03/20 04:30', endTime: '03/20 12:30', mode: 'auto', signal: 'checkInOpen', status: '等待执行', baseTime: '03/20 04:30', offsetMinutes: 0 },
+  { id: 'g1', screenName: '候车室综合屏', area: 'waiting', startTime: '03/20 03:23', endTime: '03/20 11:28', mode: 'manual', signal: 'checkInOpen', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: 0, hasOcrSupport: true, ocrStatus: 'normal' },
+  { id: 'g2', screenName: '检票口引导屏', area: 'entrance', startTime: '03/20 03:18', endTime: '03/20 11:23', mode: 'auto', signal: 'arrival', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: -5, hasOcrSupport: true, ocrStatus: 'abnormal' },
+  { id: 'g3', screenName: '站台引导屏', area: 'platform', startTime: '03/20 03:18', endTime: '03/20 11:23', mode: 'auto', signal: 'arrival', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: -5, hasOcrSupport: false },
+  { id: 'g4', screenName: '出站口引导屏', area: 'exit', startTime: '03/20 03:18', endTime: '03/20 11:23', mode: 'auto', signal: 'arrival', status: '正在执行', baseTime: '03/20 03:23', offsetMinutes: -5, hasOcrSupport: true, ocrStatus: 'normal' },
+  { id: 'g5', screenName: '1号候车屏', area: 'waiting', startTime: '03/20 04:00', endTime: '03/20 12:00', mode: 'auto', signal: 'checkInOpen', status: '等待执行', baseTime: '03/20 04:00', offsetMinutes: 0, hasOcrSupport: true, ocrStatus: 'normal' },
+  { id: 'g6', screenName: '2号候车屏', area: 'waiting', startTime: '03/20 04:30', endTime: '03/20 12:30', mode: 'auto', signal: 'checkInOpen', status: '等待执行', baseTime: '03/20 04:30', offsetMinutes: 0, hasOcrSupport: false },
 ];
 
 // 生成20条广播计划数据
@@ -133,16 +139,19 @@ const generateBroadcastPlans = (): BroadcastPlan[] => {
   
   const signals: ('checkInOpen' | 'arrival' | 'departure')[] = ['checkInOpen', 'arrival', 'departure'];
   const statuses = ['正在播放', '等待执行', '已停止'];
+  const areas: ('waiting' | 'entrance' | 'platform' | 'exit')[] = ['waiting', 'entrance', 'platform', 'exit'];
   
   for (let i = 0; i < 20; i++) {
     const hour = 6 + Math.floor(i / 2);
     const minute = (i % 2) * 30 + Math.floor(Math.random() * 15);
     const timeStr = `03/20 ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
     const mode = i % 3 === 0 ? 'manual' : 'auto';
+    const area = areas[i % 4];
     
     plans.push({
       id: `b${i + 1}`,
       name: broadcastNames[i],
+      area,
       playTime: timeStr,
       playCount: Math.floor(Math.random() * 3) + 1,
       triggerSignal: signals[i % 3],
@@ -164,7 +173,7 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
   darkMode = false
 }) => {
   const train = mockTrainSchedules.find(t => t.id === trainId);
-  const [activeTab, setActiveTab] = useState<'guide' | 'broadcast'>('broadcast');
+  const [activeTab, setActiveTab] = useState<'guide' | 'broadcast'>('guide');
   const [previewModalVisible, setPreviewModalVisible] = useState(false);
   const [previewScreenName, setPreviewScreenName] = useState('');
   const [guidePlans, setGuidePlans] = useState<GuidePlan[]>(mockGuidePlans);
@@ -172,19 +181,28 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [modifiedIds, setModifiedIds] = useState<Set<string>>(new Set());
   
-  // 广播计划筛选状态
-  const [broadcastFilter, setBroadcastFilter] = useState<'all' | 'auto' | 'manual'>('all');
+  // 引导计划区域筛选
+  const [guideFilter, setGuideFilter] = useState<'all' | 'entrance' | 'waiting' | 'platform' | 'exit'>('all');
+  
+  // 广播计划筛选状态（按区域）
+  const [broadcastFilter, setBroadcastFilter] = useState<'all' | 'entrance' | 'waiting' | 'platform' | 'exit'>('all');
   
   // 广播计划搜索关键词
   const [broadcastSearch, setBroadcastSearch] = useState('');
   
   // 筛选后的广播计划
   const filteredBroadcastPlans = broadcastPlans.filter(plan => {
-    // 模式筛选
-    if (broadcastFilter !== 'all' && plan.mode !== broadcastFilter) return false;
+    // 区域筛选
+    if (broadcastFilter !== 'all' && plan.area !== broadcastFilter) return false;
     // 搜索筛选
     if (broadcastSearch && !plan.name.toLowerCase().includes(broadcastSearch.toLowerCase())) return false;
     return true;
+  });
+  
+  // 筛选后的引导计划
+  const filteredGuidePlans = guidePlans.filter(plan => {
+    if (guideFilter === 'all') return true;
+    return plan.area === guideFilter;
   });
 
   // 编辑弹窗状态
@@ -242,6 +260,18 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
     setHasUnsavedChanges(false);
     setModifiedIds(new Set());
     message.success('保存成功');
+  };
+
+  // 切换引导计划模式
+  const handleGuideModeToggle = (planId: string) => {
+    setGuidePlans(prev => prev.map(plan => {
+      if (plan.id === planId) {
+        return { ...plan, mode: plan.mode === 'auto' ? 'manual' : 'auto' };
+      }
+      return plan;
+    }));
+    setModifiedIds(prev => new Set([...prev, planId]));
+    setHasUnsavedChanges(true);
   };
 
   // 打开编辑弹窗
@@ -423,6 +453,18 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
     }
   };
 
+  // 切换广播模式
+  const handleBroadcastModeToggle = (planId: string) => {
+    setBroadcastPlans(prev => prev.map(plan => {
+      if (plan.id === planId) {
+        return { ...plan, mode: plan.mode === 'auto' ? 'manual' : 'auto' };
+      }
+      return plan;
+    }));
+    setModifiedIds(prev => new Set([...prev, planId]));
+    setHasUnsavedChanges(true);
+  };
+
   // 检查是否有变化
   const hasChanges = () => {
     if (!originalValues) return false;
@@ -487,35 +529,206 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
     message.success('刷屏成功');
   };
 
-  // 表格行组件 - 引导计划（2行布局）
+  // 引导计划卡片组件 - 新版卡片布局
   const GuidePlanRow = ({ plan }: { plan: GuidePlan }) => (
     <div
       style={{
-        ...getGuideRowStyle(darkMode),
-        ...(modifiedIds.has(plan.id) ? getModifiedRowStyle(darkMode) : {})
+        ...getGuideCardStyle(darkMode),
+        ...(modifiedIds.has(plan.id) ? getModifiedCardStyle(darkMode) : {})
       }}
     >
-      {/* 第一行：屏名称 + 状态 + 操作（编辑、上屏、下屏） */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-        {/* 屏名称（可占满剩余空间） */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Monitor size={16} color={darkMode ? '#60A5FA' : '#3B82F6'} />
-          <span style={{ fontSize: '14px', fontWeight: 600, color: darkMode ? '#E2E8F0' : '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      {/* 卡片头部：屏名称 + OCR状态 */}
+      <div style={getCardHeaderStyle(darkMode)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            background: darkMode ? 'rgba(59, 130, 246, 0.15)' : '#EFF6FF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Monitor size={16} color={darkMode ? '#60A5FA' : '#3B82F6'} />
+          </div>
+          <span style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: darkMode ? '#E2E8F0' : '#1F2937',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
             {plan.screenName}
           </span>
         </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {/* OCR状态标签 */}
+          {plan.hasOcrSupport ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 8px',
+              borderRadius: '6px',
+              background: plan.ocrStatus === 'abnormal'
+                ? (darkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2')
+                : (darkMode ? 'rgba(16, 185, 129, 0.15)' : '#DCFCE7'),
+              border: `1px solid ${plan.ocrStatus === 'abnormal'
+                ? (darkMode ? 'rgba(239, 68, 68, 0.3)' : '#FECACA')
+                : (darkMode ? 'rgba(16, 185, 129, 0.3)' : '#86EFAC')}`
+            }}>
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: plan.ocrStatus === 'abnormal' ? '#EF4444' : '#10B981'
+              }} />
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 500,
+                color: plan.ocrStatus === 'abnormal' ? '#EF4444' : '#10B981'
+              }}>
+                {plan.ocrStatus === 'abnormal' ? 'OCR异常' : 'OCR正常'}
+              </span>
+            </div>
+          ) : (
+            <span style={{
+              fontSize: '11px',
+              color: darkMode ? '#64748B' : '#9CA3AF',
+              padding: '4px 8px',
+              background: darkMode ? 'rgba(100, 116, 139, 0.1)' : '#F3F4F6',
+              borderRadius: '6px'
+            }}>
+              OCR不支持
+            </span>
+          )}
+        </div>
+      </div>
 
-        {/* 状态 - 垂直居中 */}
-        <div style={{ marginLeft: '12px', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-          {getStatusTag(plan.status, modifiedIds.has(plan.id))}
+      {/* 卡片内容：时间和状态 */}
+      <div style={getCardContentStyle(darkMode)}>
+        {/* 时间信息 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* 开始时间 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              background: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              minWidth: '20px',
+              textAlign: 'center'
+            }}>开</span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              fontFamily: 'monospace'
+            }}>
+              {plan.startTime}
+            </span>
+          </div>
+          <span style={{ color: darkMode ? '#475569' : '#CBD5E1' }}>→</span>
+          {/* 结束时间 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              background: '#64748B',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              minWidth: '20px',
+              textAlign: 'center'
+            }}>结</span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 500,
+              color: darkMode ? '#94A3B8' : '#6B7280',
+              fontFamily: 'monospace'
+            }}>
+              {plan.endTime}
+            </span>
+          </div>
         </div>
 
-        {/* 操作列 - 垂直居中（编辑、上屏、下屏） */}
-        <div style={{ marginLeft: '12px', display: 'flex', gap: '4px', flexShrink: 0, alignItems: 'center' }}>
+        {/* 状态标签 */}
+        <div style={{ marginLeft: 'auto' }}>
+          {getStatusTag(plan.status, modifiedIds.has(plan.id))}
+        </div>
+      </div>
+
+      {/* 卡片底部：操作按钮组 */}
+      <div style={getCardFooterStyle(darkMode)}>
+        {/* 模式切换 */}
+        <Tooltip title={plan.mode === 'auto' ? '自动模式，点击切换为手动' : '手动模式，点击切换为自动'}>
+          <button
+            onClick={() => handleGuideModeToggle(plan.id)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid',
+              borderColor: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              background: plan.mode === 'auto'
+                ? (darkMode ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5')
+                : (darkMode ? 'rgba(245, 158, 11, 0.1)' : '#FEF3C7'),
+              color: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Radio size={12} fill={plan.mode === 'auto' ? '#10B981' : '#F59E0B'} />
+            {plan.mode === 'auto' ? '自动' : '手动'}
+          </button>
+        </Tooltip>
+
+        {/* 分隔线 */}
+        <div style={{
+          width: '1px',
+          height: '24px',
+          background: darkMode ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          margin: '0 8px'
+        }} />
+
+        {/* 操作按钮组 */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <Tooltip title="预览">
+            <button
+              onClick={(e) => handlePreview(plan, e)}
+              style={getCardActionBtnStyle(darkMode, 'default')}
+            >
+              <Eye size={14} />
+            </button>
+          </Tooltip>
+          <Tooltip title="回读">
+            <button
+              onClick={(e) => handleReadBack(plan, e)}
+              style={getCardActionBtnStyle(darkMode, 'default')}
+            >
+              <RefreshCw size={14} />
+            </button>
+          </Tooltip>
+          <Tooltip title="刷屏">
+            <button
+              onClick={(e) => handleRefreshScreen(plan, e)}
+              style={getCardActionBtnStyle(darkMode, 'default')}
+            >
+              <RotateCcw size={14} />
+            </button>
+          </Tooltip>
           <Tooltip title="编辑">
             <button
               onClick={() => handleEdit(plan, 'guide')}
-              style={getIconButtonStyle(darkMode, 'primary')}
+              style={getCardActionBtnStyle(darkMode, 'default')}
             >
               <Edit3 size={14} />
             </button>
@@ -523,7 +736,7 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
           <Tooltip title="上屏">
             <button
               onClick={(e) => handleScreenUp(plan, e)}
-              style={getIconButtonStyle(darkMode, 'success')}
+              style={getCardActionBtnStyle(darkMode, 'success')}
             >
               <Play size={14} />
             </button>
@@ -531,228 +744,219 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
           <Tooltip title="下屏">
             <button
               onClick={(e) => handleScreenDown(plan, e)}
-              style={getIconButtonStyle(darkMode, 'danger')}
+              style={getCardActionBtnStyle(darkMode, 'danger')}
             >
               <Square size={14} />
             </button>
           </Tooltip>
         </div>
       </div>
+    </div>
+  );
 
-      {/* 第二行：预览、回读、刷屏按钮 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-        <Tooltip title="预览">
-          <button
-            onClick={(e) => handlePreview(plan, e)}
-            style={{
-              ...getIconButtonStyle(darkMode, 'primary'),
-              width: 'auto',
-              padding: '4px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <EyeOutlined size={14} />
-            <span style={{ fontSize: '12px' }}>预览</span>
-          </button>
-        </Tooltip>
-        <Tooltip title="回读">
-          <button
-            onClick={(e) => handleReadBack(plan, e)}
-            style={{
-              ...getIconButtonStyle(darkMode, 'success'),
-              width: 'auto',
-              padding: '4px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <RefreshCw size={14} />
-            <span style={{ fontSize: '12px' }}>回读</span>
-          </button>
-        </Tooltip>
-        <Tooltip title="刷屏">
-          <button
-            onClick={(e) => handleRefreshScreen(plan, e)}
-            style={{
-              ...getIconButtonStyle(darkMode, 'primary'),
-              width: 'auto',
-              padding: '4px 12px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px'
-            }}
-          >
-            <RotateCcw size={14} />
-            <span style={{ fontSize: '12px' }}>刷屏</span>
-          </button>
-        </Tooltip>
-      </div>
-
-      {/* 第三行：开始时间 + 结束时间 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        {/* 开始时间 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+  // 广播计划卡片组件 - 新版卡片布局
+  const BroadcastPlanCard = ({ plan }: { plan: BroadcastPlan }) => (
+    <div
+      style={{
+        ...getBroadcastCardStyle(darkMode, plan.hasConflict),
+        ...(modifiedIds.has(plan.id) ? getModifiedBroadcastCardStyle(darkMode) : {})
+      }}
+    >
+      {/* 卡片头部：广播词名称 */}
+      <div style={getBroadcastCardHeaderStyle(darkMode, plan.hasConflict)}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+          <div style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '8px',
+            background: plan.hasConflict
+              ? (darkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2')
+              : (darkMode ? 'rgba(59, 130, 246, 0.15)' : '#EFF6FF'),
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Volume2 size={16} color={plan.hasConflict ? (darkMode ? '#F87171' : '#EF4444') : (darkMode ? '#60A5FA' : '#3B82F6')} />
+          </div>
           <span style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            background: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            minWidth: '20px',
-            textAlign: 'center'
-          }}>开</span>
-          <div
-            style={{
-              display: 'inline-flex',
+            fontSize: '14px',
+            fontWeight: 600,
+            color: darkMode ? '#E2E8F0' : '#1F2937',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            {plan.name}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          {plan.hasConflict && (
+            <div style={{
+              display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '4px 10px',
+              padding: '4px 8px',
               borderRadius: '6px',
-              background: plan.mode === 'auto'
-                ? (darkMode ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5')
-                : (darkMode ? 'rgba(245, 158, 11, 0.1)' : '#FEF3C7'),
-              border: `1px solid ${plan.mode === 'auto'
-                ? (darkMode ? 'rgba(16, 185, 129, 0.2)' : '#A7F3D0')
-                : (darkMode ? 'rgba(245, 158, 11, 0.2)' : '#FDE68A')}`
-            }}
-          >
-            <Clock size={12} color={plan.mode === 'auto' ? '#10B981' : '#F59E0B'} />
-            <span style={{ fontSize: '12px', fontWeight: 600, color: plan.mode === 'auto' ? '#10B981' : '#F59E0B', whiteSpace: 'nowrap' }}>
-              {plan.startTime}
+              background: darkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEE2E2',
+              border: `1px solid ${darkMode ? 'rgba(239, 68, 68, 0.3)' : '#FECACA'}`
+            }}>
+              <span style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: '#EF4444'
+              }} />
+              <span style={{
+                fontSize: '11px',
+                fontWeight: 500,
+                color: '#EF4444'
+              }}>
+                冲突
+              </span>
+            </div>
+          )}
+          <div style={{
+            fontSize: '11px',
+            color: darkMode ? '#64748B' : '#9CA3AF',
+            padding: '4px 8px',
+            background: darkMode ? 'rgba(100, 116, 139, 0.1)' : '#F3F4F6',
+            borderRadius: '6px'
+          }}>
+            {getSignalLabel(plan.triggerSignal)}
+          </div>
+        </div>
+      </div>
+
+      {/* 卡片内容：播放时间和次数 */}
+      <div style={getBroadcastCardContentStyle(darkMode)}>
+        {/* 播放时间 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              color: '#FFFFFF',
+              background: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              padding: '2px 6px',
+              borderRadius: '4px',
+              minWidth: '20px',
+              textAlign: 'center'
+            }}>
+              <Clock size={10} />
+            </span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: 600,
+              color: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              fontFamily: 'monospace'
+            }}>
+              {plan.playTime}
+            </span>
+          </div>
+
+          {/* 播放次数 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{
+              fontSize: '11px',
+              color: darkMode ? '#64748B' : '#9CA3AF'
+            }}>
+              播放
+            </span>
+            <span style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              color: darkMode ? '#E2E8F0' : '#1F2937',
+              padding: '2px 8px',
+              background: darkMode ? 'rgba(255,255,255,0.05)' : '#F1F5F9',
+              borderRadius: '4px'
+            }}>
+              {plan.playCount}
+            </span>
+            <span style={{
+              fontSize: '11px',
+              color: darkMode ? '#64748B' : '#9CA3AF'
+            }}>
+              次
             </span>
           </div>
         </div>
 
-        {/* 结束时间 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
-          <span style={{
-            fontSize: '10px',
-            fontWeight: 700,
-            color: '#FFFFFF',
-            background: '#64748B',
-            padding: '2px 6px',
-            borderRadius: '4px',
-            minWidth: '20px',
-            textAlign: 'center'
-          }}>结</span>
-          <span style={{ fontSize: '12px', fontWeight: 500, color: darkMode ? '#E2E8F0' : '#374151', whiteSpace: 'nowrap' }}>
-            {plan.endTime}
-          </span>
+        {/* 状态标签 */}
+        <div style={{ marginLeft: 'auto' }}>
+          {getStatusTag(plan.status, modifiedIds.has(plan.id))}
+        </div>
+      </div>
+
+      {/* 卡片底部：模式切换和操作按钮 */}
+      <div style={getBroadcastCardFooterStyle(darkMode)}>
+        {/* 模式切换 */}
+        <Tooltip title={plan.mode === 'auto' ? '自动模式，点击切换为手动' : '手动模式，点击切换为自动'}>
+          <button
+            onClick={() => handleBroadcastModeToggle(plan.id)}
+            style={{
+              padding: '6px 12px',
+              borderRadius: '6px',
+              border: '1px solid',
+              borderColor: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              background: plan.mode === 'auto'
+                ? (darkMode ? 'rgba(16, 185, 129, 0.1)' : '#ECFDF5')
+                : (darkMode ? 'rgba(245, 158, 11, 0.1)' : '#FEF3C7'),
+              color: plan.mode === 'auto' ? '#10B981' : '#F59E0B',
+              fontSize: '12px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.2s'
+            }}
+          >
+            <Radio size={12} fill={plan.mode === 'auto' ? '#10B981' : '#F59E0B'} />
+            {plan.mode === 'auto' ? '自动' : '手动'}
+          </button>
+        </Tooltip>
+
+        {/* 分隔线 */}
+        <div style={{
+          width: '1px',
+          height: '24px',
+          background: darkMode ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+          margin: '0 8px'
+        }} />
+
+        {/* 操作按钮组 */}
+        <div style={{ display: 'flex', gap: '6px' }}>
+          <Tooltip title="编辑">
+            <button
+              onClick={() => handleEdit(plan, 'broadcast')}
+              style={getCardActionBtnStyle(darkMode, 'default')}
+            >
+              <Edit3 size={14} />
+            </button>
+          </Tooltip>
+          <Tooltip title="播放">
+            <button
+              onClick={(e) => handleBroadcastAction(plan, 'play', e)}
+              style={getCardActionBtnStyle(darkMode, 'success')}
+            >
+              <Play size={14} />
+            </button>
+          </Tooltip>
+          <Tooltip title="停止">
+            <button
+              onClick={(e) => handleBroadcastAction(plan, 'stop', e)}
+              style={getCardActionBtnStyle(darkMode, 'danger')}
+            >
+              <Square size={14} />
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
   );
 
-  const BroadcastPlanRow = ({ plan, index }: { plan: BroadcastPlan; index: number }) => (
-    <div
-      style={{
-        ...getRowStyle(darkMode),
-        ...(modifiedIds.has(plan.id) ? getModifiedRowStyle(darkMode) : {})
-      }}
-    >
-      {/* 序号 */}
-      <div style={{ 
-        width: '28px', 
-        flexShrink: 0, 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center',
-        marginRight: '8px'
-      }}>
-        <span style={{ 
-          fontSize: '12px', 
-          fontWeight: 600, 
-          color: darkMode ? '#64748B' : '#9CA3AF',
-          background: darkMode ? 'rgba(100, 116, 139, 0.2)' : '#F1F5F9',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          minWidth: '24px',
-          textAlign: 'center'
-        }}>
-          {index + 1}
-        </span>
-      </div>
 
-      {/* 广播词 */}
-      <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Volume2 size={14} color={darkMode ? '#60A5FA' : '#3B82F6'} />
-        <span style={{ fontSize: '13px', fontWeight: 500, color: darkMode ? '#E2E8F0' : '#1F2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {plan.name}
-        </span>
-      </div>
-
-      {/* 播放时间 - 手动黄色自动绿色，不换行 */}
-      <div style={{ flexShrink: 0, marginLeft: '12px' }}>
-        <div
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            background: plan.mode === 'auto'
-              ? (darkMode ? 'rgba(16, 185, 129, 0.15)' : '#DCFCE7')
-              : (darkMode ? 'rgba(245, 158, 11, 0.15)' : '#FEF3C7'),
-            border: `1px solid ${plan.mode === 'auto'
-              ? (darkMode ? 'rgba(16, 185, 129, 0.3)' : '#86EFAC')
-              : (darkMode ? 'rgba(245, 158, 11, 0.3)' : '#FDE68A')}`,
-            whiteSpace: 'nowrap'
-          }}
-        >
-          <Clock size={12} color={plan.mode === 'auto' ? '#10B981' : '#F59E0B'} />
-          <span style={{ fontSize: '12px', fontWeight: 600, color: plan.mode === 'auto' ? '#10B981' : '#F59E0B', whiteSpace: 'nowrap' }}>
-            {plan.playTime}
-          </span>
-        </div>
-      </div>
-
-      {/* 次数 */}
-      <div style={{ width: '50px', flexShrink: 0, textAlign: 'center', marginLeft: '12px' }}>
-        <span style={{ fontSize: '12px', color: darkMode ? '#94A3B8' : '#6B7280' }}>{plan.playCount}次</span>
-      </div>
-
-      {/* 状态 - 垂直居中 */}
-      <div style={{ width: '90px', flexShrink: 0, marginLeft: '12px', display: 'flex', alignItems: 'center' }}>
-        {getStatusTag(plan.status, modifiedIds.has(plan.id))}
-      </div>
-
-      {/* 操作列 - 垂直居中，去掉编辑 */}
-      <div style={{ flexShrink: 0, marginLeft: '12px', display: 'flex', gap: '6px', alignItems: 'center' }}>
-        <Tooltip title="播放">
-          <button
-            onClick={(e) => handleBroadcastAction(plan, 'play', e)}
-            style={getIconButtonStyle(darkMode, 'success')}
-          >
-            <Play size={14} />
-          </button>
-        </Tooltip>
-        <Tooltip title="停止">
-          <button
-            onClick={(e) => handleBroadcastAction(plan, 'stop', e)}
-            style={getIconButtonStyle(darkMode, 'danger')}
-          >
-            <Square size={14} />
-          </button>
-        </Tooltip>
-      </div>
-    </div>
-  );
-
-
-
-  const BroadcastTableHeader = () => (
-    <div style={getHeaderRowStyle(darkMode)}>
-      <span style={{ ...getHeaderCellStyle(darkMode), flex: 1, minWidth: 0 }}>广播词</span>
-      <span style={{ ...getHeaderCellStyle(darkMode), width: '80px', flexShrink: 0 }}>播放时间</span>
-      <span style={{ ...getHeaderCellStyle(darkMode), width: '50px', flexShrink: 0, textAlign: 'center' }}>次数</span>
-      <span style={{ ...getHeaderCellStyle(darkMode), width: '90px', flexShrink: 0 }}>状态</span>
-      <span style={{ ...getHeaderCellStyle(darkMode), width: '100px', flexShrink: 0, textAlign: 'right' }}>操作</span>
-    </div>
-  );
 
   return (
     <>
@@ -823,65 +1027,236 @@ export const PlanDetailDrawer: React.FC<PlanDetailDrawerProps> = ({
               </button>
             </div>
 
+            {/* 引导计划筛选 */}
+            {activeTab === 'guide' && (
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => setGuideFilter('all')}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: guideFilter === 'all'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                    background: guideFilter === 'all'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : 'transparent',
+                    color: guideFilter === 'all' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  全部 ({guidePlans.length})
+                </button>
+                <button
+                  onClick={() => setGuideFilter('entrance')}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: guideFilter === 'entrance'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                    background: guideFilter === 'entrance'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : 'transparent',
+                    color: guideFilter === 'entrance' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  进站口 ({guidePlans.filter(p => p.area === 'entrance').length})
+                </button>
+                <button
+                  onClick={() => setGuideFilter('waiting')}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: guideFilter === 'waiting'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                    background: guideFilter === 'waiting'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : 'transparent',
+                    color: guideFilter === 'waiting' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  候车室 ({guidePlans.filter(p => p.area === 'waiting').length})
+                </button>
+                <button
+                  onClick={() => setGuideFilter('platform')}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: guideFilter === 'platform'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                    background: guideFilter === 'platform'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : 'transparent',
+                    color: guideFilter === 'platform' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  站台 ({guidePlans.filter(p => p.area === 'platform').length})
+                </button>
+                <button
+                  onClick={() => setGuideFilter('exit')}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    border: '1px solid',
+                    borderColor: guideFilter === 'exit'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                    background: guideFilter === 'exit'
+                      ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                      : 'transparent',
+                    color: guideFilter === 'exit' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                    fontSize: '12px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  出站口 ({guidePlans.filter(p => p.area === 'exit').length})
+                </button>
+              </div>
+            )}
+
             {/* 广播计划筛选和搜索 */}
             {activeTab === 'broadcast' && (
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', alignItems: 'center' }}>
-                <button
-                  onClick={() => setBroadcastFilter('all')}
-                  style={{
-                    ...getFilterBtnStyle(darkMode),
-                    ...(broadcastFilter === 'all' ? getActiveFilterBtnStyle(darkMode) : {})
-                  }}
-                >
-                  全部
-                </button>
-                <button
-                  onClick={() => setBroadcastFilter('auto')}
-                  style={{
-                    ...getFilterBtnStyle(darkMode),
-                    ...(broadcastFilter === 'auto' ? getActiveFilterBtnStyle(darkMode) : {})
-                  }}
-                >
-                  自动
-                </button>
-                <button
-                  onClick={() => setBroadcastFilter('manual')}
-                  style={{
-                    ...getFilterBtnStyle(darkMode),
-                    ...(broadcastFilter === 'manual' ? getActiveFilterBtnStyle(darkMode) : {})
-                  }}
-                >
-                  手动
-                </button>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                {/* 筛选标签 */}
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  <button
+                    onClick={() => setBroadcastFilter('all')}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: broadcastFilter === 'all'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                      background: broadcastFilter === 'all'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : 'transparent',
+                      color: broadcastFilter === 'all' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    全部 ({broadcastPlans.length})
+                  </button>
+                  <button
+                    onClick={() => setBroadcastFilter('entrance')}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: broadcastFilter === 'entrance'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                      background: broadcastFilter === 'entrance'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : 'transparent',
+                      color: broadcastFilter === 'entrance' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    进站口 ({broadcastPlans.filter(p => p.area === 'entrance').length})
+                  </button>
+                  <button
+                    onClick={() => setBroadcastFilter('waiting')}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: broadcastFilter === 'waiting'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                      background: broadcastFilter === 'waiting'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : 'transparent',
+                      color: broadcastFilter === 'waiting' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    候车室 ({broadcastPlans.filter(p => p.area === 'waiting').length})
+                  </button>
+                  <button
+                    onClick={() => setBroadcastFilter('platform')}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: broadcastFilter === 'platform'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                      background: broadcastFilter === 'platform'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : 'transparent',
+                      color: broadcastFilter === 'platform' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    站台 ({broadcastPlans.filter(p => p.area === 'platform').length})
+                  </button>
+                  <button
+                    onClick={() => setBroadcastFilter('exit')}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid',
+                      borderColor: broadcastFilter === 'exit'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : (darkMode ? 'rgba(42, 107, 124, 0.35)' : 'rgba(29, 78, 95, 0.15)'),
+                      background: broadcastFilter === 'exit'
+                        ? (darkMode ? '#2A6B7C' : '#2A6B7C')
+                        : 'transparent',
+                      color: broadcastFilter === 'exit' ? '#FFFFFF' : (darkMode ? '#94A3B8' : '#64748B'),
+                      fontSize: '12px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    出站口 ({broadcastPlans.filter(p => p.area === 'exit').length})
+                  </button>
+                </div>
+                
+                {/* 搜索框 */}
                 <Input
                   placeholder="搜索广播词..."
                   value={broadcastSearch}
                   onChange={(e) => setBroadcastSearch(e.target.value)}
+                  prefix={<span style={{ color: darkMode ? '#64748B' : '#9CA3AF' }}>🔍</span>}
                   style={{
-                    flex: 1,
-                    marginLeft: '8px',
-                    background: darkMode ? 'rgba(0,0,0,0.2)' : '#ffffff',
-                    border: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-                    borderRadius: '6px',
-                    color: darkMode ? '#E2E8F0' : '#1F2937',
-                    fontSize: '16px',
-                    fontWeight: 600
+                    width: '180px',
+                    fontSize: '13px',
+                    background: darkMode ? 'rgba(0,0,0,0.2)' : '#FFFFFF',
+                    borderColor: darkMode ? 'rgba(255,255,255,0.1)' : '#E2E8F0',
+                    color: darkMode ? '#E2E8F0' : '#1F2937'
                   }}
-                  prefix={<span style={{ color: darkMode ? '#64748B' : '#9CA3AF', marginLeft: '8px' }}>🔍</span>}
                 />
               </div>
             )}
-
-            {/* 表格 */}
+            
+            {/* 卡片列表 */}
             <div style={{ flex: 1, overflowY: 'auto' }}>
               {activeTab === 'guide' && (
                 <>
-                  {guidePlans.map(plan => <GuidePlanRow key={plan.id} plan={plan} />)}
+                  {filteredGuidePlans.map(plan => <GuidePlanRow key={plan.id} plan={plan} />)}
                 </>
               )}
               {activeTab === 'broadcast' && (
                 <>
-                  {filteredBroadcastPlans.map((plan, index) => <BroadcastPlanRow key={plan.id} plan={plan} index={index} />)}
+                  {filteredBroadcastPlans.map(plan => <BroadcastPlanCard key={plan.id} plan={plan} />)}
                 </>
               )}
             </div>
@@ -1226,6 +1601,74 @@ const getModifiedRowStyle = (darkMode: boolean): React.CSSProperties => ({
   background: darkMode ? 'rgba(245, 158, 11, 0.08)' : 'rgba(245, 158, 11, 0.05)'
 });
 
+const getGuideCardStyle = (darkMode: boolean): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '0',
+  background: darkMode ? '#1E293B' : '#ffffff',
+  borderRadius: '12px',
+  marginBottom: '12px',
+  border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
+  boxShadow: darkMode
+    ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)'
+    : '0 1px 3px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.2s',
+  overflow: 'hidden'
+});
+
+const getModifiedCardStyle = (darkMode: boolean): React.CSSProperties => ({
+  border: `2px solid ${darkMode ? 'rgba(245, 158, 11, 0.5)' : 'rgba(245, 158, 11, 0.6)'}`,
+  boxShadow: darkMode
+    ? '0 4px 6px -1px rgba(245, 158, 11, 0.2), 0 2px 4px -2px rgba(245, 158, 11, 0.1)'
+    : '0 4px 6px rgba(245, 158, 11, 0.1)'
+});
+
+const getCardHeaderStyle = (darkMode: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '12px 16px',
+  borderBottom: darkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9'
+});
+
+const getCardContentStyle = (darkMode: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '12px 16px',
+  background: darkMode ? 'rgba(0,0,0,0.1)' : '#f8fafc',
+  borderBottom: darkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9'
+});
+
+const getCardFooterStyle = (darkMode: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '10px 16px',
+  gap: '4px'
+});
+
+const getCardActionBtnStyle = (darkMode: boolean, variant: 'default' | 'success' | 'danger'): React.CSSProperties => {
+  const colors = {
+    default: { bg: darkMode ? 'rgba(255,255,255,0.05)' : '#f1f5f9', color: darkMode ? '#94A3B8' : '#64748B', border: darkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0' },
+    success: { bg: darkMode ? 'rgba(16, 185, 129, 0.15)' : '#ECFDF5', color: '#10B981', border: darkMode ? 'rgba(16, 185, 129, 0.3)' : '#A7F3D0' },
+    danger: { bg: darkMode ? 'rgba(239, 68, 68, 0.15)' : '#FEF2F2', color: '#EF4444', border: darkMode ? 'rgba(239, 68, 68, 0.3)' : '#FECACA' }
+  };
+  const color = colors[variant];
+  return {
+    width: '32px',
+    height: '32px',
+    borderRadius: '6px',
+    border: `1px solid ${color.border}`,
+    background: color.bg,
+    color: color.color,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.2s'
+  };
+};
+
 const getIconButtonStyle = (darkMode: boolean, variant: 'primary' | 'success' | 'danger'): React.CSSProperties => {
   const colors = {
     primary: { bg: darkMode ? 'rgba(59, 130, 246, 0.15)' : '#EFF6FF', color: '#3B82F6', border: darkMode ? 'rgba(59, 130, 246, 0.3)' : '#BFDBFE' },
@@ -1380,4 +1823,60 @@ const getEditSaveBtnStyle = (darkMode: boolean): React.CSSProperties => ({
   cursor: 'pointer',
   boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)',
   transition: 'all 0.2s'
+});
+
+// 广播卡片样式
+const getBroadcastCardStyle = (darkMode: boolean, hasConflict?: boolean): React.CSSProperties => ({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '0',
+  background: darkMode ? '#1E293B' : '#ffffff',
+  borderRadius: '12px',
+  marginBottom: '12px',
+  border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0',
+  boxShadow: darkMode
+    ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.2)'
+    : '0 1px 3px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.2s',
+  overflow: 'hidden',
+  ...(hasConflict && {
+    border: darkMode ? '1px solid rgba(239, 68, 68, 0.3)' : '1px solid #FECACA',
+    boxShadow: darkMode
+      ? '0 4px 6px -1px rgba(239, 68, 68, 0.2), 0 2px 4px -2px rgba(239, 68, 68, 0.1)'
+      : '0 1px 3px rgba(239, 68, 68, 0.1)'
+  })
+});
+
+const getModifiedBroadcastCardStyle = (darkMode: boolean): React.CSSProperties => ({
+  border: `2px solid ${darkMode ? 'rgba(245, 158, 11, 0.5)' : 'rgba(245, 158, 11, 0.6)'}`,
+  boxShadow: darkMode
+    ? '0 4px 6px -1px rgba(245, 158, 11, 0.2), 0 2px 4px -2px rgba(245, 158, 11, 0.1)'
+    : '0 4px 6px rgba(245, 158, 11, 0.1)'
+});
+
+const getBroadcastCardHeaderStyle = (darkMode: boolean, hasConflict?: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '12px 16px',
+  borderBottom: darkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9',
+  ...(hasConflict && {
+    background: darkMode ? 'rgba(239, 68, 68, 0.05)' : 'rgba(254, 226, 226, 0.3)'
+  })
+});
+
+const getBroadcastCardContentStyle = (darkMode: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '12px 16px',
+  background: darkMode ? 'rgba(0,0,0,0.1)' : '#f8fafc',
+  borderBottom: darkMode ? '1px solid rgba(255,255,255,0.05)' : '1px solid #f1f5f9'
+});
+
+const getBroadcastCardFooterStyle = (darkMode: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '10px 16px',
+  gap: '4px'
 });

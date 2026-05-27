@@ -400,6 +400,53 @@
   min-height: 0;
 }
 
+.formation-area.draggable {
+  cursor: ns-resize;
+}
+
+.formation-area.dragging {
+  cursor: ns-resize;
+  background: rgba(82, 196, 26, 0.05);
+}
+
+.drag-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 16px;
+  background: rgba(82, 196, 26, 0.15);
+  border: 2px dashed rgba(82, 196, 26, 0.5);
+  border-radius: 12px;
+  color: rgba(82, 196, 26, 0.9);
+  font-size: 12px;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.drag-hint .current-offset {
+  font-size: 24px;
+  font-weight: 700;
+  color: #52c41a;
+  line-height: 1;
+}
+
+.formation-area.dragging .drag-hint {
+  background: rgba(82, 196, 26, 0.25);
+  border-color: #52c41a;
+  animation: pulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes pulse {
+  from { transform: translate(-50%, -50%) scale(1); }
+  to { transform: translate(-50%, -50%) scale(1.05); }
+}
+
 .carriages-track {
   position: relative;
   width: 60px;
@@ -478,6 +525,27 @@
   flex-shrink: 0;
 }
 
+.screens-area.single-adjust-mode {
+  background: rgba(22, 119, 255, 0.02);
+  border-radius: 8px;
+}
+
+.screens-drag-hint {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: rgba(22, 119, 255, 0.15);
+  border: 1px dashed rgba(22, 119, 255, 0.4);
+  border-radius: 6px;
+  color: var(--rail-primary);
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 10;
+}
+
 .screen-node {
   position: absolute;
   left: 0;
@@ -503,6 +571,20 @@
   background: rgba(114, 46, 209, 0.25);
   border-color: var(--accent-purple);
   box-shadow: 0 0 0 2px rgba(114, 46, 209, 0.2);
+}
+
+.screen-node.draggable {
+  cursor: grab;
+}
+
+.screen-node.draggable:active {
+  cursor: grabbing;
+}
+
+.screen-node.dragging {
+  opacity: 0.9;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 2px var(--rail-primary);
 }
 
 .screen-node.has-offset {
@@ -798,6 +880,76 @@
   color: var(--text-tertiary);
   margin-bottom: 10px;
   display: block;
+  font-weight: 600;
+}
+
+.drag-instruction {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--bg-primary);
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 10px;
+}
+
+.drag-instruction span {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.offset-control.global .drag-instruction {
+  border-color: rgba(82, 196, 26, 0.3);
+}
+
+.offset-control.global .drag-instruction span {
+  color: #52c41a;
+}
+
+.offset-control.single .drag-instruction {
+  border-color: rgba(22, 119, 255, 0.3);
+}
+
+.offset-control.single .drag-instruction span {
+  color: var(--rail-primary);
+}
+
+.offset-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.offset-label-small {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.offset-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.offset-display.has-offset .offset-number {
+  color: var(--accent-orange);
+}
+
+.no-selection-hint {
+  padding: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--bg-primary);
+  border-radius: 6px;
+  border: 1px dashed var(--border-color);
 }
 
 .offset-input-group {
@@ -943,6 +1095,15 @@
 
 .tooltip-row .value.offset {
   color: var(--accent-orange);
+}
+
+.tooltip-hint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color);
+  font-size: 10px;
+  color: var(--rail-primary);
+  text-align: center;
 }
 
 /* ========== 动画效果 ========== */

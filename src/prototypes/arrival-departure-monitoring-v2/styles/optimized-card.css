@@ -1,0 +1,457 @@
+/* ==================== 车次卡片优化 - 完整样式系统 ==================== */
+
+/* ========== 1. 色彩系统定义 ========== */
+:root {
+  /* 核心状态色 */
+  --color-status-normal: #1890ff;
+  --color-status-late: #dc2626;
+  --color-status-early: #2563eb;
+  --color-status-alert: #faad14;
+  --color-status-success: #16a34a;
+
+  /* 标签背景色 */
+  --color-tag-water-bg: #dbeafe;
+  --color-tag-water-border: #93c5fd;
+  --color-tag-water-text: #1e40af;
+
+  --color-tag-sewage-bg: #fed7aa;
+  --color-tag-sewage-border: #fdba74;
+  --color-tag-sewage-text: #92400e;
+
+  --color-tag-abnormal-bg: #fee2e2;
+  --color-tag-abnormal-border: #fca5a5;
+  --color-tag-abnormal-text: #991b1b;
+
+  --color-tag-special-bg: #fef3c7;
+  --color-tag-special-border: #fde68a;
+  --color-tag-special-text: #92400e;
+
+  /* 中性色 */
+  --color-bg-light: #f9fafb;
+  --color-bg-lighter: #f3f4f6;
+  --color-border: #e5e7eb;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+}
+
+.dark {
+  --color-bg-light: #1e293b;
+  --color-bg-lighter: #0f172a;
+  --color-border: rgba(71, 85, 105, 0.3);
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+}
+
+/* ========== 2. 卡片容器 ========== */
+.optimized-train-card {
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.optimized-train-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  border-color: var(--color-border);
+  transform: translateY(-2px);
+}
+
+.optimized-train-card.selected {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border: 2px solid var(--color-status-normal);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.optimized-train-card.suspended {
+  opacity: 0.6;
+  background: var(--color-bg-lighter);
+}
+
+/* ========== 3. 卡片头部（第一行） ========== */
+.optimized-train-card-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(180deg, var(--color-bg-light) 0%, var(--color-bg-lighter) 100%);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  min-height: 52px;
+}
+
+/* 序号徽章 */
+.card-index-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #2a4365 0%, #1a365d 100%);
+  color: #ffffff;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 车次号 */
+.card-train-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 90px;
+  padding: 6px 12px;
+  font-size: 32px;
+  font-weight: 700;
+  font-family: 'Noto Serif SC', serif;
+  letter-spacing: 1px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.card-train-number.origin {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+
+.card-train-number.end {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+}
+
+.card-train-number.pass {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+  border: 1px solid #93c5fd;
+}
+
+.card-train-number:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 时间信息 */
+.card-time-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.time-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-arrow {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.time-value {
+  font-size: 18px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  color: var(--color-text-primary);
+  letter-spacing: 0.5px;
+}
+
+.time-value.late {
+  color: var(--color-status-late);
+}
+
+.time-value.early {
+  color: var(--color-status-early);
+}
+
+.time-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.time-badge.late {
+  background: var(--color-status-late);
+  color: #ffffff;
+}
+
+.time-badge.early {
+  background: var(--color-status-early);
+  color: #ffffff;
+}
+
+/* 异常标记 */
+.card-alert-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--color-tag-abnormal-bg);
+  border: 1px solid var(--color-tag-abnormal-border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-tag-abnormal-text);
+  flex-shrink: 0;
+  animation: pulse-alert 2s infinite;
+}
+
+@keyframes pulse-alert {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* ========== 4. 卡片内容（第二行） ========== */
+.optimized-train-card-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+/* 信息块 */
+.info-block {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.info-block-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--color-text-secondary);
+}
+
+.info-block-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.info-block-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+}
+
+.info-block-subtitle {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  line-height: 1.2;
+}
+
+/* 标签容器 */
+.card-tags-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 标签样式 */
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.card-tag:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-tag.water {
+  background: var(--color-tag-water-bg);
+  border: 1px solid var(--color-tag-water-border);
+  color: var(--color-tag-water-text);
+}
+
+.card-tag.sewage {
+  background: var(--color-tag-sewage-bg);
+  border: 1px solid var(--color-tag-sewage-border);
+  color: var(--color-tag-sewage-text);
+}
+
+.card-tag.abnormal {
+  background: var(--color-tag-abnormal-bg);
+  border: 1px solid var(--color-tag-abnormal-border);
+  color: var(--color-tag-abnormal-text);
+}
+
+.card-tag.special {
+  background: var(--color-tag-special-bg);
+  border: 1px solid var(--color-tag-special-border);
+  color: var(--color-tag-special-text);
+}
+
+/* ========== 5. 暗黑模式适配 ========== */
+.dark .optimized-train-card {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+.dark .optimized-train-card:hover {
+  border-color: rgba(71, 85, 105, 0.7);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .optimized-train-card.selected {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(37, 99, 235, 0.1) 100%);
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.dark .optimized-train-card-header {
+  background: rgba(51, 65, 85, 0.5);
+  border-bottom-color: rgba(71, 85, 105, 0.3);
+}
+
+.dark .card-train-number {
+  color: var(--color-text-primary);
+}
+
+.dark .time-value {
+  color: var(--color-text-primary);
+}
+
+.dark .info-block-title {
+  color: var(--color-text-primary);
+}
+
+.dark .info-block-subtitle {
+  color: var(--color-text-muted);
+}
+
+/* ========== 6. 响应式设计 ========== */
+@media (max-width: 1024px) {
+  .optimized-train-card-body {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .optimized-train-card-header {
+    gap: 12px;
+    padding: 10px 12px;
+  }
+
+  .card-train-number {
+    font-size: 28px;
+    min-width: 80px;
+  }
+
+  .time-value {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .optimized-train-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .card-time-info {
+    width: 100%;
+    min-width: auto;
+  }
+
+  .card-alert-badge {
+    width: 100%;
+  }
+
+  .optimized-train-card-body {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .card-train-number {
+    font-size: 24px;
+  }
+
+  .time-value {
+    font-size: 14px;
+  }
+}
+
+/* ========== 7. 动画效果 ========== */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.optimized-train-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes highlight {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: rgba(59, 130, 246, 0.1);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.optimized-train-card.highlight {
+  animation: highlight 1s ease-in-out;
+}
+
+/* ========== 8. 打印样式 ========== */
+@media print {
+  .optimized-train-card {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+
+  .optimized-train-card-header {
+    background: #f5f5f5;
+  }
+}

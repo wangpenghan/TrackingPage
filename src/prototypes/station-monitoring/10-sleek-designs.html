@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10种精致高铁卡片设计</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 50%, #f1f5f9 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(226,232,240,0.8);
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #1e40af 0%, #6366f1 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+        
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            padding: 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .card-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .card-wrapper {
+            position: relative;
+            width: 300px;
+            height: 180px;
+            cursor: pointer;
+        }
+        
+        .card {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .card:hover {
+            transform: translateY(-8px) scale(1.03);
+            box-shadow: 0 25px 60px rgba(0,0,0,0.15);
+        }
+        
+        .card-bg {
+            position: absolute;
+            inset: 0;
+        }
+        
+        .card-content {
+            position: relative;
+            z-index: 10;
+            padding: 24px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        .card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .train-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .stop-type {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        .train-no {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .train-route {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-top: 4px;
+            letter-spacing: 0.5px;
+        }
+        
+        .card-bottom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .info-box {
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.25);
+        }
+        
+        .card-decoration {
+            position: absolute;
+            opacity: 0.1;
+        }
+        
+        /* Design 1: Aero Streamline */
+        .design-1 .card-bg {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #2563eb 100%);
+        }
+        
+        .design-1 .card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            animation: shine 3s ease-in-out infinite;
+        }
+        
+        @keyframes shine {
+            0%, 100% { transform: translateX(-100%) rotate(45deg); }
+            50% { transform: translateX(100%) rotate(45deg); }
+        }
+        
+        /* Design 2: Aurora */
+        .design-2 .card-bg {
+            background: linear-gradient(135deg, #064e3b 0%, #047857 50%, #10b981 100%);
+        }
+        
+        .design-2 .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.15) 0%, transparent 30%),
+                radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 0%, transparent 25%);
+        }
+        
+        /* Design 3: Sunset */
+        .design-3 .card-bg {
+            background: linear-gradient(180deg, #7c2d12 0%, #c2410c 50%, #ea580c 100%);
+        }
+        
+        .design-3 .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+        }
+        
+        /* Design 4: Ocean */
+        .design-4 .card-bg {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #06b6d4 100%);
+        }
+        
+        /* Design 5: Royal */
+        .design-5 .card-bg {
+            background: linear-gradient(135deg, #581c87 0%, #7c3aed 50%, #a78bfa 100%);
+        }
+        
+        /* Design 6: Forest */
+        .design-6 .card-bg {
+            background: linear-gradient(135deg, #14532d 0%, #166534 50%, #22c55e 100%);
+        }
+        
+        /* Design 7: Cyber */
+        .design-7 .card-bg {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+        }
+        
+        .design-7 .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: 
+                linear-gradient(90deg, rgba(6,182,212,0.3) 1px, transparent 1px),
+                linear-gradient(rgba(6,182,212,0.3) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.3;
+        }
+        
+        /* Design 8: Berry */
+        .design-8 .card-bg {
+            background: linear-gradient(135deg, #831843 0%, #be185d 50%, #ec4899 100%);
+        }
+        
+        /* Design 9: Gold */
+        .design-9 .card-bg {
+            background: linear-gradient(135deg, #713f12 0%, #a16207 50%, #ca8a04 100%);
+        }
+        
+        .design-9 .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+        }
+        
+        /* Design 10: Space */
+        .design-10 .card-bg {
+            background: linear-gradient(135deg, #0c0a1d 0%, #1e1b4b 50%, #312e81 100%);
+        }
+        
+        .design-10 .card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1) 0%, transparent 50%);
+        }
+        
+        .card-title {
+            margin-top: 16px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #1e293b;
+        }
+        
+        .card-desc {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 4px;
+            text-align: center;
+        }
+        
+        .select-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(226,232,240,0.8);
+            padding: 20px;
+            z-index: 100;
+        }
+        
+        .select-bar-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .select-btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+        
+        .select-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+        
+        .btn-1 { background: linear-gradient(135deg, #1e40af, #3b82f6); }
+        .btn-2 { background: linear-gradient(135deg, #047857, #10b981); }
+        .btn-3 { background: linear-gradient(135deg, #c2410c, #ea580c); }
+        .btn-4 { background: linear-gradient(135deg, #2563eb, #06b6d4); }
+        .btn-5 { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+        .btn-6 { background: linear-gradient(135deg, #16a34a, #22c55e); }
+        .btn-7 { background: linear-gradient(135deg, #0f172a, #1e3a8a); }
+        .btn-8 { background: linear-gradient(135deg, #be185d, #ec4899); }
+        .btn-9 { background: linear-gradient(135deg, #a16207, #ca8a04); }
+        .btn-10 { background: linear-gradient(135deg, #1e1b4b, #6366f1); }
+        
+        .info-section {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 40px 120px;
+        }
+        
+        .info-box-large {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>10种精致高铁卡片设计</h1>
+        <p style="color: #64748b; margin-top: 8px; font-size: 15px;">
+            丝滑流畅 · 简约大气 · 专业品质
+        </p>
+    </div>
+    
+    <div class="cards-grid">
+        <!-- Design 1: Aero Streamline -->
+        <div class="card-item">
+            <div class="card-wrapper design-1">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <defs>
+                            <linearGradient id="train1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="white" stop-opacity="0.3"/>
+                                <stop offset="100%" stop-color="white" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M 0 100 Q 60 70 120 80 Q 180 75 240 90 L 300 100 L 300 130 L 0 130 Z" fill="url(#train1)"/>
+                        <circle cx="50" cy="120" r="8" fill="white" opacity="0.15"/>
+                        <circle cx="100" cy="118" r="8" fill="white" opacity="0.15"/>
+                        <circle cx="150" cy="120" r="8" fill="white" opacity="0.15"/>
+                        <circle cx="200" cy="118" r="8" fill="white" opacity="0.15"/>
+                        <rect x="120" y="85" width="40" height="20" rx="3" fill="white" opacity="0.1"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>G</span>
+                                <span>高速</span>
+                            </div>
+                            <div class="stop-type">终到</div>
+                        </div>
+                        <div>
+                            <div class="train-no">G8602</div>
+                            <div class="train-route">成都东 → 重庆东</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">07:12</div>
+                            <div class="info-box">3道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">1️⃣ 航空流线</div>
+            <div class="card-desc">深蓝渐变 · 金属光泽</div>
+        </div>
+        
+        <!-- Design 2: Aurora -->
+        <div class="card-item">
+            <div class="card-wrapper design-2">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <ellipse cx="150" cy="90" rx="130" ry="60" fill="white" opacity="0.08"/>
+                        <circle cx="50" cy="120" r="8" fill="white" opacity="0.12"/>
+                        <circle cx="100" cy="118" r="8" fill="white" opacity="0.12"/>
+                        <circle cx="150" cy="120" r="8" fill="white" opacity="0.12"/>
+                        <circle cx="200" cy="118" r="8" fill="white" opacity="0.12"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>D</span>
+                                <span>动车</span>
+                            </div>
+                            <div class="stop-type">始发</div>
+                        </div>
+                        <div>
+                            <div class="train-no">D5134</div>
+                            <div class="train-route">重庆东 → 贵阳北</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">08:15</div>
+                            <div class="info-box">2道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">2️⃣ 极光绿韵</div>
+            <div class="card-desc">翠绿渐变 · 自然清新</div>
+        </div>
+        
+        <!-- Design 3: Sunset -->
+        <div class="card-item">
+            <div class="card-wrapper design-3">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <circle cx="50" cy="120" r="8" fill="white" opacity="0.12"/>
+                        <circle cx="100" cy="118" r="8" fill="white" opacity="0.12"/>
+                        <circle cx="150" cy="120" r="8" fill="white" opacity="0.12"/>
+                        <circle cx="200" cy="118" r="8" fill="white" opacity="0.12"/>
+                        <path d="M 50 100 Q 100 85 150 95 Q 200 85 250 100" stroke="white" stroke-width="2" opacity="0.2" fill="none"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>C</span>
+                                <span>城际</span>
+                            </div>
+                            <div class="stop-type">途经</div>
+                        </div>
+                        <div>
+                            <div class="train-no">C5821</div>
+                            <div class="train-route">重庆西 → 重庆东</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">11:22</div>
+                            <div class="info-box">1道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">3️⃣ 落日余晖</div>
+            <div class="card-desc">橙红渐变 · 温暖动感</div>
+        </div>
+        
+        <!-- Design 4: Ocean -->
+        <div class="card-item">
+            <div class="card-wrapper design-4">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <path d="M 0 120 Q 75 90 150 100 Q 225 90 300 120 L 300 150 L 0 150 Z" fill="white" opacity="0.06"/>
+                        <circle cx="50" cy="125" r="7" fill="white" opacity="0.1"/>
+                        <circle cx="110" cy="123" r="7" fill="white" opacity="0.1"/>
+                        <circle cx="170" cy="125" r="7" fill="white" opacity="0.1"/>
+                        <circle cx="230" cy="123" r="7" fill="white" opacity="0.1"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>G</span>
+                                <span>高速</span>
+                            </div>
+                            <div class="stop-type">终到</div>
+                        </div>
+                        <div>
+                            <div class="train-no">G8616</div>
+                            <div class="train-route">长沙南 → 重庆东</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">13:55</div>
+                            <div class="info-box">4道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">4️⃣ 海洋蓝调</div>
+            <div class="card-desc">蓝青渐变 · 清新专业</div>
+        </div>
+        
+        <!-- Design 5: Royal -->
+        <div class="card-item">
+            <div class="card-wrapper design-5">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <ellipse cx="150" cy="95" rx="120" ry="55" fill="white" opacity="0.08"/>
+                        <circle cx="60" cy="122" r="8" fill="white" opacity="0.1"/>
+                        <circle cx="120" cy="120" r="8" fill="white" opacity="0.1"/>
+                        <circle cx="180" cy="122" r="8" fill="white" opacity="0.1"/>
+                        <circle cx="240" cy="120" r="8" fill="white" opacity="0.1"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>G</span>
+                                <span>高速</span>
+                            </div>
+                            <div class="stop-type">始发</div>
+                        </div>
+                        <div>
+                            <div class="train-no">G8605</div>
+                            <div class="train-route">重庆东 → 长沙南</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">07:30</div>
+                            <div class="info-box">5道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">5️⃣ 皇家紫韵</div>
+            <div class="card-desc">紫色渐变 · 高贵典雅</div>
+        </div>
+        
+        <!-- Design 6: Forest -->
+        <div class="card-item">
+            <div class="card-wrapper design-6">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <path d="M 0 110 Q 100 85 200 95 Q 250 90 300 110 L 300 140 L 0 140 Z" fill="white" opacity="0.07"/>
+                        <circle cx="55" cy="125" r="7" fill="white" opacity="0.1"/>
+                        <circle cx="115" cy="123" r="7" fill="white" opacity="0.1"/>
+                        <circle cx="175" cy="125" r="7" fill="white" opacity="0.1"/>
+                        <circle cx="235" cy="123" r="7" fill="white" opacity="0.1"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>D</span>
+                                <span>动车</span>
+                            </div>
+                            <div class="stop-type">始发</div>
+                        </div>
+                        <div>
+                            <div class="train-no">D5238</div>
+                            <div class="train-route">重庆东 → 成都东</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">08:15</div>
+                            <div class="info-box">7道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">6️⃣ 森林绿意</div>
+            <div class="card-desc">绿色渐变 · 生机盎然</div>
+        </div>
+        
+        <!-- Design 7: Cyber -->
+        <div class="card-item">
+            <div class="card-wrapper design-7">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <circle cx="50" cy="120" r="8" fill="#06b6d4" opacity="0.2"/>
+                        <circle cx="100" cy="118" r="8" fill="#06b6d4" opacity="0.2"/>
+                        <circle cx="150" cy="120" r="8" fill="#06b6d4" opacity="0.2"/>
+                        <circle cx="200" cy="118" r="8" fill="#06b6d4" opacity="0.2"/>
+                        <line x1="0" y1="90" x2="300" y2="90" stroke="#06b6d4" stroke-width="1" opacity="0.3"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>G</span>
+                                <span>高速</span>
+                            </div>
+                            <div class="stop-type">始发</div>
+                        </div>
+                        <div>
+                            <div class="train-no">G8610</div>
+                            <div class="train-route">重庆东 → 武汉</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">10:20</div>
+                            <div class="info-box">3道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">7️⃣ 赛博朋克</div>
+            <div class="card-desc">深蓝科技 · 网格未来</div>
+        </div>
+        
+        <!-- Design 8: Berry -->
+        <div class="card-item">
+            <div class="card-wrapper design-8">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <ellipse cx="150" cy="100" rx="125" ry="60" fill="white" opacity="0.08"/>
+                        <circle cx="55" cy="125" r="7" fill="white" opacity="0.12"/>
+                        <circle cx="115" cy="123" r="7" fill="white" opacity="0.12"/>
+                        <circle cx="175" cy="125" r="7" fill="white" opacity="0.12"/>
+                        <circle cx="235" cy="123" r="7" fill="white" opacity="0.12"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>C</span>
+                                <span>城际</span>
+                            </div>
+                            <div class="stop-type">始发</div>
+                        </div>
+                        <div>
+                            <div class="train-no">C5832</div>
+                            <div class="train-route">重庆东 → 重庆西</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">11:40</div>
+                            <div class="info-box">1道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">8️⃣ 浆果粉晶</div>
+            <div class="card-desc">粉色渐变 · 甜美浪漫</div>
+        </div>
+        
+        <!-- Design 9: Gold -->
+        <div class="card-item">
+            <div class="card-wrapper design-9">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <path d="M 0 115 Q 80 90 160 100 Q 240 90 300 115 L 300 145 L 0 145 Z" fill="white" opacity="0.1"/>
+                        <circle cx="50" cy="128" r="7" fill="white" opacity="0.12"/>
+                        <circle cx="110" cy="126" r="7" fill="white" opacity="0.12"/>
+                        <circle cx="170" cy="128" r="7" fill="white" opacity="0.12"/>
+                        <circle cx="230" cy="126" r="7" fill="white" opacity="0.12"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>G</span>
+                                <span>高速</span>
+                            </div>
+                            <div class="stop-type">始发</div>
+                        </div>
+                        <div>
+                            <div class="train-no">G8620</div>
+                            <div class="train-route">重庆东 → 贵阳北</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">14:05</div>
+                            <div class="info-box">6道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">9️⃣ 琥珀金韵</div>
+            <div class="card-desc">金棕渐变 · 温暖奢华</div>
+        </div>
+        
+        <!-- Design 10: Space -->
+        <div class="card-item">
+            <div class="card-wrapper design-10">
+                <div class="card">
+                    <div class="card-bg"></div>
+                    <svg class="card-decoration" width="100%" height="100%" viewBox="0 0 300 180">
+                        <circle cx="50" cy="122" r="6" fill="white" opacity="0.15"/>
+                        <circle cx="100" cy="120" r="6" fill="white" opacity="0.15"/>
+                        <circle cx="150" cy="122" r="6" fill="white" opacity="0.15"/>
+                        <circle cx="200" cy="120" r="6" fill="white" opacity="0.15"/>
+                        <circle cx="250" cy="122" r="6" fill="white" opacity="0.15"/>
+                        <circle cx="80" cy="60" r="2" fill="white" opacity="0.3"/>
+                        <circle cx="150" cy="40" r="1.5" fill="white" opacity="0.4"/>
+                        <circle cx="220" cy="55" r="2" fill="white" opacity="0.3"/>
+                    </svg>
+                    <div class="card-content">
+                        <div class="card-top">
+                            <div class="train-badge">
+                                <span>G</span>
+                                <span>高速</span>
+                            </div>
+                            <div class="stop-type">途经</div>
+                        </div>
+                        <div>
+                            <div class="train-no">G307</div>
+                            <div class="train-route">西安北 → 成都东</div>
+                        </div>
+                        <div class="card-bottom">
+                            <div class="info-box">09:05</div>
+                            <div class="info-box">4道</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-title">🔟 深空紫电</div>
+            <div class="card-desc">深紫渐变 · 神秘深邃</div>
+        </div>
+    </div>
+    
+    <div class="info-section">
+        <div class="info-box-large">
+            <h2 style="font-size: 24px; font-weight: 800; color: #1e293b; margin-bottom: 20px;">
+                🎯 设计理念
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                <div style="padding: 24px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #1e40af; margin-bottom: 8px; font-size: 16px;">
+                        ✨ 丝滑流畅
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        采用圆润的24px大圆角，配合流畅的贝塞尔曲线边缘，整体视觉柔和自然
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #7c3aed; margin-bottom: 8px; font-size: 16px;">
+                        🎨 精心配色
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        10种精心设计的配色方案，从航空蓝到极光绿，从皇家紫到赛博朋克
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #16a34a; margin-bottom: 8px; font-size: 16px;">
+                        💫 微妙光影
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        SVG高铁轮廓点缀，半透明光泽层，营造层次感和空间感
+                    </div>
+                </div>
+                
+                <div style="padding: 24px; background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-radius: 16px;">
+                    <div style="font-weight: 700; color: #dc2626; margin-bottom: 8px; font-size: 16px;">
+                        📱 交互友好
+                    </div>
+                    <div style="color: #64748b; font-size: 14px; line-height: 1.6;">
+                        悬停时平滑上浮放大，配合精致阴影，流畅的0.4s过渡动画
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="select-bar">
+        <div class="select-bar-content">
+            <button onclick="selectDesign(1)" class="select-btn btn-1">选 1</button>
+            <button onclick="selectDesign(2)" class="select-btn btn-2">选 2</button>
+            <button onclick="selectDesign(3)" class="select-btn btn-3">选 3</button>
+            <button onclick="selectDesign(4)" class="select-btn btn-4">选 4</button>
+            <button onclick="selectDesign(5)" class="select-btn btn-5">选 5</button>
+            <button onclick="selectDesign(6)" class="select-btn btn-6">选 6</button>
+            <button onclick="selectDesign(7)" class="select-btn btn-7">选 7</button>
+            <button onclick="selectDesign(8)" class="select-btn btn-8">选 8</button>
+            <button onclick="selectDesign(9)" class="select-btn btn-9">选 9</button>
+            <button onclick="selectDesign(10)" class="select-btn btn-10">选 10</button>
+        </div>
+    </div>
+    
+    <script>
+        const designData = {
+            1: { name: '航空流线', color: '深蓝渐变', desc: '金属光泽' },
+            2: { name: '极光绿韵', color: '翠绿渐变', desc: '自然清新' },
+            3: { name: '落日余晖', color: '橙红渐变', desc: '温暖动感' },
+            4: { name: '海洋蓝调', color: '蓝青渐变', desc: '清新专业' },
+            5: { name: '皇家紫韵', color: '紫色渐变', desc: '高贵典雅' },
+            6: { name: '森林绿意', color: '绿色渐变', desc: '生机盎然' },
+            7: { name: '赛博朋克', color: '深蓝科技', desc: '网格未来' },
+            8: { name: '浆果粉晶', color: '粉色渐变', desc: '甜美浪漫' },
+            9: { name: '琥珀金韵', color: '金棕渐变', desc: '温暖奢华' },
+            10: { name: '深空紫电', color: '深紫渐变', desc: '神秘深邃' }
+        };
+        
+        function selectDesign(num) {
+            const design = designData[num];
+            alert(`你选择了：${num}号「${design.name}」\n\n配色：${design.color}\n风格：${design.desc}\n\n请告诉我这个选择，我将为你实现到主页面！`);
+            console.log('Selected:', num, design);
+        }
+    </script>
+</body>
+</html>

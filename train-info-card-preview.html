@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>火车信息卡片预览</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      gap: 40px;
+      padding: 40px;
+    }
+    h2 {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .preview-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .cards-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ===== 卡片样式 ===== */
+    .train-card {
+      position: relative;
+      width: 210px;
+      height: 109px;
+      overflow: hidden;
+    }
+
+    /* 背景层 */
+    .card-bg-top {
+      position: absolute;
+      left: 0; top: 0;
+      width: 210px;
+      height: 52px;
+      background: linear-gradient(180deg, #E3F7FF 0%, #60BDE6 100%);
+      border: 1px solid #60BDE6;
+    }
+    .card-bg-bottom {
+      position: absolute;
+      left: 0; top: 52px;
+      width: 210px;
+      height: 32px;
+      background: #D9D9D9;
+      border: 1px solid rgba(5, 26, 54, 0.34);
+    }
+
+    /* 服务标签（右上角） */
+    .service-tag {
+      position: absolute;
+      top: 0;
+      width: 24px;
+      height: 24px;
+    }
+    .service-tag-bg {
+      position: absolute;
+      inset: 0;
+      background: #C5F6FF;
+      border: 1px solid #627C94;
+      border-radius: 5px;
+    }
+    .service-tag-text {
+      position: absolute;
+      left: 5px;
+      top: 3px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1;
+    }
+
+    /* 车次标签 */
+    .train-number-wrap {
+      position: absolute;
+      left: 44px;
+      top: 30px;
+      width: 88px;
+      height: 28px;
+    }
+    .train-number-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, #ECE6DA 0%, #FFD18F 100%);
+      border: 1px solid #D48806;
+      border-radius: 6px;
+    }
+    .train-number-text {
+      position: absolute;
+      left: 25.5px;
+      top: 5px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #D48806;
+      line-height: 1;
+    }
+
+    /* 路线文字 */
+    .route-text {
+      position: absolute;
+      left: 19px;
+      top: 60px;
+      width: 113px;
+      font-size: 13px;
+      font-weight: 400;
+      color: #3D3B3B;
+      line-height: 1;
+    }
+
+    /* 股道框（右上） */
+    .track-wrap {
+      position: absolute;
+      left: 139px;
+      top: 30px;
+      width: 65px;
+      height: 44px;
+    }
+    .track-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #D9D9D9 0%, #737373 100%);
+      border: 1px solid #4B4F52;
+      border-radius: 9px;
+    }
+    .track-text {
+      position: absolute;
+      left: 7px;
+      top: 6px;
+      font-size: 16px;
+      font-weight: 700;
+      color: #2E3237;
+      line-height: 1;
+    }
+    .track-progress {
+      position: absolute;
+      left: 10px;
+      top: 29px;
+      width: 46px;
+      height: 9px;
+      background: #00FF2F;
+      border: 1px solid #413F3F;
+      border-radius: 9999px;
+    }
+
+    /* 时间框（左下） */
+    .time-wrap {
+      position: absolute;
+      left: 44px;
+      top: 81px;
+      width: 88px;
+      height: 24px;
+    }
+    .time-bg {
+      position: absolute;
+      left: -36px;
+      top: 0;
+      width: 124px;
+      height: 24px;
+      background: linear-gradient(180deg, #D9D9D9 0%, rgba(115,115,115,0.86) 100%);
+      border: 1px solid #7D7979;
+      border-radius: 9px;
+    }
+    .time-text {
+      position: absolute;
+      left: -18px;
+      top: 3px;
+      width: 88px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #2E3237;
+      text-align: center;
+      line-height: 1;
+    }
+
+    /* 变道框（右下） */
+    .track-change-wrap {
+      position: absolute;
+      left: 139px;
+      top: 81px;
+      width: 66px;
+      height: 24px;
+    }
+    .track-change-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, #E60000 0%, #800000 100%);
+      border: 1px solid #7D7979;
+      border-radius: 9px;
+    }
+    .track-change-text {
+      position: absolute;
+      left: 8px;
+      top: 3px;
+      font-size: 14px;
+      font-weight: 700;
+      color: #FFF0F1;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-group">
+    <h2>Figma 设计还原 — 火车信息卡片</h2>
+    <div class="cards-row">
+
+      <!-- 卡片 1：G1101 重庆东→北京西 -->
+      <div class="train-card">
+        <div class="card-bg-top"></div>
+        <div class="card-bg-bottom"></div>
+
+        <div class="service-tag" style="left:181px"><div class="service-tag-bg"></div><span class="service-tag-text">水</span></div>
+        <div class="service-tag" style="left:154px"><div class="service-tag-bg"></div><span class="service-tag-text">污</span></div>
+        <div class="service-tag" style="left:127px"><div class="service-tag-bg"></div><span class="service-tag-text">包</span></div>
+        <div class="service-tag" style="left:100px"><div class="service-tag-bg"></div><span class="service-tag-text">餐</span></div>
+        <div class="service-tag" style="left:73px"><div class="service-tag-bg"></div><span class="service-tag-text">库</span></div>
+
+        <div class="train-number-wrap">
+          <div class="train-number-bg"></div>
+          <span class="train-number-text">G1101</span>
+        </div>
+
+        <span class="route-text">重庆东→北京西</span>
+
+        <div class="track-wrap">
+          <div class="track-bg"></div>
+          <span class="track-text">16正北</span>
+          <div class="track-progress"></div>
+        </div>
+
+        <div class="time-wrap">
+          <div class="time-bg"></div>
+          <span class="time-text">08:19</span>
+        </div>
+
+        <div class="track-change-wrap">
+          <div class="track-change-bg"></div>
+          <span class="track-change-text">25→24</span>
+        </div>
+      </div>
+
+      <!-- 卡片 2：D3201 上海虹桥→成都东 -->
+      <div class="train-card">
+        <div class="card-bg-top"></div>
+        <div class="card-bg-bottom"></div>
+
+        <div class="service-tag" style="left:181px"><div class="service-tag-bg"></div><span class="service-tag-text">水</span></div>
+        <div class="service-tag" style="left:154px"><div class="service-tag-bg"></div><span class="service-tag-text">餐</span></div>
+
+        <div class="train-number-wrap">
+          <div class="train-number-bg"></div>
+          <span class="train-number-text">D3201</span>
+        </div>
+
+        <span class="route-text">上海虹桥→成都东</span>
+
+        <div class="track-wrap">
+          <div class="track-bg"></div>
+          <span class="track-text">8正南</span>
+          <div class="track-progress"></div>
+        </div>
+
+        <div class="time-wrap">
+          <div class="time-bg"></div>
+          <span class="time-text">14:32</span>
+        </div>
+
+        <div class="track-change-wrap">
+          <div class="track-change-bg"></div>
+          <span class="track-change-text">12→11</span>
+        </div>
+      </div>
+
+      <!-- 卡片 3：C6012 广州南→深圳北 -->
+      <div class="train-card">
+        <div class="card-bg-top"></div>
+        <div class="card-bg-bottom"></div>
+
+        <div class="service-tag" style="left:181px"><div class="service-tag-bg"></div><span class="service-tag-text">水</span></div>
+        <div class="service-tag" style="left:154px"><div class="service-tag-bg"></div><span class="service-tag-text">包</span></div>
+        <div class="service-tag" style="left:127px"><div class="service-tag-bg"></div><span class="service-tag-text">餐</span></div>
+
+        <div class="train-number-wrap">
+          <div class="train-number-bg"></div>
+          <span class="train-number-text">C6012</span>
+        </div>
+
+        <span class="route-text">广州南→深圳北</span>
+
+        <div class="track-wrap">
+          <div class="track-bg"></div>
+          <span class="track-text">3正北</span>
+          <div class="track-progress"></div>
+        </div>
+
+        <div class="time-wrap">
+          <div class="time-bg"></div>
+          <span class="time-text">09:45</span>
+        </div>
+
+        <div class="track-change-wrap">
+          <div class="track-change-bg"></div>
+          <span class="track-change-text">5→6</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="preview-group">
+    <h2>深色背景下的效果</h2>
+    <div class="cards-row" style="background:#1a2332; padding:24px; border-radius:12px;">
+
+      <div class="train-card">
+        <div class="card-bg-top"></div>
+        <div class="card-bg-bottom"></div>
+        <div class="service-tag" style="left:181px"><div class="service-tag-bg"></div><span class="service-tag-text">水</span></div>
+        <div class="service-tag" style="left:154px"><div class="service-tag-bg"></div><span class="service-tag-text">污</span></div>
+        <div class="service-tag" style="left:127px"><div class="service-tag-bg"></div><span class="service-tag-text">包</span></div>
+        <div class="service-tag" style="left:100px"><div class="service-tag-bg"></div><span class="service-tag-text">餐</span></div>
+        <div class="service-tag" style="left:73px"><div class="service-tag-bg"></div><span class="service-tag-text">库</span></div>
+        <div class="train-number-wrap"><div class="train-number-bg"></div><span class="train-number-text">G1101</span></div>
+        <span class="route-text">重庆东→北京西</span>
+        <div class="track-wrap"><div class="track-bg"></div><span class="track-text">16正北</span><div class="track-progress"></div></div>
+        <div class="time-wrap"><div class="time-bg"></div><span class="time-text">08:19</span></div>
+        <div class="track-change-wrap"><div class="track-change-bg"></div><span class="track-change-text">25→24</span></div>
+      </div>
+
+      <div class="train-card">
+        <div class="card-bg-top"></div>
+        <div class="card-bg-bottom"></div>
+        <div class="service-tag" style="left:181px"><div class="service-tag-bg"></div><span class="service-tag-text">水</span></div>
+        <div class="service-tag" style="left:154px"><div class="service-tag-bg"></div><span class="service-tag-text">餐</span></div>
+        <div class="train-number-wrap"><div class="train-number-bg"></div><span class="train-number-text">D3201</span></div>
+        <span class="route-text">上海虹桥→成都东</span>
+        <div class="track-wrap"><div class="track-bg"></div><span class="track-text">8正南</span><div class="track-progress"></div></div>
+        <div class="time-wrap"><div class="time-bg"></div><span class="time-text">14:32</span></div>
+        <div class="track-change-wrap"><div class="track-change-bg"></div><span class="track-change-text">12→11</span></div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

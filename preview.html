@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>火车信息卡片组件预览</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #f0f4f8;
+      font-family: 'Inter', sans-serif;
+      padding: 40px;
+    }
+    h1 {
+      font-size: 18px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    h2 {
+      font-size: 14px;
+      color: #666;
+      margin: 30px 0 15px 0;
+    }
+    .card-row {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-label {
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚄 火车信息卡片组件</h1>
+
+  <h2>往北开行 (TrainCardNorth) - 五种状态</h2>
+  <div class="card-row">
+    <!-- 正常状态 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <!-- 服务标签 - 右对齐 -->
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n1)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n1" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr1)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr1" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch1)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch1" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti1)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti1" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">正常状态</span>
+    </div>
+
+    <!-- 股道变更 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n2)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n2" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr2)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr2" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch2)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch2" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 8px; top: 3px; font-weight: 700; font-size: 14px; color: #FFF0F1; white-space: nowrap;">25→24</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti2)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti2" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">股道变更</span>
+    </div>
+
+    <!-- 晚点状态 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n3)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n3" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr3)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr3" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <!-- 晚点圆圈 -->
+          <div style="position: absolute; left: 0; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#FCB3AD" stroke="#C00F0C"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #000000; white-space: nowrap;">45</span>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch3)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch3" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti3)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti3" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">晚点45分钟</span>
+    </div>
+
+    <!-- 同时晚点和股道变更 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n4)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n4" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr4)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr4" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <!-- 晚点圆圈 - 与车次框底部对齐 -->
+          <div style="position: absolute; left: 0; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#FCB3AD" stroke="#C00F0C"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #000000; white-space: nowrap;">45</span>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch4)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch4" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 8px; top: 3px; font-weight: 700; font-size: 14px; color: #FFF0F1; white-space: nowrap;">25→24</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti4)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti4" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">晚点+股道变更</span>
+    </div>
+
+    <!-- 早点状态 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n5)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n5" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr5)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr5" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 0; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#1706FF" stroke="#76CAFF"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">-10</span>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch5)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch5" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti5)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti5" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#0077E6"/><stop offset="1" stop-color="#040080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">早点10分钟</span>
+    </div>
+  </div>
+
+  <h2>往南开行 (TrainCardSouth) - 五种状态</h2>
+  <div class="card-row">
+    <!-- 正常状态 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 5px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 32px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 59px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 86px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 113px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" fill="url(#s1)" stroke="#60BDE6"/>
+            <defs><linearGradient id="s1" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 6px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#trs1)" stroke="#4B4F52"/>
+              <defs><linearGradient id="trs1" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正南</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 9px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M65.5996 0.5H6C2.96244 0.5 0.5 2.96243 0.5 6V22C0.5 25.0376 2.96244 27.5 6 27.5H82.4004C85.2167 27.4998 87.4998 25.2167 87.5 22.4004C87.5 10.3054 77.6946 0.5 65.5996 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 15.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 78px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 5px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#chs1)" stroke="#7D7979"/>
+              <defs><linearGradient id="chs1" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#tis1)" stroke="#7D7979"/>
+              <defs><linearGradient id="tis1" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">正常状态</span>
+    </div>
+
+    <!-- 股道变更 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 5px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 32px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 59px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 86px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 113px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" fill="url(#s2)" stroke="#60BDE6"/>
+            <defs><linearGradient id="s2" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 6px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#trs2)" stroke="#4B4F52"/>
+              <defs><linearGradient id="trs2" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正南</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 9px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M65.5996 0.5H6C2.96244 0.5 0.5 2.96243 0.5 6V22C0.5 25.0376 2.96244 27.5 6 27.5H82.4004C85.2167 27.4998 87.4998 25.2167 87.5 22.4004C87.5 10.3054 77.6946 0.5 65.5996 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 15.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 78px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 5px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#chs2)" stroke="#7D7979"/>
+              <defs><linearGradient id="chs2" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 8px; top: 3px; font-weight: 700; font-size: 14px; color: #FFF0F1; white-space: nowrap;">25→24</span>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#tis2)" stroke="#7D7979"/>
+              <defs><linearGradient id="tis2" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">股道变更</span>
+    </div>
+
+    <!-- 晚点状态 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 5px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 32px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 59px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 86px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 113px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" fill="url(#s3)" stroke="#60BDE6"/>
+            <defs><linearGradient id="s3" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 6px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#trs3)" stroke="#4B4F52"/>
+              <defs><linearGradient id="trs3" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正南</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 9px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M65.5996 0.5H6C2.96244 0.5 0.5 2.96243 0.5 6V22C0.5 25.0376 2.96244 27.5 6 27.5H82.4004C85.2167 27.4998 87.4998 25.2167 87.5 22.4004C87.5 10.3054 77.6946 0.5 65.5996 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 15.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 78px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <!-- 晚点圆圈 - 与车次框底部对齐 -->
+          <div style="position: absolute; right: 0; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#FCB3AD" stroke="#C00F0C"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #000000; white-space: nowrap;">45</span>
+          </div>
+          
+          <div style="position: absolute; left: 5px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#chs3)" stroke="#7D7979"/>
+              <defs><linearGradient id="chs3" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#tis3)" stroke="#7D7979"/>
+              <defs><linearGradient id="tis3" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">晚点45分钟</span>
+    </div>
+
+    <!-- 同时晚点和股道变更 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 5px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 32px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 59px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 86px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 113px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" fill="url(#s4)" stroke="#60BDE6"/>
+            <defs><linearGradient id="s4" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 6px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#trs4)" stroke="#4B4F52"/>
+              <defs><linearGradient id="trs4" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正南</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 9px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M65.5996 0.5H6C2.96244 0.5 0.5 2.96243 0.5 6V22C0.5 25.0376 2.96244 27.5 6 27.5H82.4004C85.2167 27.4998 87.4998 25.2167 87.5 22.4004C87.5 10.3054 77.6946 0.5 65.5996 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 15.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 78px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <!-- 晚点圆圈 - 与车次框底部对齐 -->
+          <div style="position: absolute; right: 0; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#FCB3AD" stroke="#C00F0C"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #000000; white-space: nowrap;">45</span>
+          </div>
+          
+          <div style="position: absolute; left: 5px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#chs4)" stroke="#7D7979"/>
+              <defs><linearGradient id="chs4" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 8px; top: 3px; font-weight: 700; font-size: 14px; color: #FFF0F1; white-space: nowrap;">25→24</span>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#tis4)" stroke="#7D7979"/>
+              <defs><linearGradient id="tis4" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E60000"/><stop offset="1" stop-color="#800000"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">晚点+股道变更</span>
+    </div>
+
+    <!-- 早点状态 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 5px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 32px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 59px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 86px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 113px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" fill="url(#s5)" stroke="#60BDE6"/>
+            <defs><linearGradient id="s5" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 6px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#trs5)" stroke="#4B4F52"/>
+              <defs><linearGradient id="trs5" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正南</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 9px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M65.5996 0.5H6C2.96244 0.5 0.5 2.96243 0.5 6V22C0.5 25.0376 2.96244 27.5 6 27.5H82.4004C85.2167 27.4998 87.4998 25.2167 87.5 22.4004C87.5 10.3054 77.6946 0.5 65.5996 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 15.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 78px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; right: 0; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#1706FF" stroke="#76CAFF"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">-10</span>
+          </div>
+          
+          <div style="position: absolute; left: 5px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#chs5)" stroke="#7D7979"/>
+              <defs><linearGradient id="chs5" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 78px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#tis5)" stroke="#7D7979"/>
+              <defs><linearGradient id="tis5" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#0077E6"/><stop offset="1" stop-color="#040080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">早点10分钟</span>
+    </div>
+  </div>
+
+  <h2>往北开行 - 新状态</h2>
+  <div class="card-row">
+    <!-- 1小时以外 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n6)" stroke="#E69360"/>
+            <defs><linearGradient id="n6" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#FFF7E3"/><stop offset="1" stop-color="#E6B760"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr6)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr6" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch6)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch6" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti6)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti6" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">1小时以外</span>
+    </div>
+
+    <!-- 已离站 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n7)" stroke="#627C94"/>
+            <defs><linearGradient id="n7" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr7)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr7" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch7)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch7" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti7)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti7" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">已离站</span>
+    </div>
+
+    <!-- 停运 -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 125px; overflow: visible; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; top: 0px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n11)" stroke="#E66062"/>
+            <defs><linearGradient id="n11" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#FFE3E3"/><stop offset="1" stop-color="#E66060"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#FFD4D0"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="rgba(54, 5, 5, 0.34)" stroke-opacity="0.34"/>
+          </svg>
+          
+          <!-- 停运圆圈 -->
+          <div style="position: absolute; left: 0px; top: -7px; width: 40px; height: 40px;">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="20" cy="20" rx="19.5" ry="19.5" fill="#C00F0C" stroke="#E66062"/>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 11px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #FFFFFF; white-space: nowrap;">停</span>
+          </div>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr11)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr11" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch11)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch11" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti11)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti11" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">停运</span>
+    </div>
+  </div>
+
+  <h2>三种车次颜色展示</h2>
+  <div class="card-row">
+    <!-- 始发车 - sf -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n8)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n8" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FFA50A 0%, #FFD07E 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr8)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr8" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch8)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch8" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti8)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti8" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">始发车 (sf)</span>
+    </div>
+
+    <!-- 途径车 - tj -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n9)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n9" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #FF36CD 0%, #FF94E4 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr9)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr9" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch9)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch9" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti9)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti9" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">途径车 (tj)</span>
+    </div>
+
+    <!-- 终到车 - zd -->
+    <div class="card-wrapper">
+      <div style="position: relative; width: 210px; height: 109px; overflow: hidden; font-family: 'Inter', sans-serif;">
+        <div style="position: absolute; left: 181px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">水</span>
+        </div>
+        <div style="position: absolute; left: 154px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">污</span>
+        </div>
+        <div style="position: absolute; left: 127px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">包</span>
+        </div>
+        <div style="position: absolute; left: 100px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">餐</span>
+        </div>
+        <div style="position: absolute; left: 73px; top: 0; width: 24px; height: 24px;">
+          <div style="position: absolute; inset: 0; background: #C5F6FF; border: 1px solid #627C94; border-radius: 5px;"></div>
+          <span style="position: absolute; left: 5px; top: 3px; font-weight: 700; font-size: 14px; color: #000000;">库</span>
+        </div>
+        
+        <div style="position: absolute; top: 25px; left: 0; width: 210px; height: 84px;">
+          <svg width="210" height="52" viewBox="0 0 210 52" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 0; left: 0;">
+            <path d="M68.2734 0.5H201C205.694 0.5 209.5 4.30558 209.5 9V51.5H0.5V47.749C0.500054 43.6368 2.37458 39.7488 5.5918 37.1875L38.6885 10.8389C47.0965 4.14507 57.5262 0.500031 68.2734 0.5Z" fill="url(#n10)" stroke="#60BDE6"/>
+            <defs><linearGradient id="n10" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#E3F7FF"/><stop offset="1" stop-color="#60BDE6"/></linearGradient></defs>
+          </svg>
+          <svg width="210" height="32" viewBox="0 0 210 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 52px; left: 0;">
+            <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill="#D9D9D9"/>
+            <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke="#051A36" stroke-opacity="0.34"/>
+          </svg>
+          
+          <div style="position: absolute; left: 44px; top: 5px; width: 88px; height: 28px;">
+            <svg width="88" height="28" viewBox="0 0 88 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M22.4004 0.5H82C85.0376 0.5 87.5 2.96243 87.5 6V22C87.5 25.0376 85.0376 27.5 82 27.5H5.59961C2.78327 27.4998 0.500211 25.2167 0.5 22.4004C0.5 10.3054 10.3054 0.5 22.4004 0.5Z" fill="rgba(0,0,0,0.7)" stroke="#2E3237"/>
+            </svg>
+            <span style="position: absolute; left: 25.5px; top: 5px; font-weight: 700; font-size: 16px; background: linear-gradient(180deg, #00C8FF 0%, #D8F7FF 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">G1101</span>
+          </div>
+          
+          <span style="position: absolute; left: 19px; top: 35px; font-size: 13px; color: #3D3B3B;">重庆东→北京西</span>
+          
+          <div style="position: absolute; left: 139px; top: 5px; width: 65px; height: 44px;">
+            <svg width="65" height="44" viewBox="0 0 65 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="64" height="43" rx="8.5" fill="url(#tr10)" stroke="#4B4F52"/>
+              <defs><linearGradient id="tr10" x1="32.5" y1="0" x2="32.5" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="#737373"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 7px; top: 6px; font-weight: 700; font-size: 16px; color: #2E3237;">16正北</span>
+            <svg width="46" height="9" viewBox="0 0 46 9" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 10px; top: 29px;">
+              <rect x="0.5" y="0.5" width="45" height="8" rx="4" fill="#00FF2F" stroke="#413F3F"/>
+            </svg>
+          </div>
+          
+          <div style="position: absolute; left: 139px; top: 56px; width: 66px; height: 24px;">
+            <svg width="66" height="24" viewBox="0 0 66 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="65" height="23" rx="8.5" fill="url(#ch10)" stroke="#7D7979"/>
+              <defs><linearGradient id="ch10" x1="33" y1="0" x2="33" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#E6E6E6"/><stop offset="1" stop-color="#808080"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #413F3F; white-space: nowrap;">16</span>
+          </div>
+          
+          <div style="position: absolute; left: 8px; top: 56px; width: 124px; height: 24px;">
+            <svg width="124" height="24" viewBox="0 0 124 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; left: 0; top: 0;">
+              <rect x="0.5" y="0.5" width="123" height="23" rx="8.5" fill="url(#ti10)" stroke="#7D7979"/>
+              <defs><linearGradient id="ti10" x1="62" y1="0" x2="62" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#D9D9D9"/><stop offset="1" stop-color="rgba(115,115,115,0.86)"/></linearGradient></defs>
+            </svg>
+            <span style="position: absolute; left: 50%; top: 3px; transform: translateX(-50%); font-weight: 700; font-size: 14px; color: #2E3237; white-space: nowrap;">08:19</span>
+          </div>
+        </div>
+      </div>
+      <span class="card-label">终到车 (zd)</span>
+    </div>
+  </div>
+
+</body>
+</html>

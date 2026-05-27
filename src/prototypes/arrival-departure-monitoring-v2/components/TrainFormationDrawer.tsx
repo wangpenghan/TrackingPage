@@ -230,6 +230,10 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
   const [directionConfigModalVisible, setDirectionConfigModalVisible] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartY, setDragStartY] = useState(0);
+  const [draggedScreenId, setDraggedScreenId] = useState<string | null>(null);
+
   // 方位配置状态
   const [topDirection, setTopDirection] = useState<'东' | '西' | '南' | '北'>('北');
   const [bottomDirection, setBottomDirection] = useState<'东' | '西' | '南' | '北'>('南');
@@ -271,6 +275,16 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
     }
   };
 
+  // 全局鼠标事件监听
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   // 生成车厢数据
   const carriages = useMemo(() => {
     return generateCarriages(formation.formationType, formation.sequence, formation.direction);
@@ -303,6 +317,56 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
       setSelectedScreenId(screenId === selectedScreenId ? null : screenId);
       setAdjustMode('single');
     }
+  };
+
+  const handleFormationAreaMouseDown = (e: React.MouseEvent) => {
+    if (!isEditMode || adjustMode !== 'global') return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragStartY(e.clientY);
+  };
+
+  const handleFormationAreaMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || adjustMode !== 'global') return;
+    const deltaY = e.clientY - dragStartY;
+    if (Math.abs(deltaY) >= 20) {
+      const delta = deltaY > 0 ? 1 : -1;
+      handleGlobalOffsetChange(delta);
+      setDragStartY(e.clientY);
+    }
+  };
+
+  const handleFormationAreaMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleScreenMouseDown = (e: React.MouseEvent, screenId: string) => {
+    if (!isEditMode) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+    setDraggedScreenId(screenId);
+    setDragStartY(e.clientY);
+    if (selectedScreenId !== screenId) {
+      setSelectedScreenId(screenId);
+      setAdjustMode('single');
+    }
+  };
+
+  const handleScreenMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !draggedScreenId || adjustMode !== 'single') return;
+    e.preventDefault();
+    const deltaY = e.clientY - dragStartY;
+    if (Math.abs(deltaY) >= 20) {
+      const delta = deltaY > 0 ? 1 : -1;
+      handleScreenOffsetChange(draggedScreenId, delta);
+      setDragStartY(e.clientY);
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+    setDraggedScreenId(null);
   };
 
   const handleGlobalOffsetChange = (delta: number) => {
@@ -452,7 +516,20 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
                 </div>
 
                 {/* 列车编组区域 */}
-                <div className="formation-area">
+                <div 
+                  className={`formation-area ${isEditMode && adjustMode === 'global' ? 'draggable' : ''} ${isDragging && adjustMode === 'global' ? 'dragging' : ''}`}
+                  onMouseDown={handleFormationAreaMouseDown}
+                  onMouseMove={handleFormationAreaMouseMove}
+                  onMouseUp={handleFormationAreaMouseUp}
+                >
+                  {isEditMode && adjustMode === 'global' && (
+                    <div className="drag-hint">
+                      <ArrowUpOutlined />
+                      <span>拖动调整整体偏移</span>
+                      <span className="current-offset">{globalOffset !== 0 ? (globalOffset > 0 ? `+${globalOffset}` : globalOffset) : '0'}</span>
+                      <ArrowDownOutlined />
+                    </div>
+                  )}
                   <div className="carriages-track">
                     {carriages.map((carriage, index) => {
                       const actualNumber = getActualCarriage(carriage.number);
@@ -493,10 +570,19 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
                 </div>
 
                 {/* 站台屏区域 */}
-                <div className="screens-area">
+                <div 
+                  className={`screens-area ${isEditMode && adjustMode === 'single' ? 'single-adjust-mode' : ''}`}
+                  onMouseMove={handleScreenMouseMove}
+                  onMouseUp={handleFormationAreaMouseUp}
+                >
+                  {isEditMode && adjustMode === 'single' && !draggedScreenId && (
+                    <div className="screens-drag-hint">拖动屏幕调整位置</div>
+                  )}
                   {screens.map(screen => {
                     const actualCarriage = getActualCarriage(screen.targetCarriage);
                     const hasOffset = actualCarriage !== screen.targetCarriage;
+                    const isScreenDragging = isDragging && draggedScreenId === screen.id;
+                    const isThisScreenSelected = selectedScreenId === screen.id;
                     
                     return (
                       <Tooltip 
@@ -518,21 +604,27 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
                               <span className="label">位置</span>
                               <span className="value">{screen.position.toFixed(1)}%</span>
                             </div>
+                            {isEditMode && <div className="tooltip-hint">拖动调整位置</div>}
                           </div>
                         }
                         placement="right"
                       >
                         <div
-                          className={`screen-node ${selectedScreenId === screen.id ? 'selected' : ''} ${hasOffset ? 'has-offset' : ''}`}
+                          className={`screen-node ${isThisScreenSelected ? 'selected' : ''} ${hasOffset ? 'has-offset' : ''} ${isScreenDragging ? 'dragging' : ''} ${isEditMode && adjustMode === 'single' ? 'draggable' : ''}`}
                           style={{ 
                             top: `${screen.position}%`,
-                            borderColor: selectedScreenId === screen.id ? landmarkColor : `${landmarkColor}80`,
-                            background: selectedScreenId === screen.id ? `${landmarkColor}30` : `${landmarkColor}15`,
-                            boxShadow: selectedScreenId === screen.id ? `0 0 0 3px ${landmarkColor}40, 0 4px 12px rgba(0,0,0,0.15)` : 'none',
-                            transform: selectedScreenId === screen.id ? 'scale(1.05)' : 'scale(1)',
-                            transition: 'all 0.2s ease'
+                            borderColor: isThisScreenSelected ? landmarkColor : `${landmarkColor}80`,
+                            background: isThisScreenSelected ? `${landmarkColor}30` : `${landmarkColor}15`,
+                            boxShadow: isThisScreenSelected ? `0 0 0 3px ${landmarkColor}40, 0 4px 12px rgba(0,0,0,0.15)` : 'none',
+                            transform: isScreenDragging ? 'scale(1.1) translateY(-50%)' : isThisScreenSelected ? 'scale(1.05)' : 'scale(1)',
+                            transition: isScreenDragging ? 'none' : 'all 0.2s ease',
+                            cursor: isEditMode && adjustMode === 'single' ? 'grab' : 'pointer'
                           }}
-                          onClick={() => handleScreenClick(screen.id)}
+                          onMouseDown={(e) => handleScreenMouseDown(e, screen.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleScreenClick(screen.id);
+                          }}
                         >
                           <div className="screen-icon-box" style={{ background: `${landmarkColor}25` }}>
                             <DesktopOutlined className="screen-icon" style={{ color: landmarkColor }} />
@@ -642,48 +734,38 @@ export const TrainFormationDrawer: React.FC<TrainFormationDrawerProps> = ({
 
                 {adjustMode === 'global' ? (
                   <div className="offset-control global">
-                    <span className="offset-label">全局偏移量（所有车厢）</span>
-                    <div className="offset-input-group">
-                      <button 
-                        className="offset-btn"
-                        onClick={() => handleGlobalOffsetChange(-1)}
-                      >
-                        <MinusOutlined />
-                      </button>
-                      <div className={`offset-value ${globalOffset !== 0 ? 'has-offset' : ''}`}>
-                        {globalOffset > 0 ? `+${globalOffset}` : globalOffset}
-                      </div>
-                      <button 
-                        className="offset-btn"
-                        onClick={() => handleGlobalOffsetChange(1)}
-                      >
-                        <PlusOutlined />
-                      </button>
+                    <span className="offset-label">整体偏移量</span>
+                    <div className="drag-instruction">
+                      <DesktopOutlined />
+                      <span>在左侧编组区域上下拖动调整</span>
+                    </div>
+                    <div className={`offset-display ${globalOffset !== 0 ? 'has-offset' : ''}`}>
+                      <span className="offset-label-small">当前偏移</span>
+                      <span className="offset-number">
+                        {globalOffset > 0 ? `+${globalOffset}` : globalOffset === 0 ? '0' : globalOffset}
+                      </span>
                     </div>
                   </div>
                 ) : (
                   <div className="offset-control single">
                     <span className="offset-label">
-                      {selectedScreen ? `调整 ${selectedScreen.name}` : '请选择站台屏'}
+                      {selectedScreen ? `${selectedScreen.name}` : '请选择站台屏'}
                     </span>
-                    {selectedScreen && (
-                      <div className="offset-input-group">
-                        <button 
-                          className="offset-btn"
-                          onClick={() => handleScreenOffsetChange(selectedScreen.id, -1)}
-                        >
-                          <MinusOutlined />
-                        </button>
-                        <div className="offset-value">
-                          {selectedScreen.targetCarriage}车
+                    {selectedScreen ? (
+                      <>
+                        <div className="drag-instruction">
+                          <DesktopOutlined />
+                          <span>拖动屏幕上下移动</span>
                         </div>
-                        <button 
-                          className="offset-btn"
-                          onClick={() => handleScreenOffsetChange(selectedScreen.id, 1)}
-                        >
-                          <PlusOutlined />
-                        </button>
-                      </div>
+                        <div className={`offset-display ${getActualCarriage(selectedScreen.targetCarriage) !== selectedScreen.targetCarriage ? 'has-offset' : ''}`}>
+                          <span className="offset-label-small">目标车厢</span>
+                          <span className="offset-number">
+                            {selectedScreen.targetCarriage}车
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="no-selection-hint">点击屏幕进行选择</div>
                     )}
                   </div>
                 )}

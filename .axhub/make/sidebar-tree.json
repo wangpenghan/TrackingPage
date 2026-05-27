@@ -1,7 +1,13 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-08T07:07:26.034Z",
+  "updatedAt": "2026-05-14T12:36:30.526Z",
   "prototypes": [
+    {
+      "id": "item-prototypes-station-monitoring",
+      "kind": "item",
+      "title": "station monitoring",
+      "itemKey": "prototypes/station-monitoring"
+    },
     {
       "id": "item:prototypes:basic-plan",
       "kind": "item",

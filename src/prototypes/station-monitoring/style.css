@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.train-card-container {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.18s ease-out, box-shadow 0.2s ease-in-out;
+  filter: drop-shadow(0 2px 4px rgba(100, 116, 139, 0.08));
+}
+
+.train-card-container:hover {
+  filter: drop-shadow(0 6px 12px rgba(100, 116, 139, 0.12));
+}
+
+.train-card-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transition: all 0.2s ease-in-out;
+  border: 1px solid var(--border-color);
+  box-shadow: 
+    inset 0 0 1px 1px rgba(255, 255, 255, 0.04),
+    0 0 8px -3px var(--glow-color);
+  opacity: 0.8;
+  pointer-events: none;
+  border-radius: 16px;
+}
+
+.train-card-container:hover::before {
+  opacity: 1;
+  box-shadow: 
+    inset 0 0 1px 1px rgba(255, 255, 255, 0.06),
+    0 0 14px -3px var(--glow-color),
+    0 0 22px -8px var(--glow-color);
+}
+
+.train-card-bg, .train-card-content {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.train-card-content {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.train-card-grid-bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 0.3;
+  mask-image: radial-gradient(circle at center, white, transparent 80%);
+}

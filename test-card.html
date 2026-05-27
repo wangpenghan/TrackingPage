@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>车次卡片预览</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #1e293b;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    .card {
+      width: 260px;
+      height: 88px;
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+    }
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.92) 100%);
+      backdrop-filter: blur(10px);
+      border: 1.5px solid rgba(15,23,42,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .card.selected .card-bg {
+      border: 2px solid #f97316;
+      box-shadow: 0 0 20px rgba(249,115,22,0.4), 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .card.linked .card-bg {
+      border: 2px solid #4ADE80;
+      box-shadow: 0 0 16px rgba(74,222,128,0.3), 0 4px 12px rgba(0,0,0,0.08);
+    }
+    .card-color-bar {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(180deg, var(--stop-color) 0%, var(--stop-color-fade) 100%);
+    }
+    .card-head {
+      position: absolute;
+      top: 0;
+      left: 4px;
+      right: 4px;
+      height: 40px;
+      background: linear-gradient(180deg, var(--stop-color-light) 0%, var(--stop-color-lighter) 100%);
+      border-radius: 0 0 12px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 8px;
+      font-size: 12px;
+    }
+    .card-train-no {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--stop-color);
+      font-family: monospace;
+      letter-spacing: 0.5px;
+    }
+    .card-route {
+      font-size: 11px;
+      color: #64748B;
+      font-weight: 500;
+      margin-left: 6px;
+    }
+    .card-direction {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--stop-color-light);
+      border: 1px solid var(--stop-color-fade);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--stop-color);
+    }
+    .card-time {
+      position: absolute;
+      top: 44px;
+      left: 8px;
+      right: 8px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .time-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4px 6px;
+      border-radius: 6px;
+      border: 1px solid;
+      font-size: 9px;
+      font-weight: 500;
+      color: #64748B;
+    }
+    .time-box.arrival {
+      background: #F0F9FF;
+      border-color: #E0F2FE;
+    }
+    .time-box.departure {
+      background: #F0FDF4;
+      border-color: #DCFCE7;
+    }
+    .time-box.track {
+      background: #F5F3FF;
+      border-color: #EDE9FE;
+    }
+    .time-value {
+      font-size: 13px;
+      font-weight: bold;
+      font-family: monospace;
+      margin-top: 2px;
+    }
+    .time-box.arrival .time-value { color: #0369A1; }
+    .time-box.departure .time-value { color: #15803D; }
+    .time-box.track .time-value { color: #7C3AED; }
+    .delay-badge {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: #FEE2E2;
+      border: 1px solid #FECACA;
+      font-size: 11px;
+      font-weight: 600;
+      color: #DC2626;
+    }
+    .card-status {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      display: flex;
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      overflow: hidden;
+    }
+    .status-item {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      border-right: 1px solid;
+    }
+    .status-item:last-child { border-right: none; }
+    .status-item.completed {
+      background: #E0F2FE;
+      color: #0369A1;
+      border-right-color: rgba(3,105,161,0.2);
+    }
+    .status-item.running {
+      background: #DCFCE7;
+      color: #15803D;
+      border-right-color: rgba(21,128,61,0.2);
+    }
+    .status-item.pending {
+      background: #F3F4F6;
+      color: #6B7280;
+      border-right-color: rgba(107,114,128,0.2);
+    }
+    .status-item.error {
+      background: #FEE2E2;
+      color: #DC2626;
+      border-right-color: rgba(220,38,38,0.2);
+    }
+
+    /* 停站类型颜色 */
+    .card.start { --stop-color: #f97316; --stop-color-light: rgba(249,115,22,0.15); --stop-color-lighter: rgba(249,115,22,0.08); --stop-color-fade: rgba(249,115,22,0.4); }
+    .card.through { --stop-color: #7c3aed; --stop-color-light: rgba(124,58,237,0.15); --stop-color-lighter: rgba(124,58,237,0.08); --stop-color-fade: rgba(124,58,237,0.4); }
+    .card.end { --stop-color: #10b981; --stop-color-light: rgba(16,185,129,0.15); --stop-color-lighter: rgba(16,185,129,0.08); --stop-color-fade: rgba(16,185,129,0.4); }
+
+    .section {
+      margin-bottom: 50px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚄 车次卡片设计预览</h1>
+
+    <div class="section">
+      <div class="section-title">终到车次（绿色）</div>
+      <div class="cards-grid">
+        <div class="card end">
+          <div class="card-bg"></div>
+          <div class="card-color-bar"></div>
+          <div class="card-head">
+            <div style="display: flex; align-items: center;">
+              <span class="card-train-no">G8602</span>
+              <span class="card-route">成都→重庆</span>
+            </div>
+            <div class="card-direction">
+              <span>3</span>
+              <span>↓</span>
+              <span>南</span>
+            </div>
+          </div>
+          <div class="card-time">
+            <div class="time-box arrival">
+              <div>到</div>
+              <div class="time-value">07:12</div>
+            </div>
+            <div class="time-box track">
+              <div>股道</div>
+              <div class="time-value">3</div>
+            </div>
+          </div>
+          <div class="card-status">
+            <div class="status-item completed">检票</div>
+            <div class="status-item running">站台</div>
+            <div class="status-item pending">出站</div>
+            <div class="status-item completed">上水</div>
+          </div>
+        </div>
+
+        <div class="card end selected">
+          <div class="card-bg"></div>
+          <div class="card-color-bar"></div>
+          <div class="card-head">
+            <div style="display: flex; align-items: center;">
+              <span class="card-train-no">D5134</span>
+              <span class="card-route">贵阳→重庆</span>
+            </div>
+            <div class="card-direction">
+              <span>2</span>
+              <span>↑</span>
+              <span>北</span>
+            </div>
+          </div>
+          <div class="card-time">
+            <div class="time-box arrival">
+              <div>到</div>
+              <div class="time-value">08:35</div>
+            </div>
+            <div class="time-box track">
+              <div>股道</div>
+              <div class="time-value">2</div>
+            </div>
+          </div>
+          <div class="card-status">
+            <div class="status-item completed">检票</div>
+            <div class="status-item completed">站台</div>
+            <div class="status-item running">出站</div>
+            <div class="status-item error">上水</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">始发车次（橙色）</div>
+      <div class="cards-grid">
+        <div class="card start">
+          <div class="card-bg"></div>
+          <div class="card-color-bar"></div>
+          <div class="card-head">
+            <div style="display: flex; align-items: center;">
+              <span class="card-train-no">G8605</span>
+              <span class="card-route">重庆→长沙</span>
+            </div>
+            <div class="card-direction">
+              <span>5</span>
+              <span>→</span>
+              <span>东</span>
+            </div>
+          </div>
+          <div class="card-time">
+            <div class="time-box departure">
+              <div>发</div>
+              <div class="time-value">07:30</div>
+            </div>
+            <div class="delay-badge">⏱ +3分</div>
+          </div>
+          <div class="card-status">
+            <div class="status-item completed">检票</div>
+            <div class="status-item completed">站台</div>
+            <div class="status-item pending">出站</div>
+            <div class="status-item pending">上水</div>
+          </div>
+        </div>
+
+        <div class="card start linked">
+          <div class="card-bg"></div>
+          <div class="card-color-bar"></div>
+          <div class="card-head">
+            <div style="display: flex; align-items: center;">
+              <span class="card-train-no">D5238</span>
+              <span class="card-route">重庆→成都</span>
+            </div>
+            <div class="card-direction">
+              <span>7</span>
+              <span>←</span>
+              <span>西</span>
+            </div>
+          </div>
+          <div class="card-time">
+            <div class="time-box departure">
+              <div>发</div>
+              <div class="time-value">08:15</div>
+            </div>
+          </div>
+          <div class="card-status">
+            <div class="status-item completed">检票</div>
+            <div class="status-item running">站台</div>
+            <div class="status-item pending">出站</div>
+            <div class="status-item pending">上水</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">途径车次（紫色）</div>
+      <div class="cards-grid">
+        <div class="card through">
+          <div class="card-bg"></div>
+          <div class="card-color-bar"></div>
+          <div class="card-head">
+            <div style="display: flex; align-items: center;">
+              <span class="card-train-no">G307</span>
+              <span class="card-route">西安→成都</span>
+            </div>
+            <div class="card-direction">
+              <span>4</span>
+              <span>↓</span>
+              <span>南</span>
+            </div>
+          </div>
+          <div class="card-time">
+            <div class="time-box arrival">
+              <div>到</div>
+              <div class="time-value">09:05</div>
+            </div>
+            <div class="time-box departure">
+              <div>发</div>
+              <div class="time-value">09:18</div>
+            </div>
+          </div>
+          <div class="card-status">
+            <div class="status-item completed">检票</div>
+            <div class="status-item completed">站台</div>
+            <div class="status-item running">出站</div>
+            <div class="status-item pending">上水</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">设计特点</div>
+      <div style="background: white; padding: 20px; border-radius: 12px; color: #475569; line-height: 1.8;">
+        <p>✓ <strong>规范尺寸</strong>：260px × 88px，符合设计规范</p>
+        <p>✓ <strong>信息层级</strong>：顶部车头（车次+区间+股道方向）→ 中部时间 → 底部作业状态</p>
+        <p>✓ <strong>未来科技感</strong>：玻璃态背景、渐变边框、发光效果、精细阴影</p>
+        <p>✓ <strong>浅色模式</strong>：柔和配色，不刺眼，高对比度易读</p>
+        <p>✓ <strong>紧凑布局</strong>：充分利用空间，拒绝大面积留白</p>
+        <p>✓ <strong>交互反馈</strong>：选中态（停站类型色）、关联态（绿色）、悬停态（上浮）</p>
+        <p>✓ <strong>作业状态</strong>：底部4色条显示检票/站台/出站/上水的实时状态</p>
+        <p>✓ <strong>晚点提示</strong>：红色徽章显示延误分钟数</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1:1复刻参考车次卡片</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            background: linear-gradient(180deg, #f0f4f8 0%, #d9e2ec 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 900;
+            color: #102a43;
+        }
+        
+        .header p {
+            color: #486581;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        
+        /* 完全复刻参考卡片 */
+        .replica-card {
+            width: 210px;
+            height: 120px;
+            background: white;
+            border-radius: 3px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* 顶部弧形浅蓝色区域 */
+        .top-blue-area {
+            width: 100%;
+            height: 65%;
+            background: linear-gradient(180deg, #bae6fd 0%, #7dd3fc 100%);
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 25% 100%, 0 75%);
+            position: relative;
+        }
+        
+        /* 顶部标签组 */
+        .top-tags {
+            display: flex;
+            gap: 6px;
+            position: absolute;
+            top: 4px;
+            right: 4px;
+        }
+        
+        .tag {
+            width: 28px;
+            height: 22px;
+            background: white;
+            border: 1px solid #0ea5e9;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: #334155;
+        }
+        
+        .tag.active {
+            border: 2px solid #0ea5e9;
+        }
+        
+        /* 中间布局 */
+        .middle-row {
+            display: flex;
+            gap: 6px;
+            padding: 26px 6px 0;
+            height: 100%;
+        }
+        
+        /* 左侧车次框 */
+        .train-number-box {
+            flex: 1.7;
+            height: 35px;
+            background: linear-gradient(180deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #d97706;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 21px;
+            font-weight: 900;
+            color: #b45309;
+            position: relative;
+        }
+        
+        /* 路线文字 */
+        .route-text {
+            position: absolute;
+            bottom: -18px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #1e293b;
+        }
+        
+        /* 右侧方向框 */
+        .direction-box {
+            flex: 1;
+            height: 35px;
+            background: linear-gradient(180deg, #e5e7eb 0%, #d1d5db 100%);
+            border: 2px solid #6b7280;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: 900;
+            color: #1e293b;
+            position: relative;
+        }
+        
+        /* 蓝色条 */
+        .blue-bar {
+            position: absolute;
+            bottom: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 6px;
+            background: #3b82f6;
+            border-radius: 1px;
+        }
+        
+        /* 底部区域 */
+        .bottom-row {
+            display: flex;
+            gap: 6px;
+            padding: 6px;
+            height: 35%;
+        }
+        
+        /* 时间框 */
+        .time-box {
+            flex: 2;
+            height: 30px;
+            background: white;
+            border: 2px solid #9ca3af;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            color: #1e293b;
+        }
+        
+        /* 股道变更红框 */
+        .platform-box {
+            flex: 1;
+            height: 30px;
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 17px;
+            font-weight: 900;
+            color: white;
+        }
+        
+        .info-box {
+            margin-top: 40px;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+        
+        .info-box h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #102a43;
+            margin-bottom: 16px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            color: #486581;
+            font-size: 14px;
+            line-height: 2;
+        }
+        
+        .info-box li::before {
+            content: "✅";
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>1:1 复刻参考车次卡片</h1>
+        <p>完全按照你提供的图片设计，尺寸210px*120px</p>
+    </div>
+    
+    <div class="replica-card">
+        <div class="top-blue-area">
+            <div class="top-tags">
+                <span class="tag">库</span>
+                <span class="tag">餐</span>
+                <span class="tag">包</span>
+                <span class="tag">污</span>
+                <span class="tag active">水</span>
+            </div>
+            <div class="middle-row">
+                <div class="train-number-box">
+                    G1001
+                    <div class="route-text">重庆东→北京西</div>
+                </div>
+                <div class="direction-box">
+                    16正北
+                    <div class="blue-bar"></div>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-row">
+            <div class="time-box">08:19/08:35</div>
+            <div class="platform-box">6→12</div>
+        </div>
+    </div>
+    
+    <div class="info-box">
+        <h3>100% 还原细节</h3>
+        <ul>
+            <li>顶部浅蓝色弧形背景，和原图完全一致的形状</li>
+            <li>顶部5个功能标签：库、餐、包、污、水，最后一个标签选中高亮</li>
+            <li>米黄色圆角车次框，橙色字体"G1001"</li>
+            <li>车次下方黑色路线文字"重庆东→北京西"</li>
+            <li>灰色圆角方向框，黑色文字"16正北"，底部蓝色条</li>
+            <li>底部白色区域灰色边框时间框，显示"08:19/08:35"</li>
+            <li>红色圆角股道变更框，白色文字"6→12"</li>
+            <li>所有颜色、字体大小、圆角、边框粗细都和原图一致</li>
+            <li>尺寸严格210px宽 × 120px高，符合你的要求</li>
+        </ul>
+    </div>
+</body>
+</html>

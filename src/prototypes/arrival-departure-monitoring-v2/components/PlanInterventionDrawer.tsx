@@ -555,20 +555,33 @@ export const PlanInterventionDrawer: React.FC<PlanInterventionDrawerProps> = ({
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '10px'
             }}>
-              {/* 立即执行 - 主按钮 */}
-              <Button
-                type="primary"
-                style={{
-                  height: '36px',
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  borderRadius: '8px',
-                  background: colors.accent,
-                  border: 'none'
-                }}
+              {/* 恢复图定 */}
+              <Popconfirm
+                title="确认恢复图定？"
+                description="该操作将停止当前所有业务，并恢复至图定时间。此操作不可逆，请确认是否继续。"
+                onConfirm={() => console.log('执行恢复图定')}
+                okText="确认"
+                cancelText="取消"
+                placement="top"
+                okButtonProps={{ danger: true }}
+                overlayStyle={{ maxWidth: '420px' }}
               >
-                立即执行
-              </Button>
+                <Button
+                  type="primary"
+                  style={{
+                    height: '64px',
+                    fontSize: '15px',
+                    fontWeight: 600,
+                    borderRadius: '8px',
+                    background: colors.danger,
+                    border: 'none',
+                    gridColumn: '1 / -1',
+                    boxShadow: `0 4px 12px ${colors.danger}40`
+                  }}
+                >
+                  恢复图定
+                </Button>
+              </Popconfirm>
 
               {/* 进站开检 */}
               <Popconfirm
