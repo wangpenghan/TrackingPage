@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-05-19T02:34:58.472Z",
+  "generatedAt": "2026-06-05T02:59:54.678Z",
   "items": {
     "components/ref-button": {
       "group": "components",
@@ -44,6 +44,12 @@
       "js": "src/prototypes/basic-plan/index.tsx",
       "html": "src/prototypes/basic-plan/index.html"
     },
+    "prototypes/connection-plan": {
+      "group": "prototypes",
+      "name": "connection-plan",
+      "js": "src/prototypes/connection-plan/index.tsx",
+      "html": "src/prototypes/connection-plan/index.html"
+    },
     "prototypes/dmr-control-system": {
       "group": "prototypes",
       "name": "dmr-control-system",
@@ -86,6 +92,12 @@
       "js": "src/prototypes/station-passenger-template/index.tsx",
       "html": "src/prototypes/station-passenger-template/index.html"
     },
+    "prototypes/statistics": {
+      "group": "prototypes",
+      "name": "statistics",
+      "js": "src/prototypes/statistics/index.tsx",
+      "html": "src/prototypes/statistics/index.html"
+    },
     "themes/antd-new": {
       "group": "themes",
       "name": "antd-new",
@@ -113,6 +125,7 @@
     "prototypes/arrival-departure-monitoring": "src/prototypes/arrival-departure-monitoring/index.tsx",
     "prototypes/arrival-departure-monitoring-v2": "src/prototypes/arrival-departure-monitoring-v2/index.tsx",
     "prototypes/basic-plan": "src/prototypes/basic-plan/index.tsx",
+    "prototypes/connection-plan": "src/prototypes/connection-plan/index.tsx",
     "prototypes/dmr-control-system": "src/prototypes/dmr-control-system/index.tsx",
     "prototypes/lighting-control": "src/prototypes/lighting-control/index.tsx",
     "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.tsx",
@@ -120,6 +133,7 @@
     "prototypes/plan-comparison": "src/prototypes/plan-comparison/index.tsx",
     "prototypes/station-monitoring": "src/prototypes/station-monitoring/index.tsx",
     "prototypes/station-passenger-template": "src/prototypes/station-passenger-template/index.tsx",
+    "prototypes/statistics": "src/prototypes/statistics/index.tsx",
     "themes/antd-new": "src/themes/antd-new/index.tsx",
     "themes/firecrawl": "src/themes/firecrawl/index.tsx",
     "themes/trae-design": "src/themes/trae-design/index.tsx"
@@ -132,6 +146,7 @@
     "prototypes/arrival-departure-monitoring": "src/prototypes/arrival-departure-monitoring/index.html",
     "prototypes/arrival-departure-monitoring-v2": "src/prototypes/arrival-departure-monitoring-v2/index.html",
     "prototypes/basic-plan": "src/prototypes/basic-plan/index.html",
+    "prototypes/connection-plan": "src/prototypes/connection-plan/index.html",
     "prototypes/dmr-control-system": "src/prototypes/dmr-control-system/index.html",
     "prototypes/lighting-control": "src/prototypes/lighting-control/index.html",
     "prototypes/managed-station-monitoring": "src/prototypes/managed-station-monitoring/index.html",
@@ -139,6 +154,7 @@
     "prototypes/plan-comparison": "src/prototypes/plan-comparison/index.html",
     "prototypes/station-monitoring": "src/prototypes/station-monitoring/index.html",
     "prototypes/station-passenger-template": "src/prototypes/station-passenger-template/index.html",
+    "prototypes/statistics": "src/prototypes/statistics/index.html",
     "themes/antd-new": "src/themes/antd-new/index.html",
     "themes/firecrawl": "src/themes/firecrawl/index.html",
     "themes/trae-design": "src/themes/trae-design/index.html"
