@@ -552,234 +552,228 @@ export const PlanInterventionDrawer: React.FC<PlanInterventionDrawerProps> = ({
 
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '10px'
+              gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+              gridAutoRows: 'minmax(44px, auto)',
+              gap: '12px',
+              alignItems: 'stretch'
             }}>
-              {/* 恢复图定 */}
-              <Popconfirm
-                title="确认恢复图定？"
-                description="该操作将停止当前所有业务，并恢复至图定时间。此操作不可逆，请确认是否继续。"
-                onConfirm={() => console.log('执行恢复图定')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                okButtonProps={{ danger: true }}
-                overlayStyle={{ maxWidth: '420px' }}
-              >
-                <Button
-                  type="primary"
-                  style={{
-                    height: '64px',
-                    fontSize: '15px',
-                    fontWeight: 600,
-                    borderRadius: '8px',
-                    background: colors.danger,
-                    border: 'none',
-                    gridColumn: '1 / -1',
-                    boxShadow: `0 4px 12px ${colors.danger}40`
-                  }}
-                >
-                  恢复图定
-                </Button>
-              </Popconfirm>
-
-              {/* 进站开检 */}
-              <Popconfirm
-                title="确认执行进站开检？"
-                description="此操作将触发进站开检流程，请确认是否继续。"
-                onConfirm={() => console.log('执行进站开检')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  进站开检
-                </Button>
-              </Popconfirm>
-
-              {/* 进站停检 */}
-              <Popconfirm
-                title="确认执行进站停检？"
-                description="此操作将触发进站停检流程，请确认是否继续。"
-                onConfirm={() => console.log('执行进站停检')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  进站停检
-                </Button>
-              </Popconfirm>
-
-              {/* 出站开检 */}
-              <Popconfirm
-                title="确认执行出站开检？"
-                description="此操作将触发出站开检流程，请确认是否继续。"
-                onConfirm={() => console.log('执行出站开检')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  出站开检
-                </Button>
-              </Popconfirm>
-
-              {/* 出站停检 */}
-              <Popconfirm
-                title="确认执行出站停检？"
-                description="此操作将触发出站停检流程，请确认是否继续。"
-                onConfirm={() => console.log('执行出站停检')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  出站停检
-                </Button>
-              </Popconfirm>
-
-              {/* 列车到达 */}
-              <Popconfirm
-                title="确认执行列车到达？"
-                description="此操作将标记列车已到达，请确认是否继续。"
-                onConfirm={() => console.log('执行列车到达')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  列车到达
-                </Button>
-              </Popconfirm>
-
-              {/* 列车离站 */}
-              <Popconfirm
-                title="确认执行列车离站？"
-                description="此操作将标记列车已离站，请确认是否继续。"
-                onConfirm={() => console.log('执行列车离站')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  列车离站
-                </Button>
-              </Popconfirm>
-
-              {/* 预告 */}
-              <Popconfirm
-                title="确认发送预告？"
-                description="此操作将发送列车预告信息，请确认是否继续。"
-                onConfirm={() => console.log('执行预告')}
-                okText="确认"
-                cancelText="取消"
-                placement="top"
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button style={{ height: '36px', fontSize: '13px', borderRadius: '8px', ...getSecondaryButtonStyle(darkMode, colors), width: '100%' }}>
-                  预告
-                </Button>
-              </Popconfirm>
-
-              {/* 晚点未定 / 未定恢复 */}
-              {isLateUndetermined ? (
-                <Button
-                  onClick={handleLateUndeterminedClick}
-                  style={{
-                    height: '36px',
-                    fontSize: '13px',
-                    borderRadius: '8px',
-                    background: darkMode ? 'rgba(255, 69, 58, 0.15)' : '#FFF5F5',
-                    color: colors.danger,
-                    border: `1px solid ${colors.danger}`,
-                    fontWeight: 600
-                  }}
-                >
-                  未定恢复
-                </Button>
-              ) : (
+              <div style={{ gridColumn: '1 / 2', gridRow: '1 / span 2' }}>
                 <Popconfirm
-                  title="确认设置为晚点未定？"
-                  description="设置后列车将被标记为晚点未定状态，请确认是否继续。"
-                  onConfirm={handleLateUndeterminedClick}
+                  title="确认恢复图定？"
+                  description="该操作将停止当前所有业务，并恢复至图定时间。此操作不可逆，请确认是否继续。"
+                  onConfirm={() => console.log('执行恢复图定')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  okButtonProps={{ danger: true }}
+                  overlayStyle={{ maxWidth: '420px' }}
+                >
+                  <Button
+                    type="primary"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      minHeight: '108px',
+                      fontSize: '16px',
+                      fontWeight: 600,
+                      borderRadius: '14px',
+                      background: `linear-gradient(135deg, ${colors.danger} 0%, ${colors.danger}cc 100%)`,
+                      border: 'none',
+                      color: '#FFFFFF',
+                      boxShadow: `0 8px 24px ${colors.danger}45, 0 2px 6px ${colors.danger}25`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      letterSpacing: '0.5px'
+                    }}
+                  >
+                    恢复图定
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '2 / 3', gridRow: '1 / 2' }}>
+                <Popconfirm
+                  title="确认执行进站开检？"
+                  description="此操作将触发进站开检流程，请确认是否继续。"
+                  onConfirm={() => console.log('执行进站开检')}
                   okText="确认"
                   cancelText="取消"
                   placement="top"
                   overlayStyle={{ maxWidth: '380px' }}
                 >
-                  <Button
-                    style={{
-                      height: '40px',
-                      fontSize: '13px',
-                      borderRadius: '8px',
-                      background: colors.cardBackground,
-                      color: colors.textSecondary,
-                      border: `1px solid ${colors.border}`,
-                      fontWeight: 500,
-                      width: '100%'
-                    }}
-                  >
-                    晚点未定
+                  <Button style={getActionButtonStyle(darkMode, colors)}>
+                    进站开检
                   </Button>
                 </Popconfirm>
-              )}
+              </div>
 
-              {/* 到停开 */}
-              <Popconfirm
-                title="⚠️ 危险操作确认"
-                description="到停开操作将强制停止列车作业，此操作不可逆，请确认是否继续？"
-                onConfirm={() => console.log('执行到停开')}
-                okText="确认执行"
-                cancelText="取消"
-                placement="top"
-                okButtonProps={{ danger: true }}
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button
-                  danger
-                  style={{
-                    height: '40px',
-                    fontSize: '13px',
-                    borderRadius: '8px',
-                    borderStyle: 'dashed',
-                    width: '100%'
-                  }}
+              <div style={{ gridColumn: '3 / 4', gridRow: '1 / 2' }}>
+                <Popconfirm
+                  title="确认执行进站停检？"
+                  description="此操作将触发进站停检流程，请确认是否继续。"
+                  onConfirm={() => console.log('执行进站停检')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  overlayStyle={{ maxWidth: '380px' }}
                 >
-                  到停开
-                </Button>
-              </Popconfirm>
+                  <Button style={{ ...getActionButtonStyle(darkMode, colors), ...getActiveButtonStyle(darkMode, colors) }}>
+                    进站停检
+                  </Button>
+                </Popconfirm>
+              </div>
 
-              {/* 发停开 */}
-              <Popconfirm
-                title="⚠️ 危险操作确认"
-                description="发停开操作将强制停止发车作业，此操作不可逆，请确认是否继续？"
-                onConfirm={() => console.log('执行发停开')}
-                okText="确认执行"
-                cancelText="取消"
-                placement="top"
-                okButtonProps={{ danger: true }}
-                overlayStyle={{ maxWidth: '380px' }}
-              >
-                <Button
-                  danger
-                  style={{
-                    height: '40px',
-                    fontSize: '13px',
-                    borderRadius: '8px',
-                    borderStyle: 'dashed',
-                    width: '100%'
-                  }}
+              <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3' }}>
+                <Popconfirm
+                  title="确认执行出站开检？"
+                  description="此操作将触发出站开检流程，请确认是否继续。"
+                  onConfirm={() => console.log('执行出站开检')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  overlayStyle={{ maxWidth: '380px' }}
                 >
-                  发停开
-                </Button>
-              </Popconfirm>
+                  <Button style={getActionButtonStyle(darkMode, colors)}>
+                    出站开检
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '3 / 4', gridRow: '2 / 3' }}>
+                <Popconfirm
+                  title="确认执行出站停检？"
+                  description="此操作将触发出站停检流程，请确认是否继续。"
+                  onConfirm={() => console.log('执行出站停检')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  overlayStyle={{ maxWidth: '380px' }}
+                >
+                  <Button style={getActionButtonStyle(darkMode, colors)}>
+                    出站停检
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '1 / 2', gridRow: '3 / 4' }}>
+                <Popconfirm
+                  title="确认发送预告？"
+                  description="此操作将发送列车预告信息，请确认是否继续。"
+                  onConfirm={() => console.log('执行预告')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  overlayStyle={{ maxWidth: '380px' }}
+                >
+                  <Button style={getActionButtonStyle(darkMode, colors)}>
+                    预告
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '2 / 3', gridRow: '3 / 4' }}>
+                <Popconfirm
+                  title="确认执行列车到达？"
+                  description="此操作将标记列车已到达，请确认是否继续。"
+                  onConfirm={() => console.log('执行列车到达')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  overlayStyle={{ maxWidth: '380px' }}
+                >
+                  <Button style={getActionButtonStyle(darkMode, colors)}>
+                    列车到达
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '3 / 4', gridRow: '3 / 4' }}>
+                <Popconfirm
+                  title="确认执行列车离站？"
+                  description="此操作将标记列车已离站，请确认是否继续。"
+                  onConfirm={() => console.log('执行列车离站')}
+                  okText="确认"
+                  cancelText="取消"
+                  placement="top"
+                  overlayStyle={{ maxWidth: '380px' }}
+                >
+                  <Button style={getActionButtonStyle(darkMode, colors)}>
+                    列车离站
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '1 / 2', gridRow: '4 / 5' }}>
+                {isLateUndetermined ? (
+                  <Button
+                    onClick={handleLateUndeterminedClick}
+                    style={{
+                      ...getActionButtonStyle(darkMode, colors),
+                      background: darkMode ? 'rgba(255, 69, 58, 0.15)' : '#FFF5F5',
+                      color: colors.danger,
+                      border: `1px solid ${colors.danger}`,
+                      fontWeight: 600
+                    }}
+                  >
+                    未定恢复
+                  </Button>
+                ) : (
+                  <Popconfirm
+                    title="确认设置为晚点未定？"
+                    description="设置后列车将被标记为晚点未定状态，请确认是否继续。"
+                    onConfirm={handleLateUndeterminedClick}
+                    okText="确认"
+                    cancelText="取消"
+                    placement="top"
+                    overlayStyle={{ maxWidth: '380px' }}
+                  >
+                    <Button style={getActionButtonStyle(darkMode, colors)}>
+                      晚点未定
+                    </Button>
+                  </Popconfirm>
+                )}
+              </div>
+
+              <div style={{ gridColumn: '2 / 3', gridRow: '4 / 5' }}>
+                <Popconfirm
+                  title="⚠️ 危险操作确认"
+                  description="到停开操作将强制停止列车作业，此操作不可逆，请确认是否继续？"
+                  onConfirm={() => console.log('执行到停开')}
+                  okText="确认执行"
+                  cancelText="取消"
+                  placement="top"
+                  okButtonProps={{ danger: true }}
+                  overlayStyle={{ maxWidth: '380px' }}
+                >
+                  <Button
+                    danger
+                    style={getDangerButtonStyle(darkMode, colors)}
+                  >
+                    到停开
+                  </Button>
+                </Popconfirm>
+              </div>
+
+              <div style={{ gridColumn: '3 / 4', gridRow: '4 / 5' }}>
+                <Popconfirm
+                  title="⚠️ 危险操作确认"
+                  description="发停开操作将强制停止发车作业，此操作不可逆，请确认是否继续？"
+                  onConfirm={() => console.log('执行发停开')}
+                  okText="确认执行"
+                  cancelText="取消"
+                  placement="top"
+                  okButtonProps={{ danger: true }}
+                  overlayStyle={{ maxWidth: '380px' }}
+                >
+                  <Button
+                    danger
+                    style={getDangerButtonStyle(darkMode, colors)}
+                  >
+                    发停开
+                  </Button>
+                </Popconfirm>
+              </div>
             </div>
           </div>
         </div>
@@ -988,4 +982,45 @@ const getLabelStyle = (darkMode: boolean, colors: typeof macOSColors.light): Rea
   fontSize: '13px',
   color: colors.textSecondary,
   fontWeight: 500
+});
+
+const getActionButtonStyle = (darkMode: boolean, colors: typeof macOSColors.light): React.CSSProperties => ({
+  height: '44px',
+  fontSize: '14px',
+  borderRadius: '12px',
+  background: darkMode 
+    ? 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)'
+    : 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(245,245,247,1) 100%)',
+  color: colors.textPrimary,
+  border: `1px solid ${darkMode ? 'rgba(255,255,255,0.14)' : 'rgba(0,0,0,0.05)'}`,
+  fontWeight: 500,
+  width: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: darkMode 
+    ? '0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.08)'
+    : '0 3px 10px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.85)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+});
+
+const getActiveButtonStyle = (darkMode: boolean, colors: typeof macOSColors.light): React.CSSProperties => ({
+  background: `linear-gradient(135deg, ${colors.accent}15 0%, ${colors.accent}08 100%)`,
+  border: `1px solid ${colors.accent}40`,
+  color: colors.accent,
+  fontWeight: 600,
+  boxShadow: `0 2px 8px ${colors.accent}20, inset 0 1px 0 ${colors.accent}10`
+});
+
+const getDangerButtonStyle = (darkMode: boolean, colors: typeof macOSColors.light): React.CSSProperties => ({
+  height: '44px',
+  fontSize: '14px',
+  borderRadius: '10px',
+  borderStyle: 'dashed',
+  borderWidth: '2px',
+  width: '100%',
+  background: darkMode ? 'rgba(255, 69, 58, 0.08)' : 'rgba(255, 59, 48, 0.04)',
+  fontWeight: 600,
+  letterSpacing: '0.2px',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
 });

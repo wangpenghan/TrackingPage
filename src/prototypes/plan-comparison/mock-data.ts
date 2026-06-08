@@ -512,13 +512,20 @@ export const mockLockStates: planLockState[] = [
     regeneratedAt: '2026-05-08 14:50',
     regeneratedData: mockNewPlan.find(t => t.trainNo === 'G7181'),
     conflictStatus: 'detected',
+    conflictFields: [
+      { field: 'track', fieldLabel: '股道', oldValue: '4', newValue: '5', priority: 'P0' },
+      { field: 'departureTime', fieldLabel: '发车时间', oldValue: '15:15', newValue: '15:20', priority: 'P0' },
+      { field: 'gates', fieldLabel: '检票口', oldValue: '4A、5A', newValue: '5A、5B', priority: 'P1' },
+    ],
+    conflictDetectedAt: '2026-05-08 14:50',
+    disposalRecords: [],
   },
 ];
 
 export const mockCheckProgress: checkProgress[] = [
   { id: 'check-1', trainNo: 'G473', diagramNo: '2025-Q4', checkStatus: 'checked', checkedBy: '张三', checkedAt: '2026-05-08 14:35' },
   { id: 'check-2', trainNo: 'G1234', diagramNo: '2025-Q4', checkStatus: 'checked', checkedBy: '张三', checkedAt: '2026-05-08 14:36' },
-  { id: 'check-3', trainNo: 'D3710', diagramNo: '2025-Q4', checkStatus: 'questioned', checkedBy: '李四', checkedAt: '2026-05-08 14:40', notes: '检票口变更需确认', questionType: 'mismatch_paper' },
+  { id: 'check-3', trainNo: 'D3710', diagramNo: '2025-Q4', checkStatus: 'unchecked' },
   { id: 'check-4', trainNo: 'G7181', diagramNo: '2025-Q4', checkStatus: 'unchecked' },
   { id: 'check-5', trainNo: 'G4321', diagramNo: '2025-Q4', checkStatus: 'unchecked' },
   { id: 'check-6', trainNo: 'G5678', diagramNo: '2025-Q4', checkStatus: 'checked', checkedBy: '张三', checkedAt: '2026-05-08 14:38' },

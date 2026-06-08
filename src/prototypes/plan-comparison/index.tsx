@@ -32,7 +32,6 @@ const typeConfig: Record<string, { label: string; color: string; bg: string; bor
 const checkStatusConfig: Record<string, { label: string; color: string; icon: React.FC<{ style?: React.CSSProperties }> }> = {
   unchecked: { label: '未核对', color: '#9CA3AF', icon: Circle },
   checked: { label: '已核对', color: '#059669', icon: CheckCircle2 },
-  questioned: { label: '有疑问', color: '#F59E0B', icon: HelpCircle },
   confirmed: { label: '已确认', color: '#2563EB', icon: CheckCircle2 },
 };
 
@@ -74,13 +73,12 @@ const Component: React.FC = () => {
     const [filter, setFilter] = useState<DiffFilter>({ type: 'all', checkStatus: 'all', showDiffOnly: false });
     const [selectedDiff, setSelectedDiff] = useState<planDifference | null>(null);
     const [selectedTrains, setSelectedTrains] = useState<Set<string>>(new Set());
-    const [showQuestionModal, setShowQuestionModal] = useState<templateData | null>(null);
     const [showKeyboardHelp, setShowKeyboardHelp] = useState(false);
-    const [sortField, setSortField] = useState<'departureTime' | 'trainNo' | 'priority' | 'locked'>('departureTime');
+    const [sortField, setSortField] = useState<'departureTime' | 'trainNo' | 'locked'>('departureTime');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
     const [notification, setNotification] = useState<{ type: 'success' | 'warning' | 'error'; message: string } | null>(null);
     const [showDetailPanel, setShowDetailPanel] = useState(true);
-    const [showConflictDrawer, setShowConflictDrawer] = useState(false);
+    const [showConflictListDrawer, setShowConflictListDrawer] = useState(false);
     const [legendVisible, setLegendVisible] = useState(true);
     const [compareDate, setCompareDate] = useState<{ from: string; to: string }>(() => {
       const today = new Date();
@@ -90,10 +88,28 @@ const Component: React.FC = () => {
       return { from: formatDate(today), to: formatDate(tomorrow) };
     });
     const [showEditModal, setShowEditModal] = useState<{ trainNo: string; data: templateData } | null>(null);
-    const questionTypeRef = useRef<string>('data_anomaly');
-    const questionNotesRef = useRef<HTMLTextAreaElement>(null);
+    const [conflictSearchTerm, setConflictSearchTerm] = useState('');
+    const [selectedResolutionAction, setSelectedResolutionAction] = useState<'applied' | 'kept' | 'reviewed'>('applied');
+    const [resolutionReason, setResolutionReason] = useState('');
+    const [showConflictOnly, setShowConflictOnly] = useState(false);
+    const [viewingConflict, setViewingConflict] = useState<planLockState | null>(null);
 
-  const lockedConflicts = useMemo(() => detectLockedPlanRegeneration(lockStates, newPlan).conflicts, [lockStates, newPlan]);
+  const lockedConflicts = useMemo(() => {
+    return detectLockedPlanRegeneration(lockStates, newPlan).conflicts;
+  }, [lockStates, newPlan]);
+
+  const filteredConflicts = useMemo(() => {
+    let filtered = [...lockedConflicts];
+    if (conflictSearchTerm) {
+      filtered = filtered.filter(c => c.trainNo.toLowerCase().includes(conflictSearchTerm.toLowerCase()));
+    }
+    return filtered.sort((a, b) => {
+      const priorityOrder = { P0: 0, P1: 1, P2: 2 };
+      const aPriority = a.conflictFields?.[0]?.priority || 'P2';
+      const bPriority = b.conflictFields?.[0]?.priority || 'P2';
+      return priorityOrder[aPriority] - priorityOrder[bPriority];
+    });
+  }, [lockedConflicts, conflictSearchTerm]);
 
   const filteredDifferences = useMemo(() => {
     let filtered = [...differences];
@@ -110,6 +126,10 @@ const Component: React.FC = () => {
       filtered = filtered.filter(d => d.type !== 'unchanged');
     }
 
+    if (showConflictOnly) {
+      filtered = filtered.filter(d => lockedConflicts.some(c => c.trainNo === d.trainNo));
+    }
+
     filtered = filtered.filter(d => {
       if (filter.checkStatus === 'all') return true;
       const check = checkProgressMap.get(d.trainNo);
@@ -117,27 +137,32 @@ const Component: React.FC = () => {
     });
 
     filtered.sort((a, b) => {
-      const lockA = lockStates.find(l => l.trainNo === a.trainNo)?.isLocked ? 1 : 0;
-      const lockB = lockStates.find(l => l.trainNo === b.trainNo)?.isLocked ? 1 : 0;
-      const priorityA = a.changedFields?.some(f => f.priority === 'P0') ? 0 : a.changedFields?.some(f => f.priority === 'P1') ? 1 : a.changedFields?.some(f => f.priority === 'P2') ? 2 : 3;
-      const priorityB = b.changedFields?.some(f => f.priority === 'P0') ? 0 : b.changedFields?.some(f => f.priority === 'P1') ? 1 : b.changedFields?.some(f => f.priority === 'P2') ? 2 : 3;
-
-      if (sortField === 'priority') {
-        return sortOrder === 'asc' ? priorityA - priorityB : priorityB - priorityA;
-      }
-      if (sortField === 'locked') {
-        return sortOrder === 'asc' ? lockA - lockB : lockB - lockA;
-      }
-      if (sortField === 'trainNo') {
-        return sortOrder === 'asc' ? a.trainNo.localeCompare(b.trainNo) : b.trainNo.localeCompare(a.trainNo);
-      }
+      // 1. 按变更类型优先级排序（removed > added > modified > unchanged）
+      const typeOrder: Record<string, number> = { 'removed': 0, 'added': 1, 'modified': 2, 'unchanged': 3 };
+      const typeDiff = typeOrder[a.type] - typeOrder[b.type];
+      if (typeDiff !== 0) return typeDiff;
+      
+      // 2. 按冲突状态排序（有冲突优先）
+      const aHasConflict = lockedConflicts.some(c => c.trainNo === a.trainNo) ? 0 : 1;
+      const bHasConflict = lockedConflicts.some(c => c.trainNo === b.trainNo) ? 0 : 1;
+      const conflictDiff = aHasConflict - bHasConflict;
+      if (conflictDiff !== 0) return conflictDiff;
+      
+      // 3. 按核对状态排序（unchecked > checked > confirmed）
+      const checkOrder: Record<string, number> = { 'unchecked': 0, 'checked': 1, 'confirmed': 2 };
+      const aCheckStatus = checkProgressMap.get(a.trainNo)?.checkStatus || 'unchecked';
+      const bCheckStatus = checkProgressMap.get(b.trainNo)?.checkStatus || 'unchecked';
+      const checkDiff = checkOrder[aCheckStatus] - checkOrder[bCheckStatus];
+      if (checkDiff !== 0) return checkDiff;
+      
+      // 4. 按发车时间排序
       const timeA = a.newData?.departureTime || a.oldData?.departureTime || '00:00';
       const timeB = b.newData?.departureTime || b.oldData?.departureTime || '00:00';
       return sortOrder === 'asc' ? timeA.localeCompare(timeB) : timeB.localeCompare(timeA);
     });
 
     return filtered;
-  }, [differences, searchTerm, filter, sortField, sortOrder, checkProgressMap, lockStates]);
+  }, [differences, searchTerm, filter, sortField, sortOrder, checkProgressMap, lockStates, lockedConflicts, showConflictOnly]);
 
   const summary = useMemo(() => ({
     total: differences.length,
@@ -152,7 +177,6 @@ const Component: React.FC = () => {
     return {
       total: checkList.length,
       checked: checkList.filter(c => c.checkStatus === 'checked' || c.checkStatus === 'confirmed').length,
-      questioned: checkList.filter(c => c.checkStatus === 'questioned').length,
       unchecked: differences.filter(d => !checkProgressMap.has(d.trainNo) || checkProgressMap.get(d.trainNo)?.checkStatus === 'unchecked').length,
     };
   }, [checkProgressMap, differences]);
@@ -162,14 +186,10 @@ const Component: React.FC = () => {
     return 'confirm';
   }, [checkSummary, summary]);
 
-  const pendingChanges = differences.filter(d => d.type !== 'unchanged' && !checkProgressMap.get(d.trainNo)?.checkStatus).length;
-  const questionChanges = checkSummary.questioned;
-  const p0Count = differences.filter(d => d.changedFields?.some(f => f.priority === 'P0')).length;
   const waitingCount = differences.filter(d => {
     const check = checkProgressMap.get(d.trainNo);
     return !check || check.checkStatus === 'unchecked';
   }).length;
-  const selectedConflicts = lockedConflicts.filter(item => selectedTrains.has(item.trainNo));
 
   const notify = (type: 'success' | 'warning' | 'error', message: string) => {
     setNotification({ type, message });
@@ -192,7 +212,7 @@ const Component: React.FC = () => {
     notify('success', `${trainNo} 数据已保存`);
   };
 
-  const handleSort = (field: 'departureTime' | 'trainNo' | 'priority' | 'locked') => {
+  const handleSort = (field: 'departureTime' | 'trainNo' | 'locked') => {
     if (sortField === field) {
       setSortOrder(o => o === 'asc' ? 'desc' : 'asc');
     } else {
@@ -238,19 +258,65 @@ const Component: React.FC = () => {
     notify('success', `已同步更新 ${differences.filter(d => d.type !== 'removed').length} 条计划`);
   };
 
-  const handleConflictAction = (action: 'keep' | 'apply' | 'review', trainNo?: string) => {
-    if (action === 'apply') {
-      setLockStates(prev => prev.map(l => ({ ...l, isLocked: false, conflictStatus: 'resolved' as const })));
-      notify('success', '已应用新计划并解锁');
-      setShowConflictDrawer(false);
-    } else if (action === 'keep') {
-      setLockStates(prev => prev.map(l => ({ ...l, conflictStatus: 'resolved' as const })));
-      notify('warning', '已保持锁定状态');
-    } else if (action === 'review' && trainNo) {
+  const handleConflictAction = (action: 'applied' | 'kept' | 'reviewed', trainNo?: string, reason?: string) => {
+    if (!trainNo) return;
+    
+    const lock = lockStates.find(l => l.trainNo === trainNo);
+    if (!lock) return;
+
+    const now = new Date().toISOString();
+    const affectedFields = lock.conflictFields?.map(f => f.fieldLabel) || [];
+    
+    const newRecord = {
+      id: `${trainNo}-${Date.now()}`,
+      action,
+      timestamp: now,
+      operator: '当前用户',
+      reason,
+      affectedFields,
+    };
+
+    setLockStates(prev => prev.map(l => {
+      if (l.trainNo !== trainNo) return l;
+      
+      const updatedRecords = [...(l.disposalRecords || []), newRecord];
+      const update: typeof l = {
+        ...l,
+        disposalRecords: updatedRecords,
+        lastResolution: {
+          action,
+          timestamp: now,
+          operator: '当前用户',
+          reason,
+        },
+      };
+
+      if (action === 'applied') {
+        update.isLocked = false;
+        update.conflictStatus = 'handled';
+      } else if (action === 'kept') {
+        update.conflictStatus = 'handled';
+      } else if (action === 'reviewed') {
+        update.conflictStatus = 'handled';
+      }
+
+      return update;
+    }));
+
+    if (action === 'applied') {
+      notify('success', `已应用新计划，车次 ${trainNo} 已解锁`);
+    } else if (action === 'kept') {
+      notify('success', `已保持锁定状态，车次 ${trainNo} 继续锁定`);
+    } else if (action === 'reviewed') {
       const diff = differences.find(d => d.trainNo === trainNo);
       if (diff) setSelectedDiff(diff);
-      notify('success', `已定位到 ${trainNo} 的差异详情`);
+      notify('success', `已跳转到 ${trainNo} 的差异详情，请审查后处理`);
     }
+    
+    setShowConflictOnly(false);
+    setViewingConflict(null);
+    setSelectedResolutionAction('applied');
+    setResolutionReason('');
   };
 
   const toggleTrainSelection = (trainNo: string) => {
@@ -360,59 +426,144 @@ const Component: React.FC = () => {
         </div>
       </div>
 
-      <div className="pc-toolbar" style={{ flexWrap: 'wrap', gap: '8px' }}>
-        <div className="pc-toolbar-left" style={{ flexWrap: 'wrap', gap: '6px' }}>
-          <div className="pc-filter-group">
-            <span className="pc-filter-label">变更类型</span>
-            <div className="pc-filter-tabs">
-              <button className={`pc-filter-tab ${filter.type === 'all' && !filter.showDiffOnly ? 'active' : ''}`} onClick={() => setFilter(prev => ({ ...prev, type: 'all', showDiffOnly: false }))}>
+      <div className="pc-toolbar" style={{ flexWrap: 'wrap', gap: '12px' }}>
+        <div className="pc-toolbar-left" style={{ flexWrap: 'wrap', gap: '12px' }}>
+          <div className="pc-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="pc-filter-label" style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', whiteSpace: 'nowrap' }}>变更类型：</span>
+            <div className="pc-filter-tabs" style={{ display: 'flex', gap: '4px' }}>
+              <button 
+                onClick={() => setFilter(prev => ({ ...prev, type: 'all', showDiffOnly: false }))}
+                style={{
+                  padding: '6px 14px',
+                  border: `2px solid ${filter.type === 'all' && !filter.showDiffOnly ? '#3B82F6' : '#D1D5DB'}`,
+                  backgroundColor: filter.type === 'all' && !filter.showDiffOnly ? '#EFF6FF' : '#FFFFFF',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: filter.type === 'all' && !filter.showDiffOnly ? 700 : 500,
+                  color: filter.type === 'all' && !filter.showDiffOnly ? '#1D4ED8' : '#6B7280',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                  boxShadow: filter.type === 'all' && !filter.showDiffOnly ? '0 2px 8px rgba(59, 130, 246, 0.15)' : 'none',
+                }}
+              >
                 全部 <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.7 }}>{summary.total}</span>
               </button>
               {(['added', 'removed', 'modified', 'unchanged'] as const).map(t => {
                 const cfg = typeConfig[t];
+                const isActive = filter.type === t;
+                const colors: Record<string, { bg: string; border: string; text: string }> = {
+                  added: { bg: '#ECFDF5', border: '#10B981', text: '#047857' },
+                  removed: { bg: '#FEF2F2', border: '#EF4444', text: '#B91C1C' },
+                  modified: { bg: '#EFF6FF', border: '#3B82F6', text: '#1D4ED8' },
+                  unchanged: { bg: '#F3F4F6', border: '#9CA3AF', text: '#4B5563' },
+                };
+                const color = colors[t];
                 return (
-                  <button key={t} className={`pc-filter-tab pc-filter-tab-${t} ${filter.type === t ? `active ${t}` : ''}`} onClick={() => setFilter(prev => ({ ...prev, type: t, showDiffOnly: false }))}>
+                  <button 
+                    key={t} 
+                    onClick={() => setFilter(prev => ({ ...prev, type: t, showDiffOnly: false }))}
+                    style={{
+                      padding: '6px 14px',
+                      border: `2px solid ${isActive ? color.border : '#D1D5DB'}`,
+                      backgroundColor: isActive ? color.bg : '#FFFFFF',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: isActive ? 700 : 500,
+                      color: isActive ? color.text : '#6B7280',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      boxShadow: isActive ? `0 2px 8px ${color.border}33` : 'none',
+                    }}
+                  >
                     {cfg.label} <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.7 }}>{summary[t]}</span>
                   </button>
                 );
               })}
             </div>
           </div>
-          <div className="pc-filter-group">
-            <span className="pc-filter-label">核对状态</span>
-            <div className="pc-filter-tabs">
-              {(['all', 'unchecked', 'checked', 'questioned'] as const).map(s => {
+          
+          <div className="pc-filter-group" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span className="pc-filter-label" style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', whiteSpace: 'nowrap' }}>核对状态：</span>
+            <div className="pc-filter-tabs" style={{ display: 'flex', gap: '4px' }}>
+              {(['all', 'unchecked', 'checked'] as const).map(s => {
                 const label = s === 'all' ? '全部' : checkStatusConfig[s].label;
+                const isActive = filter.checkStatus === s;
                 const isUncheckedFilter = s === 'unchecked';
-                const uncheckedCount = summary.unchecked;
-                return (
-                  <button
-                    key={s}
-                    className={`pc-filter-tab pc-filter-tab-${s} ${filter.checkStatus === s ? 'active' : ''}`}
-                    onClick={() => setFilter(prev => ({ ...prev, checkStatus: s }))}
-                    style={isUncheckedFilter ? {
-                      borderColor: '#F59E0B',
-                      backgroundColor: 'rgba(245,158,11,0.15)',
-                      color: '#D97706',
-                      fontWeight: 700,
-                      boxShadow: '0 0 0 1px rgba(245,158,11,0.4)'
-                    } : undefined}
-                  >
-                    {label}
-                    {isUncheckedFilter && <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.8 }}>({uncheckedCount})</span>}
-                  </button>
-                );
+                const uncheckedCount = waitingCount;
+                
+                if (isActive) {
+                  const colors = s === 'checked' 
+                    ? { bg: '#ECFDF5', border: '#10B981', text: '#047857' }
+                    : s === 'unchecked'
+                      ? { bg: '#FEF3C7', border: '#F59E0B', text: '#B45309' }
+                      : { bg: '#EFF6FF', border: '#3B82F6', text: '#1D4ED8' };
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setFilter(prev => ({ ...prev, checkStatus: s }))}
+                      style={{
+                        padding: '6px 14px',
+                        border: `2px solid ${colors.border}`,
+                        backgroundColor: colors.bg,
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: colors.text,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                        boxShadow: `0 2px 8px ${colors.border}33`,
+                      }}
+                    >
+                      {label}
+                      {isUncheckedFilter && <span style={{ marginLeft: '4px', fontSize: '11px' }}>({uncheckedCount})</span>}
+                    </button>
+                  );
+                } else {
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setFilter(prev => ({ ...prev, checkStatus: s }))}
+                      style={{
+                        padding: '6px 14px',
+                        border: '1px solid #D1D5DB',
+                        backgroundColor: '#FFFFFF',
+                        borderRadius: '6px',
+                        fontSize: '13px',
+                        fontWeight: 500,
+                        color: '#6B7280',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {label}
+                      {isUncheckedFilter && <span style={{ marginLeft: '4px', fontSize: '11px', opacity: 0.7 }}>({uncheckedCount})</span>}
+                    </button>
+                  );
+                }
               })}
             </div>
           </div>
+          
           {lockedConflicts.length > 0 && (
-            <button style={{ ...btnStyles.ghost, padding: '6px 12px', fontSize: '12px', backgroundColor: '#FFFBEB', borderColor: '#FCD34D', color: '#92400E' }} onClick={() => setShowConflictDrawer(true)}>
+            <button 
+              style={{ 
+                padding: '6px 14px',
+                border: `2px solid ${showConflictOnly ? '#DC2626' : '#FECACA'}`,
+                backgroundColor: showConflictOnly ? '#DC2626' : '#FEF2F2',
+                borderRadius: '6px',
+                fontSize: '13px',
+                fontWeight: 700,
+                color: showConflictOnly ? '#FFFFFF' : '#DC2626',
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                boxShadow: showConflictOnly ? '0 2px 8px rgba(220, 38, 38, 0.3)' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }} 
+              onClick={() => setShowConflictOnly(!showConflictOnly)}
+            >
               <AlertCircle style={{ width: '14px', height: '14px' }} /> 冲突 {lockedConflicts.length}
-            </button>
-          )}
-          {p0Count > 0 && (
-            <button style={{ ...btnStyles.ghost, padding: '6px 12px', fontSize: '12px', backgroundColor: '#FEF2F2', borderColor: '#FECACA', color: '#DC2626' }} onClick={() => handleSort('priority')}>
-              P0 {p0Count}
             </button>
           )}
         </div>
@@ -426,37 +577,17 @@ const Component: React.FC = () => {
 
       <div className="pc-main" style={showDetailPanel ? undefined : { padding: '16px 24px' }}>
         <div className={`pc-table-container ${!showDetailPanel ? 'full-width' : ''}`}>
-          {/* 颜色图例 */}
-          <div className="pc-legend-bar">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <div className="pc-legend-section">
-                <span className="pc-legend-title">图例</span>
-                {legendVisible && (
-                  <>
-                    <span className="pc-legend-item"><span className="pc-legend-dot origin" />始发</span>
-                    <span className="pc-legend-item"><span className="pc-legend-dot pass" />途经</span>
-                    <span className="pc-legend-item"><span className="pc-legend-dot terminal" />终到</span>
-                    <span style={{ width: 1, height: 16, backgroundColor: '#E5E7EB', margin: '0 12px' }} />
-                    <span className="pc-legend-item"><span className="pc-legend-dot added" />新增</span>
-                    <span className="pc-legend-item"><span className="pc-legend-dot removed" />减少</span>
-                    <span className="pc-legend-item"><span className="pc-legend-dot modified" />变更</span>
-                  </>
-                )}
-              </div>
-              <button
-                onClick={() => setLegendVisible(!legendVisible)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '4px',
-                  padding: '4px 10px', border: '1px solid #E5E7EB',
-                  borderRadius: '4px', backgroundColor: '#fff',
-                  cursor: 'pointer', color: '#6B7280', fontSize: '12px',
-                  fontWeight: 500
-                }}
-              >
-                {legendVisible ? '收起' : '展开'}
-                <span style={{ fontSize: '10px' }}>{legendVisible ? '▲' : '▼'}</span>
-              </button>
-            </div>
+          {/* 简化的图例区域 */}
+          <div style={{ padding: '10px 0', borderBottom: '1px solid #F3F4F6', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#10B981', marginRight: '4px' }}></span>新增
+            </span>
+            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#EF4444', marginRight: '4px' }}></span>减少
+            </span>
+            <span style={{ fontSize: '12px', color: '#9CA3AF' }}>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '2px', backgroundColor: '#3B82F6', marginRight: '4px' }}></span>变更
+            </span>
           </div>
 
           <div className="pc-card-list">
@@ -468,20 +599,28 @@ const Component: React.FC = () => {
               const isSelected = selectedDiff?.trainNo === diff.trainNo;
               const isLocked = lockStates.find(l => l.trainNo === diff.trainNo)?.isLocked;
               const data = diff.newData || diff.oldData;
-              const priority = diff.changedFields?.some(f => f.priority === 'P0') ? 'P0' : diff.changedFields?.some(f => f.priority === 'P1') ? 'P1' : diff.changedFields?.some(f => f.priority === 'P2') ? 'P2' : '—';
               const mergedText = formatMergedField(data);
               const typeClass = getTypeClass(data?.status);
               const typeColor = getTypeColor(data?.status);
               const typeLabel = getTypeLabel(data?.status);
               const isUnchecked = !check || check.checkStatus === 'unchecked';
+              const hasConflict = lockedConflicts.some(c => c.trainNo === diff.trainNo);
+              const conflict = hasConflict ? lockedConflicts.find(c => c.trainNo === diff.trainNo) : null;
+              const isConflictHandled = conflict?.conflictStatus === 'handled';
+              
               return (
                 <div
                   key={diff.trainNo}
                   className={`pc-card pc-card-${diff.type} pc-card-check-${check?.checkStatus || 'unchecked'} ${isSelected ? 'detail-selected' : ''}`}
                   onClick={() => setSelectedDiff(diff)}
                   style={{
-                    boxShadow: isUnchecked ? '0 0 0 2px rgba(245, 158, 11, 0.3)' : undefined,
-                    transform: isUnchecked ? 'translateZ(0)' : undefined,
+                    boxShadow: isUnchecked ? '0 0 0 2px rgba(245, 158, 11, 0.2)' : undefined,
+                    backgroundColor: hasConflict 
+                      ? (isConflictHandled ? '#ECFDF5' : '#FEE2E2')
+                      : undefined,
+                    borderLeft: hasConflict 
+                      ? `4px solid ${isConflictHandled ? '#059669' : '#DC2626'}`
+                      : undefined,
                   }}
                 >
                   {/* 顶部标题区域 - 车次信息放在首位 */}
@@ -490,6 +629,34 @@ const Component: React.FC = () => {
                       {/* 车次信息 - 最优先显示 */}
                       <div className="pc-trainno-wrapper">
                         <span className={`pc-trainno pc-trainno-strong pc-trainno-${typeClass}`}>{diff.trainNo}</span>
+                        {hasConflict && (
+                          <span 
+                            style={{
+                              marginLeft: '8px',
+                              padding: '3px 8px',
+                              backgroundColor: isConflictHandled ? '#ECFDF5' : '#FEE2E2',
+                              color: isConflictHandled ? '#059669' : '#DC2626',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              cursor: 'pointer',
+                            }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const conflict = lockedConflicts.find(c => c.trainNo === diff.trainNo);
+                              if (conflict) {
+                                setViewingConflict(conflict);
+                                setSelectedDiff(diff);
+                              }
+                            }}
+                          >
+                            <AlertCircle style={{ width: '12px', height: '12px' }} />
+                            {isConflictHandled ? '已处理' : '冲突'}
+                          </span>
+                        )}
                       </div>
                       {/* 核对状态显示 - 固定信息在左边 */}
                       <div className="pc-status-display">
@@ -497,12 +664,6 @@ const Component: React.FC = () => {
                           <span className="pc-status-badge checked">
                             <Check style={{ width: '14px', height: '14px' }} />
                             已核对
-                          </span>
-                        )}
-                        {check?.checkStatus === 'questioned' && (
-                          <span className="pc-status-badge questioned">
-                            <HelpCircle style={{ width: '14px', height: '14px' }} />
-                            有疑问
                           </span>
                         )}
                         {check?.checkStatus === 'confirmed' && (
@@ -513,30 +674,19 @@ const Component: React.FC = () => {
                         )}
                         {isUnchecked && (
                           <span className="pc-status-badge unchecked" style={{
-                            borderColor: '#F59E0B',
-                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                            color: '#D97706',
-                            fontWeight: 700,
-                            boxShadow: '0 0 0 1px rgba(245, 158, 11, 0.2)'
+                            backgroundColor: '#F3F4F6',
+                            color: '#6B7280',
+                            fontWeight: 600,
                           }}>
                             <Circle style={{ width: '14px', height: '14px' }} />
                             未核对
                           </span>
                         )}
                       </div>
-                      {/* 变更类型标签 - 动态信息在右边 */}
+                      {/* 锁定状态标签 */}
                       <div className="pc-card-badges">
-                        {diff.type !== 'unchanged' && (
-                          <span className={`pc-type-badge pc-type-badge-${diff.type}`}>
-                            {diff.type === 'added' && <Plus style={{ width: '12px', height: '12px' }} />}
-                            {diff.type === 'removed' && <Minus style={{ width: '12px', height: '12px' }} />}
-                            {diff.type === 'modified' && <Edit style={{ width: '12px', height: '12px' }} />}
-                            {cfg.label}
-                          </span>
-                        )}
                         {isLocked && <span className="pc-lock-badge"><Lock style={{ width: '10px', height: '10px' }} />锁定</span>}
                         {data?.focusFlag && <span className="pc-focus-dot" title="重点关注" />}
-                        {priority !== '—' && <span className="pc-priority-badge" style={{ backgroundColor: priority === 'P0' ? '#EF4444' : priority === 'P1' ? '#F59E0B' : '#9CA3AF' }}>{priority}</span>}
                       </div>
                     </div>
                     <div className="pc-card-actions" onClick={e => e.stopPropagation()}>
@@ -552,9 +702,6 @@ const Component: React.FC = () => {
                       </button>
                       <button className="pc-ghost-btn" onClick={() => handleLockToggle(diff.trainNo)} title={isLocked ? '解锁' : '锁定'}>
                         {isLocked ? <Unlock style={{ width: '14px', height: '14px' }} /> : <Lock style={{ width: '14px', height: '14px' }} />}
-                      </button>
-                      <button className="pc-ghost-btn" onClick={() => setShowQuestionModal(data || null)} title="疑问">
-                        <HelpCircle style={{ width: '14px', height: '14px' }} />
                       </button>
                     </div>
                   </div>
@@ -610,6 +757,62 @@ const Component: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* 处置记录区域 - 仅在有记录时显示 */}
+                  {(() => {
+                    const lock = lockStates.find(l => l.trainNo === diff.trainNo);
+                    if (!lock || !lock.disposalRecords || lock.disposalRecords.length === 0) return null;
+                    
+                    const actionLabels: Record<string, { label: string; color: string }> = {
+                      applied: { label: '应用新计划', color: '#059669' },
+                      kept: { label: '保持锁定', color: '#6B7280' },
+                      reviewed: { label: '审查后处理', color: '#D97706' },
+                    };
+                    
+                    return (
+                      <div style={{
+                        padding: '12px 16px',
+                        borderTop: '1px solid #E5E7EB',
+                        backgroundColor: '#FAFAFA',
+                      }}>
+                        <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#374151', margin: '0 0 10px 0' }}>处置记录</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {lock.disposalRecords.map((record) => (
+                            <div key={record.id} style={{
+                              padding: '10px 12px',
+                              backgroundColor: '#FFFFFF',
+                              borderRadius: '6px',
+                              border: '1px solid #E5E7EB',
+                            }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{record.timestamp.slice(0, 16).replace('T', ' ')}</span>
+                                </div>
+                                <span style={{
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  backgroundColor: actionLabels[record.action].color + '15',
+                                  color: actionLabels[record.action].color,
+                                }}>
+                                  {actionLabels[record.action].label}
+                                </span>
+                              </div>
+                              {record.reason && (
+                                <div style={{ fontSize: '12px', color: '#374151', marginBottom: '4px' }}>原因：{record.reason}</div>
+                              )}
+                              {record.affectedFields && record.affectedFields.length > 0 && (
+                                <div style={{ fontSize: '11px', color: '#6B7280' }}>
+                                  受影响字段：{record.affectedFields.join('、')}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })}
@@ -619,8 +822,7 @@ const Component: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
               <span className="pc-summary-tag total">共 {filteredDifferences.length} 条</span>
               <span className="pc-summary-tag checked">已核对 {checkSummary.checked}</span>
-              <span className="pc-summary-tag questioned">有疑问 {questionChanges}</span>
-              <span className="pc-summary-tag unchecked">未核对 {pendingChanges}</span>
+              <span className="pc-summary-tag unchecked">未核对 {waitingCount}</span>
             </div>
             {selectedTrains.size > 0 && (
               <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -634,23 +836,135 @@ const Component: React.FC = () => {
         {showDetailPanel && (
           <div style={{ width: '340px', flexShrink: 0, backgroundColor: '#fff', border: '1px solid #E5E7EB', borderRadius: '10px', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div style={{ padding: '16px', borderBottom: '2px solid #E5E7EB', backgroundColor: '#F9FAFB' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>差异详情</h3>
-              {selectedDiff && <p style={{ fontSize: '12px', color: '#6B7280', margin: '4px 0 0 0' }}>{selectedDiff.trainNo} · {typeConfig[selectedDiff.type].label}</p>}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#111827', margin: 0 }}>
+                  {viewingConflict ? '冲突详情' : '差异详情'}
+                </h3>
+                {viewingConflict && (
+                  <button 
+                    style={{ 
+                      background: 'none', border: 'none', cursor: 'pointer', 
+                      color: '#6B7280', padding: '4px', fontSize: '12px' 
+                    }}
+                    onClick={() => setViewingConflict(null)}
+                  >
+                    关闭
+                  </button>
+                )}
+              </div>
+              {selectedDiff && <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>{selectedDiff.trainNo} · {viewingConflict ? '有冲突' : typeConfig[selectedDiff.type].label}</p>}
             </div>
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px' }}>
-              {selectedDiff ? (
+              {viewingConflict ? (
+                <>
+                  <div style={{ marginBottom: '16px', padding: '10px', backgroundColor: '#FEF2F2', borderRadius: '6px', border: '1px solid #FECACA' }}>
+                    <div style={{ fontSize: '12px', fontWeight: 600, color: '#991B1B', marginBottom: '6px' }}>来源：计划生成命令</div>
+                    <div style={{ fontSize: '12px', color: '#7F1D1D', lineHeight: 1.5 }}>
+                      {viewingConflict.lockedReason || '已锁定的计划收到新的修改命令，检测到冲突。请选择处理方式。'}
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#374151', margin: '0 0 8px 0' }}>锁定信息</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '12px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ color: '#6B7280' }}>锁定时间</span>
+                        <span style={{ color: '#111827' }}>{viewingConflict.lockedAt || '—'}</span>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {viewingConflict.conflictFields && viewingConflict.conflictFields.length > 0 && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#374151', margin: '0 0 10px 0' }}>
+                        冲突字段 ({viewingConflict.conflictFields.length})
+                      </h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {viewingConflict.conflictFields.map((field, i) => (
+                          <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: '8px', backgroundColor: '#F9FAFB', borderRadius: '4px' }}>
+                            <div style={{ fontSize: '12px', fontWeight: 600, color: '#374151' }}>{field.fieldLabel}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                              <span style={{ color: '#9CA3AF', textDecoration: 'line-through' }}>{String(field.oldValue || '—')}</span>
+                              <span style={{ color: '#6B7280', fontSize: '10px' }}>→</span>
+                              <span style={{ color: '#1D4ED8', fontWeight: 600 }}>{String(field.newValue || '—')}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#F9FAFB', borderRadius: '6px' }}>
+                    <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#374151', margin: '0 0 10px 0' }}>选择处理方式：</h4>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '12px' }}>
+                      {(['applied', 'kept', 'reviewed'] as const).map(action => {
+                        const actionLabels: Record<string, { label: string; desc: string }> = {
+                          applied: { label: '应用新计划', desc: '采用新数据，解锁车次' },
+                          kept: { label: '保持锁定', desc: '保留原数据，继续锁定' },
+                          reviewed: { label: '审查后处理', desc: '查看差异，稍后处理' },
+                        };
+                        const config = actionLabels[action];
+                        return (
+                          <label key={action} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', padding: '8px', borderRadius: '4px', backgroundColor: selectedResolutionAction === action ? '#EFF6FF' : 'transparent' }}>
+                            <input
+                              type="radio"
+                              name="resolution"
+                              checked={selectedResolutionAction === action}
+                              onChange={() => setSelectedResolutionAction(action)}
+                              style={{ accentColor: '#5e6ad2', marginTop: '2px' }}
+                            />
+                            <div>
+                              <div style={{ fontSize: '12px', fontWeight: 500, color: '#111827' }}>{config.label}</div>
+                              <div style={{ fontSize: '11px', color: '#6B7280' }}>{config.desc}</div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <div style={{ marginBottom: '12px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>处理原因（可选）：</label>
+                      <textarea
+                        value={resolutionReason}
+                        onChange={(e) => setResolutionReason(e.target.value)}
+                        placeholder="请输入处理原因（可选）..."
+                        rows={2}
+                        style={{
+                          width: '100%',
+                          padding: '8px',
+                          borderRadius: '4px',
+                          border: '1px solid #E5E7EB',
+                          fontSize: '12px',
+                          resize: 'vertical',
+                          outline: 'none',
+                        }}
+                      />
+                    </div>
+                    <button 
+                      style={{ width: '100%', ...btnStyles.primary, fontSize: '13px' }} 
+                      onClick={() => {
+                        handleConflictAction(selectedResolutionAction, viewingConflict.trainNo, resolutionReason);
+                        setViewingConflict(null);
+                        setSelectedResolutionAction('applied');
+                        setResolutionReason('');
+                      }}
+                    >
+                      确认处理
+                    </button>
+                  </div>
+                </>
+              ) : selectedDiff ? (
                 <>
                   {selectedDiff.type === 'modified' && selectedDiff.changedFields && selectedDiff.changedFields.length > 0 && (
                     <div style={{ marginBottom: '16px' }}>
-                      <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280', margin: '0 0 12px 0' }}>变更字段 ({selectedDiff.changedFields.length})</h4>
+                      <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#6B7280', margin: '0 0 10px 0' }}>变更字段 ({selectedDiff.changedFields.length})</h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {selectedDiff.changedFields.map((field, i) => (
-                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 10px', backgroundColor: '#F9FAFB', borderRadius: '6px', fontSize: '12px' }}>
-                            <span style={{ padding: '1px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 700, backgroundColor: field.priority === 'P0' ? '#FEF2F2' : field.priority === 'P1' ? '#FFFBEB' : '#F3F4F6', color: field.priority === 'P0' ? '#DC2626' : field.priority === 'P1' ? '#D97706' : '#6B7280' }}>{field.priority}</span>
+                          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', backgroundColor: '#F9FAFB', borderRadius: '4px', fontSize: '12px' }}>
                             <span style={{ fontWeight: 500, color: '#374151', flex: 1 }}>{getFieldLabel(field.field)}</span>
                             <span style={{ color: '#9CA3AF' }}>{String(field.oldValue || '—')}</span>
                             <span style={{ color: '#6B7280' }}>→</span>
-                            <span style={{ color: '#1D4ED8', fontWeight: 700 }}>{String(field.newValue || '—')}</span>
+                            <span style={{ color: '#1D4ED8', fontWeight: 600 }}>{String(field.newValue || '—')}</span>
                           </div>
                         ))}
                       </div>
@@ -659,8 +973,8 @@ const Component: React.FC = () => {
 
                   <div style={{ padding: '16px 0', borderTop: '1px solid #F3F4F6' }}>
                     <h4 style={{ fontSize: '12px', fontWeight: 700, color: '#6B7280', margin: '0 0 12px 0' }}>核对状态</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
-                      {(['unchecked', 'checked', 'questioned', 'confirmed'] as const).map(status => {
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                      {(['unchecked', 'checked', 'confirmed'] as const).map(status => {
                         const isActive = checkProgressMap.get(selectedDiff.trainNo)?.checkStatus === status;
                         const config = checkStatusConfig[status];
                         const StatusIcon = config.icon;
@@ -673,8 +987,8 @@ const Component: React.FC = () => {
                             }}
                             style={{
                               display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px',
-                              backgroundColor: isActive ? (status === 'checked' ? '#ECFDF5' : status === 'questioned' ? '#FFFBEB' : status === 'confirmed' ? '#EFF6FF' : '#F3F4F6') : '#fff',
-                              border: isActive ? `1px solid ${status === 'checked' ? '#A7F3D0' : status === 'questioned' ? '#FCD34D' : status === 'confirmed' ? '#BFDBFE' : '#D1D5DB'}` : '1px solid #E5E7EB',
+                              backgroundColor: isActive ? (status === 'checked' ? '#ECFDF5' : status === 'confirmed' ? '#EFF6FF' : '#F3F4F6') : '#fff',
+                              border: isActive ? `1px solid ${status === 'checked' ? '#A7F3D0' : status === 'confirmed' ? '#BFDBFE' : '#D1D5DB'}` : '1px solid #E5E7EB',
                               borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: isActive ? 600 : 400,
                               color: isActive ? config.color : '#6B7280', transition: 'all 0.15s',
                             }}
@@ -694,10 +1008,53 @@ const Component: React.FC = () => {
                     <button style={lockStates.find(l => l.trainNo === selectedDiff.trainNo)?.isLocked ? btnStyles.ghost : btnStyles.warning} onClick={() => handleLockToggle(selectedDiff.trainNo)}>
                       <Lock style={{ width: '14px', height: '14px' }} />{lockStates.find(l => l.trainNo === selectedDiff.trainNo)?.isLocked ? '解锁' : '锁定'}
                     </button>
-                    <button style={btnStyles.ghost} onClick={() => setShowQuestionModal(selectedDiff.newData || selectedDiff.oldData!)}>
-                      <HelpCircle style={{ width: '14px', height: '14px' }} /> 标记疑问
-                    </button>
                   </div>
+
+                  {/* 处置记录展示 */}
+                  {(() => {
+                    const lock = lockStates.find(l => l.trainNo === selectedDiff.trainNo);
+                    if (!lock || !lock.disposalRecords || lock.disposalRecords.length === 0) return null;
+                    
+                    const actionLabels: Record<string, { label: string; color: string }> = {
+                      applied: { label: '应用新计划', color: '#059669' },
+                      kept: { label: '保持锁定', color: '#6B7280' },
+                      reviewed: { label: '审查后处理', color: '#D97706' },
+                    };
+                    
+                    return (
+                      <div style={{ padding: '16px 0', borderTop: '1px solid #F3F4F6' }}>
+                        <h4 style={{ fontSize: '12px', fontWeight: 600, color: '#374151', margin: '0 0 12px 0' }}>处置记录</h4>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {lock.disposalRecords.map((record, i) => (
+                            <div key={record.id} style={{ padding: '10px', backgroundColor: '#F9FAFB', borderRadius: '6px', border: '1px solid #E5E7EB' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                  <span style={{ fontSize: '12px', color: '#9CA3AF' }}>{record.timestamp.slice(0, 16).replace('T', ' ')}</span>
+                                  <span style={{ fontSize: '11px', color: '#6B7280' }}>{record.operator}</span>
+                                </div>
+                                <span style={{ 
+                                  padding: '2px 8px', 
+                                  borderRadius: '4px', 
+                                  fontSize: '11px', 
+                                  fontWeight: 600,
+                                  backgroundColor: actionLabels[record.action].color + '15',
+                                  color: actionLabels[record.action].color,
+                                }}>
+                                  {actionLabels[record.action].label}
+                                </span>
+                              </div>
+                              {record.reason && (
+                                <div style={{ fontSize: '12px', color: '#374151', marginBottom: '4px' }}>原因：{record.reason}</div>
+                              )}
+                              {record.affectedFields && record.affectedFields.length > 0 && (
+                                <div style={{ fontSize: '11px', color: '#6B7280' }}>受影响字段：{record.affectedFields.join('、')}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </>
               ) : (
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', color: '#9CA3AF', textAlign: 'center' }}>
@@ -722,9 +1079,9 @@ const Component: React.FC = () => {
               clearSelection();
             }}>批量核对</button>
             <button style={btnStyles.primary} onClick={() => {
-              setShowConflictDrawer(true);
-              notify('warning', `已打开 ${selectedTrains.size} 条选中车次的冲突处理面板`);
-            }}>批量冲突处理</button>
+              setShowConflictListDrawer(true);
+              notify('warning', `已打开冲突车次列表`);
+            }}>查看冲突</button>
           </div>
         </div>
       )}
@@ -734,13 +1091,13 @@ const Component: React.FC = () => {
         padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '16px', alignItems: 'center' }}>
-          {pendingChanges > 0 && (
+          {waitingCount > 0 && (
             <div style={{ fontSize: '13px', color: '#F59E0B', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <AlertCircle style={{ width: '16px', height: '16px' }} />
-              还有 {pendingChanges} 条变更需要核对{questionChanges > 0 && `，${questionChanges} 条待确认`}
+              还有 {waitingCount} 条变更需要核对
             </div>
           )}
-          {pendingChanges === 0 && (
+          {waitingCount === 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ fontSize: '13px', color: '#059669', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <CheckCircle2 style={{ width: '16px', height: '16px' }} />
@@ -773,82 +1130,102 @@ const Component: React.FC = () => {
         </div>
       </div>
 
-      {showConflictDrawer && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.18)', zIndex: 998 }} onClick={() => setShowConflictDrawer(false)}>
-          <div style={{ position: 'absolute', right: 0, top: 0, width: '380px', height: '100%', backgroundColor: '#fff', borderLeft: '1px solid #E5E7EB', boxShadow: '-8px 0 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
-            <div style={{ padding: '16px 18px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      {/* 冲突车次列表 Drawer */}
+      {showConflictListDrawer && (
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(15,23,42,0.18)', zIndex: 998 }} onClick={() => setShowConflictListDrawer(false)}>
+          <div style={{ position: 'absolute', right: 0, top: 0, width: '400px', height: '100%', backgroundColor: '#fff', borderLeft: '1px solid #E5E7EB', boxShadow: '-4px 0 12px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div style={{ padding: '14px 16px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <div style={{ fontSize: '15px', fontWeight: 700, color: '#111827' }}>冲突处理面板</div>
-                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '4px' }}>{selectedConflicts.length > 0 ? `已选中 ${selectedConflicts.length} 条冲突车次` : `共 ${lockedConflicts.length} 条冲突车次`}</div>
+                <div style={{ fontSize: '14px', fontWeight: 600, color: '#111827' }}>冲突处理</div>
+                <div style={{ fontSize: '12px', color: '#6B7280', marginTop: '2px' }}>共 {lockedConflicts.length} 条冲突车次，按优先级排序</div>
               </div>
-              <button style={{ ...btnStyles.ghost, padding: '6px 10px' }} onClick={() => setShowConflictDrawer(false)}><X style={{ width: '14px', height: '14px' }} /></button>
+              <button style={{ ...btnStyles.ghost, padding: '4px 8px' }} onClick={() => setShowConflictListDrawer(false)}><X style={{ width: '14px', height: '14px' }} /></button>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
-              {(selectedConflicts.length > 0 ? selectedConflicts : lockedConflicts).map(item => (
-                <div key={item.id} style={{ border: '1px solid #E5E7EB', borderRadius: '8px', padding: '12px', marginBottom: '10px', backgroundColor: '#FAFAFA' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <strong style={{ color: '#111827' }}>{item.trainNo}</strong>
-                    <span style={{ fontSize: '12px', color: '#F59E0B' }}>{item.conflictStatus === 'resolved' ? '已处理' : '待处理'}</span>
+            <div style={{ padding: '12px' }}>
+              <div style={{ position: 'relative' }}>
+                <Search style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: '#9CA3AF' }} />
+                <input
+                  type="text"
+                  placeholder="搜索冲突车次"
+                  value={conflictSearchTerm}
+                  onChange={e => setConflictSearchTerm(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px 8px 32px',
+                    borderRadius: '6px',
+                    border: '1px solid #E5E7EB',
+                    fontSize: '12px',
+                    backgroundColor: '#F9FAFB',
+                    outline: 'none',
+                  }}
+                />
+              </div>
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
+              {filteredConflicts.map(item => {
+                const priority = item.conflictFields?.[0]?.priority || 'P2';
+                const priorityColors: Record<string, { bg: string; color: string }> = {
+                  P0: { bg: '#FEF2F2', color: '#DC2626' },
+                  P1: { bg: '#FFFBEB', color: '#D97706' },
+                  P2: { bg: '#F3F4F6', color: '#6B7280' },
+                };
+                const conflictFieldNames = item.conflictFields?.map(f => f.fieldLabel).join('、') || '未知字段';
+                return (
+                  <div 
+                    key={item.id} 
+                    style={{ 
+                      border: '1px solid #E5E7EB', 
+                      borderRadius: '6px', 
+                      padding: '10px 12px', 
+                      marginBottom: '8px', 
+                      cursor: 'pointer',
+                      backgroundColor: item.conflictStatus === 'resolved' ? '#F9FAFB' : '#FEF2F2',
+                      borderColor: item.conflictStatus === 'resolved' ? '#E5E7EB' : '#FECACA',
+                      transition: 'all 0.15s',
+                    }}
+                    onClick={() => {
+                      setShowConflictListDrawer(false);
+                      setViewingConflict(item);
+                      const diff = differences.find(d => d.trainNo === item.trainNo);
+                      if (diff) setSelectedDiff(diff);
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ color: '#111827', fontSize: '13px' }}>{item.trainNo}</strong>
+                        <span style={{
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          backgroundColor: priorityColors[priority].bg,
+                          color: priorityColors[priority].color,
+                        }}>[{priority}]</span>
+                      </div>
+                      <span style={{ fontSize: '11px', color: item.conflictStatus === 'resolved' ? '#059669' : '#DC2626', fontWeight: 500 }}>
+                        {item.conflictStatus === 'resolved' ? '已处理' : '待处理'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px' }}>
+                      冲突字段：{conflictFieldNames}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#9CA3AF' }}>
+                      锁定于 {item.lockedAt || '未知时间'}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6B7280', lineHeight: 1.6 }}>{item.lockedReason || '锁定计划已被后台重新生成，请确认处理方式。'}</div>
-                  <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                    <button style={btnStyles.ghost} onClick={() => handleConflictAction('review', item.trainNo)}>查看新变化</button>
-                    <button style={btnStyles.ghost} onClick={() => handleConflictAction('keep', item.trainNo)}>保持锁定</button>
-                    <button style={btnStyles.primary} onClick={() => handleConflictAction('apply', item.trainNo)}>应用新计划</button>
-                  </div>
+                );
+              })}
+              {filteredConflicts.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px 20px', color: '#9CA3AF', fontSize: '13px' }}>
+                  未找到匹配的冲突车次
                 </div>
-              ))}
-            </div>
-            <div style={{ padding: '12px 16px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between' }}>
-              <button style={btnStyles.ghost} onClick={() => setShowConflictDrawer(false)}>关闭</button>
-              <button style={btnStyles.primary} onClick={() => notify('success', '冲突处理结果已保存')}>保存结果</button>
+              )}
             </div>
           </div>
         </div>
       )}
 
-      {showQuestionModal && (
-        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div style={{ width: '400px', backgroundColor: '#fff', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 20px', borderBottom: '1px solid #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <HelpCircle style={{ width: '18px', height: '18px', color: '#F59E0B' }} />
-                <span style={{ fontSize: '16px', fontWeight: 700, color: '#111827' }}>标记疑问</span>
-              </div>
-              <button onClick={() => setShowQuestionModal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', padding: '4px' }}><X style={{ width: '18px', height: '18px' }} /></button>
-            </div>
-            <div style={{ padding: '20px' }}>
-              <p style={{ fontSize: '14px', color: '#374151', margin: '0 0 16px 0' }}>车次 <strong>{showQuestionModal.trainNo}</strong> 标记为有疑问后，需要调度长确认。</p>
-              <div className="pc-question-type">
-                <label>疑问类型</label>
-                <div className="pc-question-options">
-                  <label className="pc-radio-label"><input type="radio" name="questionType" defaultChecked onChange={() => { questionTypeRef.current = 'data_anomaly'; }} /> 数据异常</label>
-                  <label className="pc-radio-label"><input type="radio" name="questionType" onChange={() => { questionTypeRef.current = 'mismatch_paper'; }} /> 与纸质文件不一致</label>
-                  <label className="pc-radio-label"><input type="radio" name="questionType" onChange={() => { questionTypeRef.current = 'need_approval'; }} /> 需要审批</label>
-                </div>
-              </div>
-              <div className="pc-question-notes">
-                <label>备注说明</label>
-                <textarea ref={questionNotesRef} rows={3} placeholder="请输入疑问说明..." style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #D1D5DB', fontSize: '13px', marginTop: '8px', resize: 'vertical', outline: 'none' }} />
-              </div>
-            </div>
-            <div style={{ padding: '16px 20px', borderTop: '1px solid #E5E7EB', display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-              <button style={btnStyles.ghost} onClick={() => setShowQuestionModal(null)}>取消</button>
-              <button style={btnStyles.primary} onClick={() => {
-                handleCheckStatus(showQuestionModal.trainNo, 'questioned', {
-                  questionType: questionTypeRef.current,
-                  notes: questionNotesRef.current?.value || '',
-                });
-                setShowQuestionModal(null);
-                questionTypeRef.current = 'data_anomaly';
-                notify('warning', `已标记 ${showQuestionModal.trainNo} 为有疑问`);
-              }}>
-                <MessageSquare style={{ width: '14px', height: '14px' }} /> 保存并标记
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
 
       {showEditModal && (
         <EditModal
@@ -875,7 +1252,6 @@ const Component: React.FC = () => {
                   { key: '↑↓', desc: '上下移动聚焦行' },
                   { key: 'Enter', desc: '查看详情' },
                   { key: 'Space', desc: '标记已核对 / 取消核对' },
-                  { key: 'Shift+Space', desc: '标记有疑问' },
                   { key: 'Ctrl+F', desc: '搜索车次' },
                   { key: 'Esc', desc: '关闭弹窗' },
                 ].map(({ key, desc }) => (

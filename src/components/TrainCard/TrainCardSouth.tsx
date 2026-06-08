@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 interface ServiceTag {
   label: string;
@@ -33,6 +33,9 @@ const TrainCardSouth: React.FC<TrainCardSouthProps> = ({
     { label: '库' },
   ],
 }) => {
+  const uniqueId = useId();
+  const gradientId = `south-grad-${uniqueId.replace(/:/g, '')}`;
+  
   const showTrackChange = status === 'track-change' || status === 'delayed-track-change';
   const isDelayed = status === 'delayed' || status === 'delayed-track-change';
   const isEarly = status === 'early';
@@ -93,13 +96,8 @@ const TrainCardSouth: React.FC<TrainCardSouthProps> = ({
           className="absolute"
           style={{ top: '0px', left: '0px' }}
         >
-          <path 
-            d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" 
-            fill="url(#south-grad)" 
-            stroke={isOneHourOut ? '#E69360' : isDeparted ? '#627C94' : isSuspended ? '#E66062' : '#60BDE6'}
-          />
           <defs>
-            <linearGradient id="south-grad" x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse">
+            <linearGradient id={gradientId} x1="105" y1="0" x2="105" y2="52" gradientUnits="userSpaceOnUse">
               {isOneHourOut ? (
                 <>
                   <stop stopColor="#FFF7E3"/>
@@ -123,6 +121,11 @@ const TrainCardSouth: React.FC<TrainCardSouthProps> = ({
               )}
             </linearGradient>
           </defs>
+          <path 
+            d="M141.727 0.5H9C4.30558 0.5 0.5 4.30558 0.5 9V51.5H209.5V47.749C209.5 43.6368 207.625 39.7488 204.408 37.1875L171.312 10.8389C162.904 4.14507 152.474 0.500031 141.727 0.5Z" 
+            fill={`url(#${gradientId})`} 
+            stroke={isOneHourOut ? '#E69360' : isDeparted ? '#627C94' : isSuspended ? '#E66062' : '#60BDE6'}
+          />
         </svg>
         
         {/* 底部背景 */}
@@ -136,7 +139,7 @@ const TrainCardSouth: React.FC<TrainCardSouthProps> = ({
           style={{ top: '52px', left: '0px' }}
         >
           <path d="M0 0H210V23C210 27.9706 205.971 32 201 32H9.00001C4.02944 32 0 27.9706 0 23V0Z" fill={isSuspended ? "#FFD4D0" : "#D9D9D9"}/>
-          <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke={isSuspended ? "rgba(54, 5, 5, 0.34)" : "#051A36"} strokeOpacity="0.34"/>
+          <path d="M209.5 0.5V23C209.5 27.6944 205.694 31.5 201 31.5H9C4.30558 31.5 0.5 27.6944 0.5 23V0.5H209.5Z" stroke={isSuspended ? "rgba(54, 5, 5, 1)" : "#051A36"} strokeOpacity={isSuspended ? "1" : "0.34"}/>
         </svg>
 
         {/* 股道框 - 左侧 */}

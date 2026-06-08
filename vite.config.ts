@@ -282,19 +282,7 @@ export default defineConfig(async ({ command }) => {
         jsxFragment: 'React.Fragment'
       },
 
-    test: {
-      globals: true,
-      environment: 'node',
-      include: [
-        'tests/**/*.test.ts',
-        'tests/**/*.test.tsx',
-        'scripts/**/*.test.ts',
-        'scripts/**/*.test.mjs',
-        'vite-plugins/**/*.test.ts',
-      ],
-      root: '.',
-    }
-  };
+    };
 
   return config;
 });

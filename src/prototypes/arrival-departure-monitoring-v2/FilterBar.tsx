@@ -281,34 +281,6 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Config Buttons */}
-        {/* Plan Change Overview Button */}
-        <div 
-          style={{
-            cursor: 'pointer',
-            padding: '6px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            borderRadius: '8px',
-            background: planChangeCount > 0
-              ? (darkMode ? 'rgba(255, 149, 0, 0.2)' : 'rgba(255, 149, 0, 0.1)')
-              : (darkMode ? 'rgba(42, 107, 124, 0.1)' : 'rgba(29, 78, 95, 0.04)'),
-            transition: 'all 0.2s ease',
-            border: planChangeCount > 0
-              ? (darkMode ? '1px solid rgba(255, 149, 0, 0.5)' : '1px solid rgba(255, 149, 0, 0.3)')
-              : (darkMode ? '1px solid rgba(42, 107, 124, 0.25)' : '1px solid rgba(29, 78, 95, 0.1)')
-          }}
-          onClick={onPlanChangeOverviewClick}
-          title="计划变更总览"
-        >
-          <Badge count={planChangeCount} offset={[0, 0]} size="small" style={{ backgroundColor: '#FF9500' }}>
-            <GitCompare 
-              size={20} 
-              color={planChangeCount > 0 ? '#FF9500' : (darkMode ? '#5DA3B3' : '#1D4E5F')} 
-            />
-          </Badge>
-        </div>
-
         <div 
           style={{
             cursor: 'pointer',

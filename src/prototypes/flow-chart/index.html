@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>攻击方与防守方占领时间流程图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        
+        /* 图例 */
+        .legend {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .legend-color {
+            width: 24px;
+            height: 16px;
+            border: 1px solid #ccc;
+        }
+        
+        .legend-color.attacker {
+            background: #C75C5C;
+        }
+        
+        .legend-color.defender {
+            background: #1A6FB5;
+        }
+        
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            width: 800px;
+        }
+        
+        /* SVG 图表 */
+        svg {
+            width: 100%;
+            height: auto;
+        }
+        
+        /* 文字样式 */
+        .axis-label {
+            font-size: 14px;
+            font-weight: bold;
+            fill: #333;
+        }
+        
+        .time-label {
+            font-size: 13px;
+            font-weight: bold;
+            fill: #333;
+        }
+        
+        .duration-label {
+            font-size: 12px;
+            fill: #666;
+        }
+        
+        .dimension-line {
+            stroke: #888;
+            stroke-width: 0.8;
+        }
+        
+        .dimension-arrow {
+            fill: #888;
+        }
+        
+        .stage-label {
+            font-size: 13px;
+            font-weight: bold;
+            fill: #333;
+        }
+        
+        /* 矩形块 */
+        .block-attacker {
+            fill: #C75C5C;
+        }
+        
+        .block-defender {
+            fill: #1A6FB5;
+        }
+        
+        /* 轴线 */
+        .timeline-axis {
+            stroke: #333;
+            stroke-width: 1.5;
+            marker-end: url(#arrow);
+        }
+        
+        .stage-line {
+            stroke: #333;
+            stroke-width: 1.5;
+        }
+        
+        .horizontal-line {
+            stroke: #999;
+            stroke-width: 0.8;
+        }
+        
+        /* 虚线 */
+        .dashed-line {
+            stroke: #999;
+            stroke-width: 0.8;
+            stroke-dasharray: 4,4;
+        }
+        
+        .ellipsis {
+            font-size: 20px;
+            fill: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 图例 -->
+        <div class="legend">
+            <div class="legend-item">
+                <span>攻击方占领时间</span>
+                <div class="legend-color attacker"></div>
+            </div>
+            <div class="legend-item">
+                <span>防守方占领时间</span>
+                <div class="legend-color defender"></div>
+            </div>
+        </div>
+        
+        <!-- 图表 -->
+        <div class="chart-container">
+            <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <marker id="arrow" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M0,0 L10,4 L0,8 Z" fill="#333"/>
+                    </marker>
+                    <marker id="arrow-left" markerWidth="10" markerHeight="8" refX="2" refY="4" orient="auto">
+                        <path d="M10,0 L0,4 L10,8 Z" fill="#888"/>
+                    </marker>
+                    <marker id="arrow-right" markerWidth="10" markerHeight="8" refX="8" refY="4" orient="auto">
+                        <path d="M0,0 L10,4 L0,8 Z" fill="#888"/>
+                    </marker>
+                </defs>
+                
+                <!-- 时间轴 -->
+                <line x1="80" y1="80" x2="80" y2="340" class="timeline-axis"/>
+                <line x1="80" y1="150" x2="740" y2="150" class="horizontal-line"/>
+                <line x1="80" y1="210" x2="740" y2="210" class="horizontal-line"/>
+                <line x1="80" y1="270" x2="740" y2="270" class="horizontal-line"/>
+                
+                <!-- 阶段线 -->
+                <line x1="80" y1="30" x2="80" y2="340" class="stage-line"/>
+                <line x1="400" y1="30" x2="400" y2="340" class="stage-line"/>
+                <line x1="720" y1="30" x2="720" y2="340" class="stage-line"/>
+                
+                <!-- 阶段标签 -->
+                <text x="170" y="50" text-anchor="middle" class="stage-label">阶段 1</text>
+                <text x="400" y="50" text-anchor="middle" class="stage-label">阶段 2</text>
+                <text x="720" y="50" text-anchor="middle" class="stage-label">阶段 H</text>
+                
+                <!-- 时间标签 -->
+                <text x="400" y="145" text-anchor="end" class="time-label">T₁</text>
+                <text x="400" y="205" text-anchor="end" class="time-label">T₁</text>
+                <text x="400" y="265" text-anchor="end" class="time-label">T₁</text>
+                <text x="740" y="155" text-anchor="start" class="time-label">Tₕ</text>
+                <text x="740" y="215" text-anchor="start" class="time-label">T</text>
+                <text x="740" y="275" text-anchor="start" class="time-label">Tₕ</text>
+                
+                <!-- 节点标签 -->
+                <text x="70" y="155" text-anchor="end" class="axis-label">N₁</text>
+                <text x="70" y="215" text-anchor="end" class="axis-label">N₂</text>
+                <text x="70" y="275" text-anchor="end" class="axis-label">N₃</text>
+                
+                <!-- 省略号 -->
+                <text x="560" y="60" class="ellipsis">...</text>
+                
+                <!-- N₁ 行数据 -->
+                <!-- 防守方 -->
+                <rect x="80" y="130" width="80" height="20" class="block-defender" rx="0"/>
+                <!-- td1 标注 -->
+                <line x1="80" y1="160" x2="80" y2="170" class="dimension-line"/>
+                <line x1="160" y1="160" x2="160" y2="170" class="dimension-line"/>
+                <line x1="80" y1="165" x2="160" y2="165" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="120" y="180" text-anchor="middle" class="duration-label">td1</text>
+                
+                <!-- 攻击方 -->
+                <rect x="160" y="115" width="120" height="30" class="block-attacker" rx="0"/>
+                <!-- ta1 标注 -->
+                <line x1="160" y1="110" x2="160" y2="105" class="dimension-line"/>
+                <line x1="280" y1="110" x2="280" y2="105" class="dimension-line"/>
+                <line x1="160" y1="108" x2="280" y2="108" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="220" y="100" text-anchor="middle" class="duration-label">ta1</text>
+                
+                <!-- 防守方 -->
+                <rect x="280" y="130" width="50" height="20" class="block-defender" rx="0"/>
+                <!-- td2 标注 -->
+                <line x1="280" y1="160" x2="280" y2="170" class="dimension-line"/>
+                <line x1="330" y1="160" x2="330" y2="170" class="dimension-line"/>
+                <line x1="280" y1="165" x2="330" y2="165" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="305" y="180" text-anchor="middle" class="duration-label">td2</text>
+                
+                <!-- 攻击方 ta2 -->
+                <rect x="330" y="110" width="30" height="30" class="block-attacker" rx="0"/>
+                <!-- ta2 标注 -->
+                <line x1="330" y1="105" x2="330" y2="100" class="dimension-line"/>
+                <line x1="360" y1="105" x2="360" y2="100" class="dimension-line"/>
+                <line x1="330" y1="103" x2="360" y2="103" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="345" y="93" text-anchor="middle" class="duration-label">ta2</text>
+                
+                <!-- 防守方 -->
+                <rect x="360" y="130" width="40" height="20" class="block-defender" rx="0"/>
+                <!-- td1 标注 -->
+                <line x1="360" y1="160" x2="360" y2="170" class="dimension-line"/>
+                <line x1="400" y1="160" x2="400" y2="170" class="dimension-line"/>
+                <line x1="360" y1="165" x2="400" y2="165" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="380" y="180" text-anchor="middle" class="duration-label">td1</text>
+                
+                <!-- 攻击方 ta1 -->
+                <rect x="400" y="115" width="50" height="30" class="block-attacker" rx="0"/>
+                <!-- ta1 标注 -->
+                <line x1="400" y1="110" x2="400" y2="105" class="dimension-line"/>
+                <line x1="450" y1="110" x2="450" y2="105" class="dimension-line"/>
+                <line x1="400" y1="108" x2="450" y2="108" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="425" y="100" text-anchor="middle" class="duration-label">ta1</text>
+                
+                <!-- 防守方 td2 -->
+                <rect x="450" y="130" width="30" height="20" class="block-defender" rx="0"/>
+                <line x1="450" y1="160" x2="450" y2="170" class="dimension-line"/>
+                <line x1="480" y1="160" x2="480" y2="170" class="dimension-line"/>
+                <line x1="450" y1="165" x2="480" y2="165" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="465" y="180" text-anchor="middle" class="duration-label">td2</text>
+                
+                <!-- N₂ 行数据 -->
+                <!-- 防守方 -->
+                <rect x="80" y="190" width="80" height="20" class="block-defender" rx="0"/>
+                <line x1="80" y1="220" x2="80" y2="230" class="dimension-line"/>
+                <line x1="160" y1="220" x2="160" y2="230" class="dimension-line"/>
+                <line x1="80" y1="225" x2="160" y2="225" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="120" y="240" text-anchor="middle" class="duration-label">td1</text>
+                
+                <!-- 攻击方 -->
+                <rect x="160" y="175" width="120" height="30" class="block-attacker" rx="0"/>
+                <line x1="160" y1="170" x2="160" y2="165" class="dimension-line"/>
+                <line x1="280" y1="170" x2="280" y2="165" class="dimension-line"/>
+                <line x1="160" y1="168" x2="280" y2="168" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="220" y="158" text-anchor="middle" class="duration-label">ta1</text>
+                
+                <!-- 防守方 td2 -->
+                <rect x="280" y="190" width="80" height="20" class="block-defender" rx="0"/>
+                <line x1="280" y1="220" x2="280" y2="230" class="dimension-line"/>
+                <line x1="360" y1="220" x2="360" y2="230" class="dimension-line"/>
+                <line x1="280" y1="225" x2="360" y2="225" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="320" y="240" text-anchor="middle" class="duration-label">td2</text>
+                
+                <!-- 防守方 td1 -->
+                <rect x="360" y="190" width="40" height="20" class="block-defender" rx="0"/>
+                <line x1="360" y1="220" x2="360" y2="230" class="dimension-line"/>
+                <line x1="400" y1="220" x2="400" y2="230" class="dimension-line"/>
+                <line x1="360" y1="225" x2="400" y2="225" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="380" y="240" text-anchor="middle" class="duration-label">td1</text>
+                
+                <!-- 攻击方 ta1 -->
+                <rect x="400" y="175" width="80" height="30" class="block-attacker" rx="0"/>
+                <line x1="400" y1="170" x2="400" y2="165" class="dimension-line"/>
+                <line x1="480" y1="170" x2="480" y2="165" class="dimension-line"/>
+                <line x1="400" y1="168" x2="480" y2="168" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="440" y="158" text-anchor="middle" class="duration-label">ta1</text>
+                
+                <!-- N₃ 行数据 -->
+                <!-- 防守方 -->
+                <rect x="80" y="250" width="80" height="20" class="block-defender" rx="0"/>
+                <line x1="80" y1="280" x2="80" y2="290" class="dimension-line"/>
+                <line x1="160" y1="280" x2="160" y2="290" class="dimension-line"/>
+                <line x1="80" y1="285" x2="160" y2="285" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="120" y="300" text-anchor="middle" class="duration-label">td1</text>
+                
+                <!-- 攻击方 -->
+                <rect x="160" y="235" width="240" height="30" class="block-attacker" rx="0"/>
+                <line x1="160" y1="230" x2="160" y2="225" class="dimension-line"/>
+                <line x1="400" y1="230" x2="400" y2="225" class="dimension-line"/>
+                <line x1="160" y1="228" x2="400" y2="228" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="280" y="218" text-anchor="middle" class="duration-label">ta1</text>
+                
+                <!-- 防守方 td1 -->
+                <rect x="400" y="250" width="60" height="20" class="block-defender" rx="0"/>
+                <line x1="400" y1="280" x2="400" y2="290" class="dimension-line"/>
+                <line x1="460" y1="280" x2="460" y2="290" class="dimension-line"/>
+                <line x1="400" y1="285" x2="460" y2="285" class="dimension-line" marker-start="url(#arrow-left)" marker-end="url(#arrow-right)"/>
+                <text x="430" y="300" text-anchor="middle" class="duration-label">td1</text>
+                
+            </svg>
+        </div>
+    </div>
+</body>
+</html>

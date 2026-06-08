@@ -483,7 +483,7 @@ export const TrainTable: React.FC<TrainTableProps> = ({
   const handleCheckInOutDoubleClick = (e: React.MouseEvent, trainId: string) => {
     e.stopPropagation();
     if (onOpenOperationDrawer) {
-      onOpenOperationDrawer(trainId, 'checkInOutAdjust');
+      onOpenOperationDrawer(trainId, 'timeAdjust');
     }
   };
 
@@ -1471,19 +1471,6 @@ export const TrainTable: React.FC<TrainTableProps> = ({
                   )}
                 </div>
                 <div className="topbar-right hide-on-collapse">
-                  {/* 计划变更标记 */}
-                  {item.planChangeInfo?.hasAnyChange && (
-                    <PlanChangeBadge
-                      changeType={item.planChangeInfo.changeType}
-                      changeCount={item.planChangeInfo.changeCount}
-                      size="medium"
-                      darkMode={darkMode}
-                      onDoubleClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenPlanChange(item.id);
-                      }}
-                    />
-                  )}
                   {/* 不常用标签 */}
                   {/* 临站发车标记 - 使用indigo色 */}
                   {index === 1 && <div className="service-tag indigo"><TrainFront size={14}/> 临站发车</div>}

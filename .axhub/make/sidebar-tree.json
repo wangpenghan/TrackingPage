@@ -1,7 +1,19 @@
 {
   "version": 1,
-  "updatedAt": "2026-05-14T12:36:30.526Z",
+  "updatedAt": "2026-06-05T02:59:54.737Z",
   "prototypes": [
+    {
+      "id": "item-prototypes-connection-plan",
+      "kind": "item",
+      "title": "connection plan",
+      "itemKey": "prototypes/connection-plan"
+    },
+    {
+      "id": "item-prototypes-statistics",
+      "kind": "item",
+      "title": "statistics",
+      "itemKey": "prototypes/statistics"
+    },
     {
       "id": "item-prototypes-station-monitoring",
       "kind": "item",

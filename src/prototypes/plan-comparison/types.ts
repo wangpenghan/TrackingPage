@@ -39,6 +39,23 @@ export interface changedField {
   priority: 'P0' | 'P1' | 'P2';
 }
 
+export interface ConflictField {
+  field: keyof templateData;
+  fieldLabel: string;
+  oldValue: any;
+  newValue: any;
+  priority: 'P0' | 'P1' | 'P2';
+}
+
+export interface DisposalRecord {
+  id: string;
+  action: 'applied' | 'kept' | 'reviewed';
+  timestamp: string;
+  operator: string;
+  reason?: string;
+  affectedFields: string[];
+}
+
 export interface planLockState {
   id: string;
   trainNo: string;
@@ -50,18 +67,25 @@ export interface planLockState {
   regeneratedAt?: string;
   regeneratedData?: templateData;
   conflictStatus?: 'none' | 'detected' | 'resolved';
+  conflictFields?: ConflictField[];
+  conflictDetectedAt?: string;
+  disposalRecords?: DisposalRecord[];
+  lastResolution?: {
+    action: 'applied' | 'kept' | 'reviewed';
+    timestamp: string;
+    operator: string;
+    reason?: string;
+  };
 }
 
 export interface checkProgress {
   id: string;
   trainNo: string;
   diagramNo: string;
-  checkStatus: 'unchecked' | 'checked' | 'questioned' | 'confirmed';
+  checkStatus: 'unchecked' | 'checked' | 'confirmed';
   checkedBy?: string;
   checkedAt?: string;
   notes?: string;
-  questionType?: 'data_anomaly' | 'mismatch_paper' | 'need_approval';
-  mentions?: string[];
 }
 
 export interface differenceSummary {
@@ -175,17 +199,12 @@ export function detectLockedPlanRegeneration(
     const newData = newPlan.find(t => t.trainNo === lock.trainNo);
     if (!newData) continue;
 
-    const hasChanges = lock.regeneratedData
-      ? detectFieldChanges(lock.regeneratedData, newData).length > 0
-      : true;
-
-    if (hasChanges) {
-      regenerated.push({
+    if (lock.conflictStatus === 'detected' && lock.conflictFields && lock.conflictFields.length > 0) {
+      conflicts.push({
         ...lock,
-        regeneratedAt: new Date().toISOString(),
-        regeneratedData: newData,
+        conflictStatus: 'detected',
+        conflictFields: lock.conflictFields,
       });
-      conflicts.push(lock);
     }
   }
 

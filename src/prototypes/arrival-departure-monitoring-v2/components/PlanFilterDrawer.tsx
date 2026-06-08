@@ -367,49 +367,6 @@ export const PlanFilterDrawer: React.FC<PlanFilterDrawerProps> = ({
           </div>
         </div>
 
-        {/* 计划变更筛选 */}
-        <div style={{ ...getCardStyle(), marginBottom: '12px' }}>
-          <div style={getSectionTitleStyle()}>计划变更</div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button
-              onClick={() => setFilters(prev => ({ ...prev, planChange: !prev.planChange }))}
-              style={getButtonStyle(filters.planChange)}
-            >
-              仅显示有变更车次
-            </button>
-            <button
-              onClick={() => setFilters(prev => ({ ...prev, yesterdayChange: !prev.yesterdayChange }))}
-              style={{
-                ...getButtonStyle(filters.yesterdayChange),
-                background: filters.yesterdayChange ? '#007AFF' : undefined,
-                borderColor: filters.yesterdayChange ? '#007AFF' : undefined
-              }}
-            >
-              昨日变更
-            </button>
-            <button
-              onClick={() => setFilters(prev => ({ ...prev, kemoChange: !prev.kemoChange }))}
-              style={{
-                ...getButtonStyle(filters.kemoChange),
-                background: filters.kemoChange ? '#FF9500' : undefined,
-                borderColor: filters.kemoChange ? '#FF9500' : undefined
-              }}
-            >
-              客模变更
-            </button>
-            <button
-              onClick={() => setFilters(prev => ({ ...prev, bothChange: !prev.bothChange }))}
-              style={{
-                ...getButtonStyle(filters.bothChange),
-                background: filters.bothChange ? '#FF3B30' : undefined,
-                borderColor: filters.bothChange ? '#FF3B30' : undefined
-              }}
-            >
-              多方变更
-            </button>
-          </div>
-        </div>
-
         {/* 股道 */}
         <div style={getCardStyle()}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
