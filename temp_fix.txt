@@ -1,9 +1,0 @@
-  // 基准时间：进站基于发点，出站基于到点
-  // 顺延模式下使用实际时间，否则使用图定时间
-  const effectiveDepartureBase = isPostponed && actualTimes.departureTime ? actualTimes.departureTime : baseDepartureTime;
-  const effectiveArrivalBase = isPostponed && actualTimes.arrivalTime ? actualTimes.arrivalTime : baseArrivalTime;
-  
-  // 进站开停检基于发点
-  const checkInBaseTime = effectiveDepartureBase;
-  // 出站开停检基于到点
-  const checkOutBaseTime = effectiveArrivalBase;
